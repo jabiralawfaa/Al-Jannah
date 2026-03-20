@@ -1277,40 +1277,8 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <!-- Logo -->
-        <a href="/" class="navbar-logo">RKM Al-Jannah</a>
-
-        <!-- Menu Tengah -->
-        <ul class="nav-menu" id="navMenu">
-            <li>
-                <a href="#visi-misi" class="nav-link">Visi & Misi</a>
-            </li>
-            <li>
-                <a href="#kanal-berita" class="nav-link">Kanal Berita</a>
-            </li>
-            <li>
-                <a href="#layanan-keuntungan" class="nav-link">Layanan & Keuntungan</a>
-            </li>
-            <li>
-                <a href="#hubungi-kami" class="nav-link">Hubungi Kami</a>
-            </li>
-        </ul>
-
-        <!-- Tombol Kanan -->
-        <div class="nav-buttons">
-            <a href="#login" class="btn btn-login">Login</a>
-            <a href="#daftar" class="btn btn-daftar">Daftar Anggota</a>
-        </div>
-
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </nav>
+    <!-- Navbar Component -->
+    <x-navbar />
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1332,7 +1300,7 @@
     </section>
 
     <!-- About Section (Apa itu RKM Al-Jannah) -->
-    <section class="about-section">
+    <section class="about-section" id="visi-misi">
         <div class="about-container">
             <div class="about-box">
                 <h2 class="about-title">Apa itu RKM AL JANNAH ?</h2>
@@ -1376,7 +1344,7 @@
     </section>
 
     <!-- News Section (Kanal Berita) -->
-    <section class="news-section">
+    <section class="news-section" id="kanal-berita">
         <div class="news-container">
             <div class="news-header">
                 <h2 class="news-title">Kanal Berita</h2>
@@ -1388,7 +1356,7 @@
                             image="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
                             :tags="['Berita', 'Kegiatan']"
                             title="Kegiatan Rutin RKM Al-Jannah Bulan Ini"
-                            url="#berita-1"
+                            url="/berita/kegiatan-rutin-rkm-al-jannah-bulan-ini"
                         />
                     </div>
                     <div class="news-col">
@@ -1664,7 +1632,7 @@
     </section>
 
     <!-- Contact Section (Hubungi Kami) -->
-    <section class="contact-section">
+    <section class="contact-section" id="hubungi-kami">
         <div class="contact-container">
             <div class="contact-header">
                 <h2 class="contact-title">Hubungi Kami</h2>
@@ -1713,23 +1681,8 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <h3 class="footer-brand-title">RKM Al-Jannah</h3>
-                    <p class="footer-brand-text">Rukun Kematian Al-Jannah</p>
-                </div>
-                <div class="footer-divider"></div>
-                <div class="footer-developer">
-                    <p class="footer-developer-text">
-                        Developed by <span class="footer-developer-name">GeoDev Creator</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer Component -->
+    <x-footer />
 
     <!-- Script untuk Mobile Menu -->
     <script>
@@ -1847,6 +1800,19 @@
             // Initialize
             updateVisibility();
         });
+
+        // Register Service Worker for Image Caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>

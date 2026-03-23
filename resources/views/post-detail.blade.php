@@ -9,7 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    
+
+    <!-- Navbar Component Styles -->
+    @vite('resources/css/components/navbar.css')
+
     <style>
         /* Reset & Base */
         * {
@@ -28,127 +31,6 @@
         a {
             text-decoration: none;
             color: inherit;
-        }
-
-        /* Navbar */
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 2rem;
-            background-color: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            font-family: "Space Grotesk", sans-serif;
-            font-optical-sizing: auto;
-            font-style: normal;
-        }
-
-        .navbar-logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #16423C;
-            transition: color 0.3s ease;
-        }
-
-        .navbar-logo:hover {
-            color: #6A9C89;
-        }
-
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: #374151;
-            font-size: 1rem;
-            font-weight: 400;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #6A9C89, #16423C);
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #16423C;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .nav-buttons {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.625rem 1.25rem;
-            font-size: 0.95rem;
-            font-weight: 400;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-login {
-            background-color: #ffffff;
-            color: #1f2937;
-        }
-
-        .btn-login:hover {
-            background-color: #f9fafb;
-            color: #111827;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-daftar {
-            background: linear-gradient(135deg, #6A9C89 0%, #16423C 100%);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(22, 66, 60, 0.3);
-        }
-
-        .btn-daftar:hover {
-            background: linear-gradient(135deg, #5a8c79 0%, #0f352d 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(22, 66, 60, 0.5);
-        }
-
-        .mobile-menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        .mobile-menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background-color: #16423C;
-            border-radius: 2px;
-            transition: all 0.3s ease;
         }
 
         /* Post Detail Section */
@@ -426,49 +308,8 @@
             color: #98CBBE;
         }
 
-        /* Responsive */
+        /* Post Detail Responsive */
         @media (max-width: 768px) {
-            .navbar {
-                padding: 1rem 1.5rem;
-            }
-
-            .nav-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background-color: #ffffff;
-                flex-direction: column;
-                padding: 1.5rem;
-                gap: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            }
-
-            .nav-menu.active {
-                display: flex;
-            }
-
-            .nav-buttons {
-                display: none;
-            }
-
-            .mobile-menu-toggle {
-                display: flex;
-            }
-
-            .mobile-menu-toggle.active span:nth-child(1) {
-                transform: rotate(45deg) translate(5px, 5px);
-            }
-
-            .mobile-menu-toggle.active span:nth-child(2) {
-                opacity: 0;
-            }
-
-            .mobile-menu-toggle.active span:nth-child(3) {
-                transform: rotate(-45deg) translate(7px, -6px);
-            }
-
             .post-detail-section {
                 padding: 3rem 1.5rem 4rem;
             }
@@ -680,25 +521,8 @@
     <!-- Footer Component -->
     <x-footer />
 
-    <!-- Script untuk Mobile Menu -->
+    <!-- Register Service Worker for Image Caching -->
     <script>
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const navMenu = document.getElementById('navMenu');
-
-        mobileMenuToggle.addEventListener('click', () => {
-            mobileMenuToggle.classList.toggle('active');
-            navMenu.classList.toggle('active');
-        });
-
-        // Close menu when clicking on a link
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenuToggle.classList.remove('active');
-                navMenu.classList.remove('active');
-            });
-        });
-
-        // Register Service Worker for Image Caching
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')

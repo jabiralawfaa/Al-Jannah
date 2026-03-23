@@ -44,7 +44,26 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Only cache images from our domain or trusted CDNs
+    // SKIP: Ignore non-HTTP/HTTPS requests (chrome-extension, moz-extension, etc.)
+    if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
+        return;
+    }
+
+    // SKIP: Ignore requests from browser extensions
+    // Check if request is from a different origin (extensions, external sites, etc.)
+    const isSameOrigin = url.origin === self.location.origin;
+    
+    if (!isSameOrigin) {
+        // Allow images from trusted CDNs (Unsplash, etc.)
+        const allowedImageDomains = ['images.unsplash.com', 'unsplash.com'];
+        const isAllowedImage = allowedImageDomains.includes(url.hostname) && isImageRequest(request);
+        
+        if (!isAllowedImage) {
+            return; // Skip caching for other external requests
+        }
+    }
+
+    // Only cache image requests
     if (isImageRequest(request)) {
         event.respondWith(
             caches.open(IMAGE_CACHE_NAME).then((cache) => {

@@ -9,3 +9,11 @@ Route::get('/', function () {
 Route::get('/berita/{slug}', function ($slug = 'kegiatan-rutin-rkm-al-jannah-bulan-ini') {
     return view('post-detail');
 })->name('post.show');
+
+Route::get('/login', function () {
+    return view('login');
+})->name('login');
+
+Route::get('/daftar', function () {
+    return view('register');
+})->name('register');

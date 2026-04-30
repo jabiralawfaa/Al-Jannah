@@ -1,59 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Rancang Bangun Website Manajemen Keuangan, Anggota, Aset, dan Pusat Informasi RKM Al-Jannah Banyuwangi
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Kelompok GeoDev Creator 
 
-## About Laravel
+Nama Anggota :
+1. Rusydi Jabir Al-awfa
+2. M. Rakha Widya Ardhana
+3. Alfin Nazatil Kirom
+4. Leni Ayu Pratiwi
+5. Intan Rahma Safira
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+resources/views/
+│
+├── layouts/
+│   ├── app.blade.php                 # Layout utama (navbar, sidebar, footer)
+│   └── public.blade.php              # Layout untuk halaman publik (tanpa login)
+│
+├── auth/
+│   ├── login.blade.php               # Form login (untuk semua pengurus)
+│   ├── register.blade.php            # Pendaftaran calon anggota (via web)
+│   ├── forgot-password.blade.php     # Lupa password
+│   ├── reset-password.blade.php      # Reset password
+│   └── verifikasi-pendaftaran.blade.php  # Halaman info setelah daftar (menunggu verifikasi)
+│
+├── public/                            # Halaman yang bisa diakses publik
+│   ├── index.blade.php                # Beranda (profil singkat, berita terbaru)
+│   ├── profil.blade.php               # Profil organisasi (visi, misi, sejarah)
+│   ├── struktur.blade.php             # Struktur kepengurusan
+│   ├── berita.blade.php               # Daftar artikel/berita kegiatan
+│   ├── berita-detail.blade.php        # Detail artikel
+│   ├── layanan.blade.php              # Informasi layanan (jenazah, ambulans, dll)
+│   ├── kontak.blade.php               # Kontak dan peta lokasi
+│   └── pendaftaran.blade.php          # Form pendaftaran anggota (sama dengan auth/register)
+│
+├── dashboard/
+│   ├── index.blade.php                # Redirect ke dashboard sesuai role
+│   ├── ketua.blade.php                # Dashboard Ketua (widget, grafik, ringkasan)
+│   ├── sekretaris.blade.php           # Dashboard Sekretaris (statistik anggota)
+│   ├── bendahara.blade.php            # Dashboard Bendahara (saldo, transaksi terbaru)
+│   ├── logistik.blade.php             # Dashboard Logistik (stok barang, pemakaian)
+│   ├── adminweb.blade.php             # Dashboard Admin Web (ringkasan artikel)
+│   ├── anggota.blade.php              # Dashboard Anggota (profil, iuran)
+│   └── superadmin.blade.php           # Dashboard Super Admin (statistik sistem)
+│
+├── anggota/
+│   ├── index.blade.php                # Daftar anggota (dengan fitur filter, search)
+│   ├── create.blade.php               # Form tambah anggota (manual oleh sekretaris)
+│   ├── edit.blade.php                 # Form edit data anggota
+│   ├── show.blade.php                 # Detail profil anggota (riwayat iuran, info pribadi)
+│   ├── verifikasi.blade.php           # Daftar calon anggota menunggu verifikasi (sekretaris)
+│   ├── verifikasi-detail.blade.php    # Detail calon anggota + aksi (setujui/tolak/perbaiki)
+│   ├── tanggungan.blade.php           # Manajemen nama tertanggung (untuk anggota)
+│   └── import.blade.php               # Import anggota dari Excel (opsional)
+│
+├── keuangan/
+│   ├── pemasukan/
+│   │   ├── index.blade.php            # Daftar transaksi pemasukan
+│   │   ├── create.blade.php           # Form catat pemasukan (bendahara)
+│   │   └── edit.blade.php             # Edit pemasukan (jika diperlukan)
+│   ├── pengeluaran/
+│   │   ├── index.blade.php            # Daftar transaksi pengeluaran
+│   │   ├── create.blade.php           # Form catat pengeluaran
+│   │   └── edit.blade.php             # Edit pengeluaran
+│   ├── iuran/
+│   │   ├── index.blade.php            # Daftar iuran anggota per bulan/tahun
+│   │   ├── create.blade.php           # Input iuran massal (per anggota)
+│   │   └── history.blade.php          # Riwayat iuran per anggota
+│   ├── laporan/
+│   │   ├── keuangan.blade.php         # Laporan keuangan (filter periode)
+│   │   ├── iuran.blade.php            # Laporan iuran anggota
+│   │   └── preview.blade.php          # Preview laporan sebelum export
+│   └── rekapitulasi.blade.php          # Rekap saldo, pemasukan, pengeluaran
+│
+├── aset/
+│   ├── index.blade.php                # Daftar barang aset/inventaris
+│   ├── create.blade.php               # Form tambah aset
+│   ├── edit.blade.php                 # Edit data aset
+│   ├── penggunaan/
+│   │   ├── index.blade.php            # Daftar permintaan / penggunaan barang
+│   │   ├── create.blade.php           # Form pengajuan penggunaan (logistik)
+│   │   ├── konfirmasi.blade.php       # Halaman konfirmasi penggunaan (stok berkurang)
+│   │   └── show.blade.php             # Detail penggunaan
+│   ├── stok-minimal.blade.php         # Notifikasi barang stok menipis
+│   └── kategorisasi.blade.php         # Kategori aset (jika diperlukan)
+│
+├── konten/
+│   ├── artikel/
+│   │   ├── index.blade.php            # Daftar artikel (admin web)
+│   │   ├── create.blade.php           # Form buat artikel baru
+│   │   ├── edit.blade.php             # Edit artikel
+│   │   └── show.blade.php             # Preview artikel sebelum publish
+│   ├── kategori.blade.php             # Manajemen kategori berita
+│   └── pengumuman.blade.php           # Manajemen pengumuman (banner/alert)
+│
+├── audit/
+│   ├── log.blade.php                  # Tabel audit log (filter, pagination)
+│   └── detail.blade.php               # Detail suatu log (jika diperlukan)
+│
+├── user/
+│   ├── index.blade.php                # Daftar pengguna sistem (superadmin)
+│   ├── create.blade.php               # Tambah pengguna baru
+│   ├── edit.blade.php                 # Edit pengguna (role, nama, email)
+│   ├── reset-password.blade.php       # Form reset password manual
+│   └── role.blade.php                 # Manajemen role (jika ada tambahan)
+│
+├── laporan/                           # Laporan export (PDF/Excel) – bisa terpisah
+│   └── download.blade.php             # Halaman sementara generate download
+│
+└── partials/
+    ├── navbar.blade.php               # Komponen navbar (beda per role)
+    ├── sidebar-ketua.blade.php
+    ├── sidebar-sekretaris.blade.php
+    ├── sidebar-bendahara.blade.php
+    ├── sidebar-logistik.blade.php
+    ├── sidebar-adminweb.blade.php
+    ├── sidebar-superadmin.blade.php
+    ├── sidebar-anggota.blade.php
+    ├── footer.blade.php
+    └── scripts.blade.php              # JS global, notifikasi, konfirmasi

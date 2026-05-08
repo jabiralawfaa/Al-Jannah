@@ -1,3 +1,5 @@
+# Database Umum untuk RKM
+
 ```mermaid
 erDiagram
     %% ====================
@@ -279,4 +281,86 @@ erDiagram
     %% === RELASI SUPERADMIN (NEW) ===
     users ||--o{ file_organisasi : "mengupload"
     users ||--o{ log_superadmin : "dicatat"
+```
+
+# Database CMS RKM
+```mermaid
+erDiagram
+    %% Tabel Categories
+    categories {
+        int id PK
+        string name
+        string slug
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Tabel Posts
+    posts {
+        int id PK
+        string title
+        string slug
+        text content
+        int media_id FK "Thumbnail (Relasi ke Media)"
+        enum status
+        datetime published_at
+        int category_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Tabel Pages
+    pages {
+        int id PK
+        string title
+        string slug
+        text content
+        int media_id FK "Gambar Halaman (Relasi ke Media)"
+        enum status
+        datetime published_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Tabel Menus (Diperbarui)
+    menus {
+        int id PK
+        string label "Nama Menu Tampilan"
+        int parent_id FK
+        int sort_order
+        boolean is_active
+        
+        %% Kolom Opsi Link (Hanya satu yang terisi)
+        int page_id FK "Opsional: Link ke Halaman"
+        int media_id FK "Opsional: Link ke File/Download"
+        string custom_url "Opsional: Link Eksternal (http://...)"
+
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Tabel Media
+    media {
+        int id PK
+        string file_name
+        string file_path
+        string mime_type
+        bigint file_size
+        string dimensions
+        string alt_text
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Relasi
+    categories ||--|{ posts : "mengategorikan"
+    menus ||--o{ menus : "memiliki sub-menu"
+
+    %% Relasi ke Media Terpusat
+    media ||--o{ posts : "thumbnail digunakan di"
+    media ||--o{ pages : "gambar digunakan di"
+    media ||--o{ menus : "file dijadikan link"
+
+    %% Relasi Menu ke Halaman
+    pages ||--o{ menus : "dijadikan link menu"
 ```

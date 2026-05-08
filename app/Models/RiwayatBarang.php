@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class RiwayatBarang extends Model
 {
+    protected $table = 'riwayat_barang';
+
     protected $fillable = [
         'waktu',
         'tipe',

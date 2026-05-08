@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KeluargaAnggota extends Model
 {
+    protected $table = 'keluarga_anggota';
+
     protected $fillable = [
         'calon_anggota_id',
         'nama',

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PermintaanIzin extends Model
 {
+    protected $table = 'permintaan_izin';
+
     protected $fillable = [
         'user_id',
         'approved_by',

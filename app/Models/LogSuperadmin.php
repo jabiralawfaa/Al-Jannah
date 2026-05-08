@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LogSuperadmin extends Model
 {
+    protected $table = 'log_superadmin';
+
     protected $fillable = [
         'user_id',
         'aksi',

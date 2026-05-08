@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CalonAnggota extends Model
 {
+    protected $table = 'calon_anggota';
+
     protected $fillable = [
         'nama',
         'email',

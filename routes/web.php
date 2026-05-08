@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Models\FileOrganisasi;
+use App\Models\LogSuperadmin;
 
 Route::get('/', function () {
     return view('public.index');
@@ -17,3 +20,15 @@ Route::get('/login', function () {
 Route::get('/daftar', function () {
     return view('public.pendaftaran');
 })->name('register');
+
+Route::get('/superadmin', function () {
+    $users = User::all();
+    $files = FileOrganisasi::all();
+    $logs = LogSuperadmin::all();
+    
+    return view('dashboard.superadmin.index', compact('users', 'files', 'logs'));
+})->name('superadmin.dashboard');
+
+Route::post('/logout', function () {
+    return redirect('/login');
+})->name('logout');

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FileOrganisasi extends Model
 {
+    protected $table = 'file_organisasi';
+
     protected $fillable = [
         'nama_file',
         'file_path',

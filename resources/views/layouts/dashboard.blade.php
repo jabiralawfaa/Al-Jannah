@@ -9,10 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 <body>
+    @include('components.dashboard.navbar')
     <div class="dashboard-container">
         @include('components.dashboard.sidebar', ['menuItems' => $menuItems ?? []])
         <main class="main-content">
-            @include('components.dashboard.navbar')
             <div class="content-wrapper">
                 @yield('content')
             </div>

@@ -1,7 +1,7 @@
 <aside class="sidebar">
-    <div class="sidebar-logo">
+    <!-- <div class="sidebar-logo">
         RKM AL-JANNAH
-    </div>
+    </div> -->
     <nav class="sidebar-menu">
         @foreach($menuItems as $item)
             <a 

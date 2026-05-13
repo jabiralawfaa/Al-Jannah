@@ -1,6 +1,6 @@
 <header class="navbar">
     <div class="navbar-brand">
-        {{ $title ?? 'Dashboard' }}
+        RKM AL-JANNAH
     </div>
     <div class="navbar-right">
         <div class="navbar-user">

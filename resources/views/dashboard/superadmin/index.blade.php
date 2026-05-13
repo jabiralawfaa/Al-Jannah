@@ -9,6 +9,13 @@
 @section('title', 'Dashboard Super Admin')
 
 @section('content')
+    @if(session('success'))
+        <div style="background-color: #d8efdd; border: 1px solid #35ab50; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; color: #154420;">
+            <span class="material-icons" style="color: #35ab50; font-size: 20px;">check_circle</span>
+            {{ session('success') }}
+        </div>
+    @endif
+
     <h1 style="font-size: 24px; font-weight: 700; color: #16423c; margin-bottom: 30px;">Dashboard</h1>
     
     <div class="stats-grid">
@@ -29,11 +36,10 @@
     <div class="card" style="margin-top: 30px;">
         <div class="card-header">
             <h2 class="card-title">Daftar User</h2>
-            <button class="btn btn-primary">+ Tambah User</button>
         </div>
         
         <div style="margin-bottom: 20px;">
-            <input type="text" placeholder="search" class="form-input" style="max-width: 400px;">
+            <input type="text" placeholder="Cari user..." class="form-input" style="max-width: 400px;" id="searchInput">
         </div>
 
         <x-dashboard.table :headers="['Nomor', 'Nama User', 'Dibuat', 'Status', 'Role', 'Aksi']">
@@ -50,12 +56,89 @@
                     <td>{{ ucfirst($user->role) }}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-sm btn-outline-primary"><span class="material-icons" style="font-size: 16px;">edit</span></button>
-                            <button class="btn btn-sm btn-danger"><span class="material-icons" style="font-size: 16px;">delete</span></button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal({{ $user->id }})">
+                                <span class="material-icons" style="font-size: 16px;">edit</span>
+                            </button>
                         </div>
                     </td>
                 </tr>
             @endforeach
         </x-dashboard.table>
     </div>
+
+    <!-- Modal Edit User -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit User</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editUserForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_nama" class="form-label">Nama User</label>
+                        <input type="text" id="edit_nama" name="nama" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_email" class="form-label">Email</label>
+                        <input type="email" id="edit_email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_password" class="form-label">Password <span style="font-weight: 400; color: #828282; font-size: 0.8rem;">(kosongkan jika tidak diubah)</span></label>
+                        <input type="password" id="edit_password" name="password" class="form-input" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_role" class="form-label">Role</label>
+                        <select id="edit_role" name="role" class="form-select" required>
+                            <option value="ketua">Ketua</option>
+                            <option value="sekretaris">Sekretaris</option>
+                            <option value="bendahara">Bendahara</option>
+                            <option value="logistik">Logistik</option>
+                            <option value="superadmin">Super Admin</option>
+                            <option value="adminweb">Admin Web</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_status" class="form-label">Status</label>
+                        <select id="edit_status" name="status" class="form-select" required>
+                            <option value="aktif">Aktif</option>
+                            <option value="non_aktif">Non-Aktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="closeEditModal()" style="font-weight: 600;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="font-weight: 600;">Edit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const usersData = @json($users->keyBy->id);
+
+        function openEditModal(userId) {
+            const user = usersData[userId];
+            if (!user) return;
+
+            document.getElementById('edit_nama').value = user.nama;
+            document.getElementById('edit_email').value = user.email;
+            document.getElementById('edit_password').value = '';
+            document.getElementById('edit_role').value = user.role;
+            document.getElementById('edit_status').value = user.status;
+
+            document.getElementById('editUserForm').action = '/superadmin/user/' + userId;
+            document.getElementById('editUserModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editUserModal').classList.remove('active');
+        }
+
+        document.getElementById('editUserModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditModal();
+        });
+    </script>
 @endsection

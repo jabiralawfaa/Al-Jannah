@@ -2,9 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Models\User;
-use App\Models\FileOrganisasi;
-use App\Models\LogSuperadmin;
+use App\Http\Controllers\SuperAdminController;
 
 Route::get('/', function () {
     return view('public.index');
@@ -30,11 +28,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/superadmin', function () {
-        $users = User::all();
-        $files = FileOrganisasi::all();
-        $logs = LogSuperadmin::all();
-
-        return view('dashboard.superadmin.index', compact('users', 'files', 'logs'));
-    })->name('superadmin.dashboard');
+    Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
+    Route::put('/superadmin/user/{id}', [SuperAdminController::class, 'updateUser'])->name('superadmin.user.update');
 });

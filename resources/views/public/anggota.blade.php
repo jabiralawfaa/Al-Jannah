@@ -3,19 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - RKM Al-Jannah</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
-    <!-- Google Fonts: Space Grotesk & Poppins -->
+    <title>Anggota - RKM Al-Jannah</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
-    <!-- Navbar Component Styles -->
     @vite('resources/css/components/navbar.css')
 
     <style>
-        /* Reset & Base */
         * {
             margin: 0;
             padding: 0;
@@ -36,8 +32,7 @@
             color: inherit;
         }
 
-        /* Login Page Specific Styles */
-        .login-page-wrapper {
+        .anggota-page-wrapper {
             flex: 1;
             display: flex;
             align-items: center;
@@ -48,8 +43,7 @@
             background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
         }
 
-        /* Decorative Images - Larger than hero */
-        .login-decor-left {
+        .anggota-decor-left {
             position: absolute;
             top: -10%;
             left: -10%;
@@ -61,7 +55,7 @@
             pointer-events: none;
         }
 
-        .login-decor-right {
+        .anggota-decor-right {
             position: absolute;
             top: -10%;
             right: 0;
@@ -73,7 +67,7 @@
             pointer-events: none;
         }
 
-        .login-bottom-ornament {
+        .anggota-bottom-ornament {
             position: absolute;
             bottom: 0;
             left: 0;
@@ -85,8 +79,7 @@
             pointer-events: none;
         }
 
-        /* Login Box */
-        .login-box {
+        .anggota-box {
             position: relative;
             z-index: 10;
             background-color: #ffffff;
@@ -97,30 +90,37 @@
             box-shadow: 0 20px 60px rgba(22, 66, 60, 0.3);
         }
 
-        /* Login Logo */
-        .login-logo {
+        .anggota-logo {
             display: flex;
             justify-content: center;
             margin-bottom: 2rem;
         }
 
-        .login-logo img {
+        .anggota-logo img {
             width: 120px;
             height: auto;
         }
 
-        /* Login Title */
-        .login-title {
+        .anggota-title {
             font-family: "Poppins", sans-serif;
             font-size: 1.5rem;
             font-weight: 700;
             color: #16423C;
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
         }
 
-        /* Form Styles */
-        .login-form {
+        .anggota-subtitle {
+            font-family: "Poppins", sans-serif;
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: #6B7280;
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .anggota-form {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -165,23 +165,7 @@
             border-color: #6A9C89;
         }
 
-        /* Forgot Password Link */
-        .forgot-password {
-            font-family: "Poppins", sans-serif;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #16423C;
-            text-align: right;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-password:hover {
-            color: #6A9C89;
-            text-decoration: underline;
-        }
-
-        /* Login Button */
-        .btn-login-submit {
+        .btn-submit {
             font-family: "Poppins", sans-serif;
             font-size: 1rem;
             font-weight: 600;
@@ -196,14 +180,46 @@
             margin-top: 0.5rem;
         }
 
-        .btn-login-submit:hover {
+        .btn-submit:hover {
             background-color: #16423C;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(30, 90, 82, 0.5);
         }
 
-        .btn-login-submit:active {
+        .btn-submit:active {
             transform: translateY(0);
+        }
+
+        .anggota-note {
+            margin-top: 1.5rem;
+            padding: 1rem 1.25rem;
+            background-color: #fefce8;
+            border: 1px solid #eab308;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .anggota-note-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            color: #ca8a04;
+            margin-top: 1px;
+        }
+
+        .anggota-note-text {
+            font-family: "Poppins", sans-serif;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #713f12;
+            line-height: 1.6;
+        }
+
+        .anggota-note-text strong {
+            font-weight: 600;
+            color: #a16207;
         }
 
         /* Footer */
@@ -258,33 +274,28 @@
             color: #98CBBE;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            .login-page-wrapper {
+            .anggota-page-wrapper {
                 padding: 3rem 1.5rem;
             }
 
-            .login-box {
+            .anggota-box {
                 padding: 2rem 1.5rem;
             }
 
-            .login-decor-left {
+            .anggota-decor-left {
                 left: -20%;
                 height: 50%;
                 max-height: 400px;
             }
 
-            .login-decor-right {
+            .anggota-decor-right {
                 right: -15%;
                 height: 40%;
                 max-height: 350px;
             }
 
-            .login-bottom-ornament {
-                /* Original size */
-            }
-
-            .login-title {
+            .anggota-title {
                 font-size: 1.25rem;
             }
 
@@ -300,15 +311,15 @@
         }
 
         @media (max-width: 480px) {
-            .login-box {
+            .anggota-box {
                 padding: 1.5rem 1rem;
             }
 
-            .login-logo img {
+            .anggota-logo img {
                 width: 100px;
             }
 
-            .login-title {
+            .anggota-title {
                 font-size: 1.125rem;
             }
 
@@ -317,7 +328,7 @@
                 padding: 0.75rem 1rem;
             }
 
-            .btn-login-submit {
+            .btn-submit {
                 font-size: 0.95rem;
                 padding: 0.875rem;
             }
@@ -325,91 +336,55 @@
     </style>
 </head>
 <body>
-    <!-- Navbar Component -->
     <x-navbar />
 
-    <!-- Login Page Wrapper -->
-    <div class="login-page-wrapper">
-        <!-- Decorative Images -->
-        <img src="{{ asset('images/ranting.png') }}" alt="Decorative branch" class="login-decor-left">
-        <img src="{{ asset('images/pohon.png') }}" alt="Decorative tree" class="login-decor-right">
-        
-        <!-- Login Box -->
-        <div class="login-box">
-            <!-- Logo -->
-            <div class="login-logo">
+    <div class="anggota-page-wrapper">
+        <img src="{{ asset('images/ranting.png') }}" alt="Decorative branch" class="anggota-decor-left">
+        <img src="{{ asset('images/pohon.png') }}" alt="Decorative tree" class="anggota-decor-right">
+
+        <div class="anggota-box">
+            <div class="anggota-logo">
                 <img src="{{ asset('images/logo-al-jannah.png') }}" alt="RKM Al-Jannah Logo">
             </div>
 
-            <!-- Title -->
-            <h1 class="login-title">Login Pengurus</h1>
+            <h1 class="anggota-title">Akses Anggota</h1>
+            <p class="anggota-subtitle">Masukkan kode akses untuk masuk ke halaman anggota</p>
 
-            <!-- Login Form -->
-            <form class="login-form" action="{{ route('login') }}" method="POST">
+            <form class="anggota-form" method="POST">
                 @csrf
-                
-                @if($errors->any())
-                    <div style="background-color: #fef2f2; border: 1px solid #dc2626; border-radius: 12px; padding: 1rem; color: #dc2626; font-size: 0.9rem;">
-                        @foreach($errors->all() as $error)
-                            <p>{{ $error }}</p>
-                        @endforeach
-                    </div>
-                @endif
-
-                <!-- Email Input -->
                 <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        class="form-input" 
-                        placeholder="Masukkan email"
-                        value="{{ old('email') }}"
+                    <label for="access_code" class="form-label">Kode Akses</label>
+                    <input
+                        type="text"
+                        id="access_code"
+                        name="access_code"
+                        class="form-input"
+                        placeholder="Masukkan kode akses"
                         required
-                        autocomplete="email"
-                        inputmode="email"
+                        autocomplete="off"
                     >
                 </div>
 
-                <!-- Password Input -->
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        class="form-input" 
-                        placeholder="Masukkan password"
-                        required
-                        autocomplete="current-password"
-                    >
-                </div>
-
-                <!-- Remember Me -->
-                <div class="checkbox-group" style="display: flex; align-items: center; gap: 0.75rem;">
-                    <input 
-                        type="checkbox" 
-                        id="remember" 
-                        name="remember" 
-                        style="width: 18px; height: 18px; accent-color: #1E5A52; cursor: pointer;"
-                    >
-                    <label for="remember" style="font-family: 'Poppins', sans-serif; font-size: 0.9rem; color: #374151; cursor: pointer;">Ingat Saya</label>
-                </div>
-
-                <!-- Login Button -->
-                <button type="submit" class="btn-login-submit">Login</button>
+                <button type="submit" class="btn-submit">Masuk</button>
             </form>
+
+            <div class="anggota-note">
+                <svg class="anggota-note-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <div class="anggota-note-text">
+                    <strong>Penting:</strong> Kode akses dapat diperoleh dengan menghubungi pengurus <strong>Bendahara</strong> RKM Al-Jannah. Kode ini bersifat rahasia dan hanya diberikan kepada anggota yang telah terdaftar.
+                </div>
+            </div>
         </div>
 
-        <!-- Bottom Ornament -->
-        <img src="{{ asset('images/bottom-ornament-login.png') }}" alt="Bottom ornament" class="login-bottom-ornament">
+        <img src="{{ asset('images/bottom-ornament-login.png') }}" alt="Bottom ornament" class="anggota-bottom-ornament">
     </div>
 
-    <!-- Footer Component -->
     <x-footer />
 
-    <!-- Register Service Worker for Image Caching -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

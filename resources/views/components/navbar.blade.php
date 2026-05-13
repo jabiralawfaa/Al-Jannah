@@ -44,6 +44,7 @@
 
         <!-- Tombol Kanan -->
         <div class="nav-buttons">
+            <a href="/anggota" class="btn btn-login">Anggota</a>
             <a href="/login" class="btn btn-login">Login</a>
             <a href="/daftar" class="btn btn-daftar">Daftar Anggota</a>
         </div>

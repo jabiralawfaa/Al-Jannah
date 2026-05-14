@@ -2,7 +2,7 @@
     'menuItems' => [
         ['label' => 'Beranda', 'url' => '/superadmin', 'active' => 'superadmin'],
         ['label' => 'File', 'url' => '/superadmin/file', 'active' => 'superadmin/file'],
-        ['label' => 'Log', 'url' => '#', 'active' => 'superadmin/log'],
+        ['label' => 'Log', 'url' => '/superadmin/log', 'active' => 'superadmin/log'],
     ]
 ])
 

@@ -49,6 +49,28 @@ class SuperAdminController extends Controller
         return view('dashboard.superadmin.file', compact('files', 'kategoriLabels'));
     }
 
+    public function logIndex(Request $request)
+    {
+        $search = $request->get('search');
+
+        $logs = LogSuperadmin::with('user')
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('aksi', 'like', "%{$search}%")
+                      ->orWhere('deskripsi', 'like', "%{$search}%")
+                      ->orWhere('ip_address', 'like', "%{$search}%")
+                      ->orWhereHas('user', function ($uq) use ($search) {
+                          $uq->where('nama', 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('dashboard.superadmin.log', compact('logs'));
+    }
+
     public function uploadFile(Request $request)
     {
         $request->validate([
@@ -100,7 +122,7 @@ class SuperAdminController extends Controller
         return redirect('/superadmin/file')->with('success', "File \"{$originalName}\" berhasil diunggah sebagai kategori: {$label}.");
     }
 
-    public function downloadFile($id)
+    public function downloadFile(Request $request, $id)
     {
         $file = FileOrganisasi::findOrFail($id);
 
@@ -114,6 +136,16 @@ class SuperAdminController extends Controller
         if (!Storage::disk($disk)->exists($file->file_path)) {
             return redirect('/superadmin/file')->with('error', 'File tidak ditemukan di penyimpanan.');
         }
+
+        LogSuperadmin::create([
+            'user_id' => auth()->id(),
+            'aksi' => 'download',
+            'deskripsi' => 'Mengunduh file: ' . $file->nama_file . ' (kategori: ' . config("file-pemilah.labels.{$file->kategori}") . ')',
+            'modul' => 'File',
+            'referensi_id' => $file->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return Storage::disk($disk)->download($file->file_path, $file->nama_file);
     }
@@ -146,12 +178,45 @@ class SuperAdminController extends Controller
         ]);
 
         $user = User::findOrFail($id);
+        $oldData = $user->replicate();
 
         if (empty($data['password'])) {
             unset($data['password']);
         }
 
         $user->update($data);
+
+        $changes = [];
+        if ($oldData->nama !== $user->nama) {
+            $changes[] = "nama dari '{$oldData->nama}' ke '{$user->nama}'";
+        }
+        if ($oldData->email !== $user->email) {
+            $changes[] = "email dari '{$oldData->email}' ke '{$user->email}'";
+        }
+        if ($oldData->role !== $user->role) {
+            $changes[] = "role dari '{$oldData->role}' ke '{$user->role}'";
+        }
+        if ($oldData->status !== $user->status) {
+            $changes[] = "status dari '{$oldData->status}' ke '{$user->status}'";
+        }
+        if (!empty($data['password'])) {
+            $changes[] = 'password diubah';
+        }
+
+        $deskripsi = 'Memperbarui user: ' . $user->nama;
+        if (!empty($changes)) {
+            $deskripsi .= ' (' . implode(', ', $changes) . ')';
+        }
+
+        LogSuperadmin::create([
+            'user_id' => auth()->id(),
+            'aksi' => 'update',
+            'deskripsi' => $deskripsi,
+            'modul' => 'User',
+            'referensi_id' => $user->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return redirect('/superadmin')->with('success', 'User berhasil diperbarui.');
     }

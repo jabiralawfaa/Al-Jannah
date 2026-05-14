@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
+    Route::get('/superadmin/log', [SuperAdminController::class, 'logIndex'])->name('superadmin.log');
     Route::get('/superadmin/file', [SuperAdminController::class, 'fileIndex'])->name('superadmin.file');
     Route::post('/superadmin/file/upload', [SuperAdminController::class, 'uploadFile'])->name('superadmin.file.upload');
     Route::get('/superadmin/file/{id}/download', [SuperAdminController::class, 'downloadFile'])->name('superadmin.file.download');

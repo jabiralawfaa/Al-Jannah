@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LogSuperadmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Cache\RateLimiter;
@@ -39,6 +40,15 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $limiter->clear($throttleKey);
 
+            LogSuperadmin::create([
+                'user_id' => Auth::id(),
+                'aksi' => 'login',
+                'deskripsi' => 'Login ke sistem',
+                'modul' => 'Auth',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             return redirect()->intended('/superadmin');
         }
 
@@ -51,6 +61,17 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+
+        LogSuperadmin::create([
+            'user_id' => $user?->id,
+            'aksi' => 'logout',
+            'deskripsi' => 'Logout dari sistem',
+            'modul' => 'Auth',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -12,6 +12,7 @@ class FileOrganisasi extends Model
     protected $fillable = [
         'nama_file',
         'file_path',
+        'kategori',
         'status',
         'uploaded_by',
     ];

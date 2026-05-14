@@ -47,6 +47,31 @@ return [
             'report' => false,
         ],
 
+        'file_diterima' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/file_organisasi/diterima'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/file_organisasi/diterima',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'file_mencurigakan' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/file_organisasi/mencurigakan'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'file_ditolak' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/file_organisasi/ditolak'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

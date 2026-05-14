@@ -20,6 +20,10 @@ Route::get('/anggota', function () {
     return view('public.anggota');
 })->name('anggota');
 
+Route::get('/sekretaris', function () {
+    return view('dashboard.sekretaris.index');
+})->name('sekretaris.dashboard');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);

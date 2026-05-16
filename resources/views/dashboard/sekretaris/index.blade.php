@@ -11,7 +11,7 @@
         ],
         [
             'label' => 'Kelola Anggota',
-            'url' => '#',
+            'url' => route('sekretaris.anggota'),
             'active' => 'sekretaris/anggota*'
         ],
         [

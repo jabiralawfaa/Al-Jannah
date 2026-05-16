@@ -24,6 +24,10 @@ Route::get('/sekretaris', function () {
     return view('dashboard.sekretaris.index');
 })->name('sekretaris.dashboard');
 
+Route::get('/sekretaris/anggota', function () {
+    return view('dashboard.sekretaris.anggota');
+})->name('sekretaris.anggota');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);

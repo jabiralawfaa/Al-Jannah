@@ -16,7 +16,7 @@
         ],
         [
             'label' => 'Log Aktivitas',
-            'url' => '#',
+            'url' => route('sekretaris.log'),
             'active' => 'sekretaris/log*'
         ],
     ];

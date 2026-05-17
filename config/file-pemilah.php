@@ -7,46 +7,58 @@ return [
     | Kategori File - Pemilah
     |--------------------------------------------------------------------------
     |
-    | Mendefinisikan ekstensi file untuk setiap kategori:
-    | - diterima: file aman yang diizinkan
-    | - mencurigakan: file berpotensi berbahaya, akses terbatas
-    | - ditolak: file berbahaya, akses sangat terbatas
+    | Mendefinisikan ekstensi file untuk setiap kategori.
+    | Referensi: .Panduan-AI/pemilah-file.md
     |
     */
 
     'diterima' => [
-        // Dokumen
+        // Dokumen & Teks
         'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
-        'txt', 'csv', 'rtf', 'odt', 'ods', 'odp', 'md', 'xps',
-        // Gambar
-        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico',
+        'odt', 'ods', 'odp',
+        'txt', 'rtf', 'csv',
+        // Gambar & Desain
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp',
+        'psd', 'ai', 'indd', 'sketch', 'eps',
+        // Audio & Video
+        'mp3', 'wav', 'ogg', 'flac', 'aac',
+        'mp4', 'avi', 'mov', 'mkv', 'wmv', 'webm', 'flv',
+        // Arsip & Kompresi (perlu scan antivirus)
+        'zip', 'rar', '7z', 'tar', 'gz',
+        // Engineering & 3D
+        'dwg', 'dxf', 'stl', 'obj',
     ],
 
     'mencurigakan' => [
-        'exe', 'msi', 'bat', 'cmd', 'vbs', 'ps1', 'psm1',
-        'scr', 'jar', 'zip', 'rar', '7z', 'tar', 'gz',
-        'lnk', 'wsf',
+        // Dokumen dengan Makro
+        'docm', 'xlsm', 'pptm', 'dotm', 'xltm',
+        // Skrip & Kode Pemrograman
+        'py', 'java', 'jar', 'c', 'cpp', 'h', 'cs', 'rb', 'go',
+        'sh', 'bash', 'ps1',
+        // Web & Database
+        'sql', 'xml', 'xsd', 'svg', 'htm', 'html',
+        // Image Disk & Virtualisasi
+        'iso', 'img', 'vhd', 'vhdx',
     ],
 
     'ditolak' => [
-        'php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'php8',
-        'html', 'htm', 'xhtml',
-        'js', 'jsx', 'mjs',
-        'sql',
-        'asp', 'aspx',
-        'py', 'pyc',
-        'pl',
-        'cgi',
-        'htaccess', 'htpasswd',
-        'com', 'sys', 'dll', 'drv', 'cpl',
+        // Eksekusi Windows
+        'exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'pif',
+        'vbs', 'vbe', 'wsf', 'wsh', 'cpl', 'dll', 'sys', 'reg', 'inf',
+        // Eksekusi macOS
+        'dmg', 'app', 'pkg',
+        // Eksekusi Linux
+        'deb', 'rpm', 'run',
+        // Skrip Sisi Server
+        'php', 'aspx', 'asp', 'jsp', 'cgi',
+        // Lainnya
+        'hta', 'lnk', 'url',
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Izin File per Kategori
     |--------------------------------------------------------------------------
-    |
-    | Mengacu pada panduan di .Panduan-AI/pemilah-file.md
     |
     */
     'permissions' => [

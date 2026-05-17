@@ -32,35 +32,31 @@ class GenerateDummyFiles extends Command
             'notulen_rapat.txt',
             'data_anggota.xlsx',
             'presentasi_rkm.pptx',
-            'banner_web.svg',
-            'README.md',
             'arsip_dokumen.odt',
+            'rekaman_rapat.mp3',
+            'video_sosialisasi.mp4',
         ];
 
         $dummyMencurigakan = [
-            'instalasi.exe',
-            'update_sistem.msi',
-            'jalankan.bat',
-            'setup.cmd',
-            'script_otomatis.vbs',
-            'deploy.ps1',
-            'screensaver.scr',
+            'laporan_makro.docm',
+            'script_python.py',
             'aplikasi_java.jar',
-            'backup_data.zip',
-            'dokumen_terkompresi.rar',
+            'deploy_script.sh',
+            'halaman_web.html',
+            'vector_ilustrasi.svg',
+            'query_database.sql',
+            'tabel_data.xml',
         ];
 
         $dummyDitolak = [
-            'index.php',
-            'config.php',
-            'shell_backdoor.php5',
-            'halaman_redirect.html',
-            'script_analytics.js',
-            'database_dump.sql',
-            'login.asp',
-            'exploit.py',
+            'installer.exe',
+            'aplikasi.msi',
+            'auto_exec.bat',
+            'virus_otomatis.vbs',
+            'screensaver.scr',
+            'backdoor.php',
+            'shell.aspx',
             'malware.cgi',
-            'config.htaccess',
         ];
 
         $disks = [

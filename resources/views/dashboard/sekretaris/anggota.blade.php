@@ -106,4 +106,57 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Edit Anggota Overlay -->
+<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+    <!-- Modal Content -->
+    <div style="background-color: white; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); overflow: hidden; padding: 30px;">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 style="font-size: 18px; font-weight: 800; color: black; margin: 0;">Edit Data Anggota</h2>
+            <span style="font-size: 14px; font-weight: 800; color: black;">ID : RKM-1</span>
+        </div>
+
+        <!-- Modal Form -->
+        <form>
+            <!-- Nama Anggota -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Nama Anggota</label>
+                <input type="text" value="Ahmad Suryo" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none;">
+            </div>
+
+            <!-- Nama yang ditanggung -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Nama yang ditanggung</label>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Input 1 -->
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-weight: 800; color: black; font-size: 14px;">1</span>
+                        <input type="text" value="Rani Ardinata" style="flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none;">
+                    </div>
+                    <!-- Input 2 -->
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-weight: 800; color: black; font-size: 14px;">2</span>
+                        <input type="text" value="Ahmad Gilang" style="flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none;">
+                        <button type="button" style="background-color: var(--primary-900); border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <span class="material-icons" style="color: white; font-size: 16px;">add</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telepon -->
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Telepon</label>
+                <input type="text" value="0812345678" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none;">
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" style="background-color: #374151; color: white; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Batal</button>
+                <button type="submit" style="background-color: var(--primary-900); color: white; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Ubah</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

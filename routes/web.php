@@ -30,6 +30,10 @@ Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
     })->name('sekretaris.anggota');
 });
 
+Route::get('/sekretaris/log', function () {
+    return view('dashboard.sekretaris.log');
+})->name('sekretaris.log');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);

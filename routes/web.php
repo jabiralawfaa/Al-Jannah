@@ -28,6 +28,14 @@ Route::get('/sekretaris/anggota', function () {
     return view('dashboard.sekretaris.anggota');
 })->name('sekretaris.anggota');
 
+Route::get('/sekretaris/anggota/nonaktif', function () {
+    return view('dashboard.sekretaris.anggota-nonaktif');
+})->name('sekretaris.anggota.nonaktif');
+
+Route::get('/sekretaris/anggota/edit', function () {
+    return view('dashboard.sekretaris.anggota-edit');
+})->name('sekretaris.anggota.edit');
+
 Route::get('/sekretaris/log', function () {
     return view('dashboard.sekretaris.log');
 })->name('sekretaris.log');

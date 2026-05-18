@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Kelola Anggota')
+@section('title', 'Kelola Anggota - Konfirmasi Nonaktif')
 
 @php
     $menuItems = [
@@ -23,7 +23,7 @@
 @endphp
 
 @section('content')
-<div style="background-color: #dcfce7; min-height: 100vh; margin: -30px; padding: 30px; font-family: 'Inter', 'Poppins', sans-serif;">
+<div style="background-color: #dcfce7; min-height: 100vh; margin: -30px; padding: 30px; font-family: 'Inter', 'Poppins', sans-serif; position: relative;">
     <h1 style="color: var(--primary-900); font-weight: bold; margin-bottom: 20px; font-size: 24px;">Kelola Anggota</h1>
 
     <div class="card" style="border: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; border-radius: 12px; background-color: white;">
@@ -88,12 +88,12 @@
                             </td>
                             <td style="padding: 12px 20px; border: 1px solid #94a3b8;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <a href="{{ route('sekretaris.anggota.edit') }}" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    <div style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
-                                    </a>
-                                    <a href="{{ route('sekretaris.anggota.nonaktif') }}" style="background-color: {{ $item['btn'] }}; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    </div>
+                                    <div style="background-color: {{ $item['btn'] }}; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">person_off</span>
-                                    </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -103,6 +103,23 @@
             </div>
             <!-- Area Putih Kosong di Bawah -->
             <div style="background-color: white; height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Nonaktif Overlay (Visible by default in this route) -->
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div style="background-color: white; width: 450px; max-width: 90%; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative; text-align: left;">
+            <p style="font-size: 16px; color: black; margin-bottom: 20px;">Apakah Anda yakin ingin menonaktifkan?</p>
+            
+            <div style="margin-bottom: 30px;">
+                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0 0 5px 0;">ID : RKM-1</p>
+                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0;">Nama : Ahmad Suryo</p>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ route('sekretaris.anggota') }}" style="background-color: #374151; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: none;">Batal</a>
+                <a href="{{ route('sekretaris.anggota') }}" style="background-color: #fbbf24; color: black; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: none;">Iya</a>
+            </div>
         </div>
     </div>
 </div>

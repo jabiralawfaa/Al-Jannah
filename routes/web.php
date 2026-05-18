@@ -20,13 +20,15 @@ Route::get('/anggota', function () {
     return view('public.anggota');
 })->name('anggota');
 
-Route::get('/sekretaris', function () {
-    return view('dashboard.sekretaris.index');
-})->name('sekretaris.dashboard');
+Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
+    Route::get('/sekretaris', function () {
+        return view('dashboard.sekretaris.index');
+    })->name('sekretaris.dashboard');
 
-Route::get('/sekretaris/anggota', function () {
-    return view('dashboard.sekretaris.anggota');
-})->name('sekretaris.anggota');
+    Route::get('/sekretaris/anggota', function () {
+        return view('dashboard.sekretaris.anggota');
+    })->name('sekretaris.anggota');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

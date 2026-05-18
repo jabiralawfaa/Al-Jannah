@@ -12,7 +12,6 @@ class KeluargaAnggota extends Model
     protected $fillable = [
         'calon_anggota_id',
         'nama',
-        'hubungan',
         'jenis_kelamin',
         'tanggal_lahir',
     ];

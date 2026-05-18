@@ -16,6 +16,10 @@ class CalonAnggota extends Model
         'email',
         'telepon',
         'alamat',
+        'tanggal_lahir',
+        'jenis_kelamin',
+        'rt_rw',
+        'kelurahan',
         'status',
         'anggota_id',
     ];

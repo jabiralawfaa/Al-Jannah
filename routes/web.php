@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SekretarisController;
+use App\Http\Controllers\PendaftaranController;
 
 Route::get('/', function () {
     return view('public.index');
@@ -12,27 +14,25 @@ Route::get('/berita/{slug}', function ($slug = 'kegiatan-rutin-rkm-al-jannah-bul
     return view('public.berita-detail');
 })->name('post.show');
 
-Route::get('/daftar', function () {
-    return view('public.pendaftaran');
-})->name('register');
+Route::get('/daftar', [PendaftaranController::class, 'create'])->name('register');
+Route::post('/register-member', [PendaftaranController::class, 'store'])->name('register-member.store');
 
 Route::get('/anggota', function () {
     return view('public.anggota');
 })->name('anggota');
 
 Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
-    Route::get('/sekretaris', function () {
-        return view('dashboard.sekretaris.index');
-    })->name('sekretaris.dashboard');
+    Route::get('/sekretaris', [SekretarisController::class, 'index'])->name('sekretaris.dashboard');
+    Route::post('/sekretaris/{id}/verifikasi', [SekretarisController::class, 'verifikasi'])->name('sekretaris.verifikasi');
 
     Route::get('/sekretaris/anggota', function () {
         return view('dashboard.sekretaris.anggota');
     })->name('sekretaris.anggota');
-});
 
-Route::get('/sekretaris/log', function () {
-    return view('dashboard.sekretaris.log');
-})->name('sekretaris.log');
+    Route::get('/sekretaris/log', function () {
+        return view('dashboard.sekretaris.log');
+    })->name('sekretaris.log');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

@@ -20,7 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 'sekretaris' => '/sekretaris',
                 'bendahara' => '/bendahara',
                 'superadmin' => '/superadmin',
-                default => '/superadmin',
+                'bendahara' => '/bendahara',
+                'ketua' => '/ketua',
+                'logistik' => '/logistik',
+                'adminweb' => '/adminweb',
+                default => '/login',
             };
         });
 

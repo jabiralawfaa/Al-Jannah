@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggota;
 use App\Models\CalonAnggota;
-use App\Models\LogSuperadmin;
+use App\Models\LogAktivitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -54,15 +54,23 @@ class SekretarisController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        LogSuperadmin::create([
+        LogAktivitas::create([
             'user_id' => Auth::id(),
             'aksi' => 'verifikasi',
-            'deskripsi' => "Verifikasi calon anggota {$calon->nama} - {$nomorAnggota}",
+            'deskripsi' => "Verifikasi calon atas nama {$calon->nama} - {$nomorAnggota}",
             'modul' => 'Sekretaris',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'referensi_id' => $calon->id,
         ]);
 
         return back()->with('success', "Calon anggota {$calon->nama} berhasil diverifikasi.");
+    }
+
+    public function log()
+    {
+        $activities = LogAktivitas::where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('dashboard.sekretaris.log', compact('activities'));
     }
 }

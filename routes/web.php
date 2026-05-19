@@ -7,6 +7,7 @@ use App\Http\Controllers\SekretarisController;
 use App\Http\Controllers\AdminWebController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LogistikController;
+use App\Http\Controllers\BendaharaController;
 
 Route::get('/', function () {
     return view('public.index');
@@ -27,11 +28,13 @@ Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
     Route::get('/sekretaris', [SekretarisController::class, 'index'])->name('sekretaris.dashboard');
     Route::post('/sekretaris/{id}/verifikasi', [SekretarisController::class, 'verifikasi'])->name('sekretaris.verifikasi');
 
-    Route::get('/sekretaris/anggota', function () {
-        return view('dashboard.sekretaris.anggota');
-    })->name('sekretaris.anggota');
+    Route::get('/sekretaris/anggota', [SekretarisController::class, 'anggota'])->name('sekretaris.anggota');
 
     Route::get('/sekretaris/log', [SekretarisController::class, 'log'])->name('sekretaris.log');
+
+    Route::get('/sekretaris/anggota/{id}/edit', [SekretarisController::class, 'editAnggota'])->name('sekretaris.anggota.edit');
+
+    Route::get('/sekretaris/anggota/{id}/nonaktif', [SekretarisController::class, 'nonaktifAnggota'])->name('sekretaris.anggota.nonaktif');
 });
 
 Route::middleware('guest')->group(function () {
@@ -67,22 +70,24 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::post('/superadmin/user', [SuperAdminController::class, 'storeUser'])->name('superadmin.user.store');
 });
 
-Route::middleware(['auth', 'role:bendahara'])->group(function () {
-    Route::get('/bendahara', function () {
-        return response()->view('errors.555', [], 555);
-    })->name('bendahara.dashboard');
+Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
+    Route::get('/bendahara', [BendaharaController::class, 'index'])->name('bendahara.dashboard');
+
+    Route::get('/bendahara/pemasukan', [BendaharaController::class, 'pemasukan'])->name('bendahara.pemasukan');
+
+    Route::get('/bendahara/pengeluaran', [BendaharaController::class, 'pengeluaran'])->name('bendahara.pengeluaran');
+
+    Route::get('/bendahara/iuran', [BendaharaController::class, 'iuran'])->name('bendahara.iuran');
+
+    Route::get('/bendahara/laporan', [BendaharaController::class, 'laporan'])->name('bendahara.laporan');
+
+    Route::get('/bendahara/verifikasi', [BendaharaController::class, 'verifikasi'])->name('bendahara.verifikasi');
 });
 
 Route::middleware(['auth', 'role:ketua'])->group(function () {
     Route::get('/ketua', function () {
         return response()->view('errors.555', [], 555);
     })->name('ketua.dashboard');
-});
-
-Route::middleware(['auth', 'role:logistik'])->group(function () {
-    Route::get('/logistik', function () {
-        return response()->view('errors.555', [], 555);
-    })->name('logistik.dashboard');
 });
 
 Route::middleware(['auth', 'role:adminweb'])->group(function () {

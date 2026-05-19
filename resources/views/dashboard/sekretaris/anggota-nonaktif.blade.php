@@ -112,8 +112,8 @@
             <p style="font-size: 16px; color: black; margin-bottom: 20px;">Apakah Anda yakin ingin menonaktifkan?</p>
             
             <div style="margin-bottom: 30px;">
-                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0 0 5px 0;">ID : RKM-1</p>
-                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0;">Nama : Ahmad Suryo</p>
+                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0 0 5px 0;">ID : {{ $anggota->nomor_anggota }}</p>
+                <p style="font-size: 14px; font-weight: 800; color: black; margin: 0;">Nama : {{ $anggota->nama }}</p>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px;">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggota;
 use App\Models\CalonAnggota;
+use App\Models\KeluargaAnggota;
 use App\Models\LogAktivitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -72,5 +73,54 @@ class SekretarisController extends Controller
             ->get();
 
         return view('dashboard.sekretaris.log', compact('activities'));
+    }
+
+    public function anggota()
+    {
+        $anggota = Anggota::with('calonAnggota.keluargaAnggota')
+            ->latest()
+            ->paginate(20);
+
+        $totalAnggota = Anggota::count();
+        $anggotaAktif = Anggota::where('status', 'aktif')->count();
+        $anggotaNonAktif = Anggota::where('status', 'non_aktif')->count();
+
+        return view('dashboard.sekretaris.anggota', compact(
+            'anggota',
+            'totalAnggota',
+            'anggotaAktif',
+            'anggotaNonAktif'
+        ));
+    }
+
+    public function editAnggota($id)
+    {
+        $anggota = Anggota::with('calonAnggota')->find($id);
+
+        if (!$anggota) {
+            $anggota = (object) [
+                'id' => $id,
+                'nomor_anggota' => "RKM-$id",
+                'nama' => 'Anggota',
+                'telepon' => '-',
+            ];
+        }
+
+        return view('dashboard.sekretaris.anggota-edit', compact('anggota'));
+    }
+
+    public function nonaktifAnggota($id)
+    {
+        $anggota = Anggota::with('calonAnggota')->find($id);
+
+        if (!$anggota) {
+            $anggota = (object) [
+                'id' => $id,
+                'nomor_anggota' => "RKM-$id",
+                'nama' => 'Anggota',
+            ];
+        }
+
+        return view('dashboard.sekretaris.anggota-nonaktif', compact('anggota'));
     }
 }

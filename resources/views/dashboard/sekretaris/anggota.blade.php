@@ -30,10 +30,10 @@
         <!-- Filter & Search Area -->
         <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
             <div style="display: flex; gap: 8px; background-color: white; padding: 4px; border-radius: 10px; border: 1px solid #d1d5db;">
-                <div style="background-color: #e5e7eb; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; color: black; border: 1px solid #9ca3af;">Semua (5)</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Aktif (3)</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Non-Aktif (1)</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Verifikasi (1)</div>
+                <div style="background-color: #e5e7eb; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; color: black; border: 1px solid #9ca3af;">Semua ({{ $totalAnggota }})</div>
+                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Aktif ({{ $anggotaAktif }})</div>
+                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Non-Aktif ({{ $anggotaNonAktif }})</div>
+                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Verifikasi (0)</div>
             </div>
             <div style="position: relative; width: 280px;">
                 <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #4b5563; font-size: 20px;">search</span>
@@ -62,47 +62,55 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @forelse($anggota as $item)
                         @php
-                            $data = [
-                                ['id' => 'RKM-1', 'nama' => 'Ahmad Suryo', 'status' => 'Aktif', 'badge' => '#16423c', 'btn' => '#fca5a5'],
-                                ['id' => 'RKM-2', 'nama' => 'Budi Santoso', 'status' => 'Non-Aktif', 'badge' => '#7f1d1d', 'btn' => '#9ca3af'],
-                                ['id' => 'RKM-3', 'nama' => 'Siti Aminah', 'status' => 'Verifikasi', 'badge' => '#a16207', 'btn' => '#9ca3af'],
-                            ];
+                            $keluarga = optional($item->calonAnggota)->keluargaAnggota ?? collect();
+                            $statusLower = strtolower($item->status);
+                            $badge = $statusLower === 'aktif' ? '#16423c' : '#7f1d1d';
+                            $btn = $statusLower === 'aktif' ? '#fca5a5' : '#9ca3af';
+                            $label = $statusLower === 'aktif' ? 'Aktif' : 'Non-Aktif';
                         @endphp
-                        @foreach($data as $item)
                         <tr style="border-bottom: 1px solid #94a3b8;">
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $item['id'] }}</td>
-                            <td style="padding: 12px 20px; font-weight: 500; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $item['nama'] }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $item->nomor_anggota }}</td>
+                            <td style="padding: 12px 20px; font-weight: 500; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $item->nama }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #94a3b8;">
                                 <div style="display: flex; flex-direction: column; color: black; font-size: 13px; line-height: 1.4;">
-                                    <span>Rani Ardinata</span>
-                                    <span>Ahmad Gilang</span>
-                                    <span>Maulana Hakim</span>
-                                    <span>Ardian Gading</span>
+                                    @forelse($keluarga as $k)
+                                    <span>{{ $k->nama }}</span>
+                                    @empty
+                                    <span style="color: #9ca3af;">-</span>
+                                    @endforelse
                                 </div>
                             </td>
-                            <td style="padding: 12px 20px; border: 1px solid #94a3b8;"><a href="#" style="color: #2563eb; text-decoration: underline; font-size: 13px;">0812345678</a></td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">15 Jan 2026</td>
+                            <td style="padding: 12px 20px; border: 1px solid #94a3b8;"><a href="#" style="color: #2563eb; text-decoration: underline; font-size: 13px;">{{ $item->telepon }}</a></td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $item->created_at->format('d M Y') }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #94a3b8; text-align: center;">
-                                <span style="background-color: {{ $item['badge'] }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $item['status'] }}</span>
+                                <span style="background-color: {{ $badge }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $label }}</span>
                             </td>
                             <td style="padding: 12px 20px; border: 1px solid #94a3b8;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <a href="{{ route('sekretaris.anggota.edit') }}" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    <a href="{{ route('sekretaris.anggota.edit', $item->id) }}" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
                                     </a>
-                                    <a href="{{ route('sekretaris.anggota.nonaktif') }}" style="background-color: {{ $item['btn'] }}; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    @if($statusLower === 'aktif')
+                                    <a href="{{ route('sekretaris.anggota.nonaktif', $item->id) }}" style="background-color: #fca5a5; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">person_off</span>
                                     </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="7" style="padding: 40px 20px; text-align: center; color: #6b7280; font-size: 14px;">Belum ada anggota terdaftar.</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
-            <!-- Area Putih Kosong di Bawah -->
-            <div style="background-color: white; height: 300px;"></div>
+            <div style="background-color: white; padding: 15px 20px;">
+                {{ $anggota->links() }}
+            </div>
         </div>
     </div>
 </div>

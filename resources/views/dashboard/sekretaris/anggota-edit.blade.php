@@ -111,13 +111,13 @@
         <div style="background-color: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                 <h2 style="font-size: 18px; font-weight: 800; color: black; margin: 0;">Edit Data Anggota</h2>
-                <span style="font-size: 14px; font-weight: 800; color: black;">ID : RKM-1</span>
+                <span style="font-size: 14px; font-weight: 800; color: black;">ID : {{ $anggota->nomor_anggota }}</span>
             </div>
 
             <form action="{{ route('sekretaris.anggota') }}">
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Nama Anggota</label>
-                    <input type="text" value="Ahmad Suryo" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                    <input type="text" value="{{ $anggota->nama }}" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
                 </div>
 
                 <div style="margin-bottom: 20px;">
@@ -139,7 +139,7 @@
 
                 <div style="margin-bottom: 30px;">
                     <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Telepon</label>
-                    <input type="text" value="0812345678" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                    <input type="text" value="{{ $anggota->telepon }}" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">

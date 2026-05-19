@@ -33,6 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        if (config('app.debug')) {
+            return;
+        }
+
         $exceptions->respond(function ($response, $e, $request) {
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 

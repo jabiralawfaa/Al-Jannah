@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Kelola Anggota')
+@section('title', 'Kelola Anggota - Edit')
 
 @php
     $menuItems = [
@@ -23,7 +23,7 @@
 @endphp
 
 @section('content')
-<div style="background-color: #dcfce7; min-height: 100vh; margin: -30px; padding: 30px; font-family: 'Inter', 'Poppins', sans-serif;">
+<div style="background-color: #dcfce7; min-height: 100vh; margin: -30px; padding: 30px; font-family: 'Inter', 'Poppins', sans-serif; position: relative;">
     <h1 style="color: var(--primary-900); font-weight: bold; margin-bottom: 20px; font-size: 24px;">Kelola Anggota</h1>
 
     <div class="card" style="border: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; border-radius: 12px; background-color: white;">
@@ -88,12 +88,12 @@
                             </td>
                             <td style="padding: 12px 20px; border: 1px solid #94a3b8;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <a href="{{ route('sekretaris.anggota.edit') }}" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    <div style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
-                                    </a>
-                                    <a href="{{ route('sekretaris.anggota.nonaktif') }}" style="background-color: {{ $item['btn'] }}; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    </div>
+                                    <div style="background-color: {{ $item['btn'] }}; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">person_off</span>
-                                    </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -103,6 +103,50 @@
             </div>
             <!-- Area Putih Kosong di Bawah -->
             <div style="background-color: white; height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Anggota Overlay (Visible by default in this route) -->
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div style="background-color: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="font-size: 18px; font-weight: 800; color: black; margin: 0;">Edit Data Anggota</h2>
+                <span style="font-size: 14px; font-weight: 800; color: black;">ID : RKM-1</span>
+            </div>
+
+            <form action="{{ route('sekretaris.anggota') }}">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Nama Anggota</label>
+                    <input type="text" value="Ahmad Suryo" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Nama yang ditanggung</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-weight: 800; color: black; font-size: 14px;">1</span>
+                            <input type="text" value="Rani Ardinata" style="flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-weight: 800; color: black; font-size: 14px;">2</span>
+                            <input type="text" value="Ahmad Gilang" style="flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                            <button type="button" style="background-color: var(--primary-900); border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <span class="material-icons" style="color: white; font-size: 16px;">add</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; font-size: 14px; font-weight: 700; color: black; margin-bottom: 8px;">Telepon</label>
+                    <input type="text" value="0812345678" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; outline: none; color: black;">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a href="{{ route('sekretaris.anggota') }}" style="background-color: #374151; color: white; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: none;">Batal</a>
+                    <button type="submit" style="background-color: var(--primary-900); color: white; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Ubah</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

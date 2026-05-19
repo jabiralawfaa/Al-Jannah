@@ -53,7 +53,11 @@ class AuthController extends Controller
             $dashboard = match ($role) {
                 'sekretaris' => '/sekretaris',
                 'superadmin' => '/superadmin',
-                default => '/superadmin',
+                'bendahara' => '/bendahara',
+                'ketua' => '/ketua',
+                'logistik' => '/logistik',
+                'adminweb' => '/adminweb',
+                default => '/login',
             };
 
             return redirect()->intended($dashboard);

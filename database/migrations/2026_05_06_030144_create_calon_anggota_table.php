@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('telepon');
             $table->text('alamat');
-            $table->enum('status', ['menunggu_verifikasi', 'disetujui', 'ditolak'])->default('menunggu_verifikasi');
+            $table->enum('status', ['menunggu_verifikasi','sudah_membayar' ,'disetujui', 'ditolak'])->default('menunggu_verifikasi');
             $table->foreignId('anggota_id')->nullable()->constrained('anggota')->onDelete('set null');
             $table->timestamps();
         });

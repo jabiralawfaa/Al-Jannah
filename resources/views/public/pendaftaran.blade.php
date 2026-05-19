@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
     <!-- Navbar Component Styles -->
     @vite('resources/css/components/navbar.css')
 
@@ -470,6 +474,20 @@
                     <img src="{{ asset('images/logo-al-jannah.png') }}" alt="RKM Al-Jannah Logo" class="registration-logo">
                     <h1 class="registration-title">FORM PENDAFTARAN ANGGOTA BARU RKM AL-JANNAH</h1>
                 </div>
+
+                @if(session('success'))
+                    <div style="background-color: #d8efdd; border: 1px solid #35ab50; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Poppins', sans-serif; font-size: 0.95rem; color: #154420;">
+                        <span class="material-icons" style="color: #35ab50; font-size: 20px;">check_circle</span>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div style="background-color: #fde8e8; border: 1px solid #e53e3e; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Poppins', sans-serif; font-size: 0.95rem; color: #742a2a;">
+                        <span class="material-icons" style="color: #e53e3e; font-size: 20px;">error</span>
+                        {{ $errors->first() }}
+                    </div>
+                @endif
 
                 <!-- Registration Form -->
                 <form class="registration-form" action="/register-member" method="POST">

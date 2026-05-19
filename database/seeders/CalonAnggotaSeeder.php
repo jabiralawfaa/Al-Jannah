@@ -45,6 +45,13 @@ class CalonAnggotaSeeder extends Seeder
                 'alamat' => 'Jl. Gajah Mada No. 15',
                 'status' => 'disetujui',
             ],
+            [
+                'nama' => 'Budi Santoso',
+                'email' => 'budi.santoso@email.com',
+                'telepon' => '081234567895',
+                'alamat' => 'Jl. Merdeka No. 7',
+                'status' => 'sudah_membayar',
+            ],
         ];
 
         foreach ($calonAnggota as $ca) {

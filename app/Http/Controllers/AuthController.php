@@ -49,7 +49,14 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            return redirect()->intended('/superadmin');
+            $role = Auth::user()->role;
+            $dashboard = match ($role) {
+                'sekretaris' => '/sekretaris',
+                'superadmin' => '/superadmin',
+                default => '/superadmin',
+            };
+
+            return redirect()->intended($dashboard);
         }
 
         $limiter->hit($throttleKey, 60);

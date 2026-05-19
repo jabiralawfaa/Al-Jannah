@@ -14,7 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
-        $middleware->redirectUsersTo('/superadmin');
+        $middleware->redirectUsersTo(function ($request) {
+            $role = $request->user()?->role;
+            return match ($role) {
+                'sekretaris' => '/sekretaris',
+                'superadmin' => '/superadmin',
+                default => '/superadmin',
+            };
+        });
+
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, $e, $request) {

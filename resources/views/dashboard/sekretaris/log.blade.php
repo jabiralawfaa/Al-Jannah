@@ -42,50 +42,31 @@
 
         <!-- Activity List -->
         <div style="padding: 0; background-color: #d1d5db;">
+            @forelse($activities as $activity)
             @php
-                $activities = [
-                    [
-                        'title' => 'Verifikasi Disetujui - Sekretaris',
-                        'subtitle' => 'a.n Ahmad fauzi - ID : RKM-2',
-                        'time' => '16 Jan 2026 09:30',
-                        'icon' => 'verified',
-                        'icon_color' => '#16423c',
-                    ],
-                    [
-                        'title' => 'Update data anggota - Sekretaris',
-                        'subtitle' => 'a.n Ahmad fauzi - ID : RKM-2',
-                        'time' => '16 Jan 2026 09:30',
-                        'icon' => 'info',
-                        'icon_color' => '#2563eb',
-                    ],
-                    [
-                        'title' => 'Penonaktifkan anggota - Sekretaris',
-                        'subtitle' => 'a.n Ahmad fauzi - ID : RKM-2',
-                        'time' => '16 Jan 2026 09:30',
-                        'icon' => 'error',
-                        'icon_color' => '#b91c1c',
-                    ],
-                ];
+                $icon = match ($activity->aksi) {
+                    'verifikasi' => ['name' => 'verified', 'color' => '#16423c'],
+                    'update' => ['name' => 'info', 'color' => '#2563eb'],
+                    'nonaktif' => ['name' => 'error', 'color' => '#b91c1c'],
+                    default => ['name' => 'info', 'color' => '#6b7280'],
+                };
             @endphp
-
-            @foreach($activities as $activity)
             <div style="display: flex; align-items: flex-start; gap: 20px; padding: 15px 20px; border-bottom: 1px solid #9ca3af; background-color: #d1d5db;">
                 <div style="margin-top: 5px;">
-                    @if($activity['icon'] == 'verified')
-                        <span class="material-icons" style="font-size: 32px; color: {{ $activity['icon_color'] }};">verified</span>
-                    @elseif($activity['icon'] == 'info')
-                        <span class="material-icons" style="font-size: 32px; color: {{ $activity['icon_color'] }};">info</span>
-                    @elseif($activity['icon'] == 'error')
-                        <span class="material-icons" style="font-size: 32px; color: {{ $activity['icon_color'] }};">error</span>
-                    @endif
+                    <span class="material-icons" style="font-size: 32px; color: {{ $icon['color'] }};">{{ $icon['name'] }}</span>
                 </div>
                 <div>
-                    <h3 style="font-size: 14px; font-weight: 800; color: black; margin: 0 0 4px 0;">{{ $activity['title'] }}</h3>
-                    <p style="font-size: 12px; font-weight: 600; color: #374151; margin: 0 0 2px 0;">{{ $activity['subtitle'] }}</p>
-                    <span style="font-size: 10px; color: #4b5563;">{{ $activity['time'] }}</span>
+                    <h3 style="font-size: 14px; font-weight: 800; color: black; margin: 0 0 4px 0;">{{ $activity->deskripsi }}</h3>
+                    <p style="font-size: 12px; font-weight: 600; color: #374151; margin: 0 0 2px 0;">{{ $activity->modul }}</p>
+                    <span style="font-size: 10px; color: #4b5563;">{{ $activity->created_at->format('d M Y H:i') }}</span>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div style="padding: 40px 20px; text-align: center; background-color: white;">
+                <span class="material-icons" style="font-size: 48px; color: #9ca3af;">history</span>
+                <p style="font-size: 14px; color: #6b7280; margin-top: 10px;">Belum ada aktivitas</p>
+            </div>
+            @endforelse
 
             <!-- White Empty Space at Bottom -->
             <div style="background-color: white; height: 350px;"></div>

@@ -52,6 +52,7 @@ class AuthController extends Controller
             $role = Auth::user()->role;
             $dashboard = match ($role) {
                 'sekretaris' => '/sekretaris',
+                'bendahara' => '/bendahara',
                 'superadmin' => '/superadmin',
                 default => '/superadmin',
             };

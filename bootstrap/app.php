@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $role = $request->user()?->role;
             return match ($role) {
                 'sekretaris' => '/sekretaris',
+                'bendahara' => '/bendahara',
                 'superadmin' => '/superadmin',
                 default => '/superadmin',
             };

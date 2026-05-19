@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SekretarisController;
+use App\Http\Controllers\BendaharaController;
 use App\Http\Controllers\PendaftaranController;
 
 Route::get('/', function () {
@@ -42,11 +43,22 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
-    Route::get('/superadmin/log', [SuperAdminController::class, 'logIndex'])->name('superadmin.log');
-    Route::get('/superadmin/file', [SuperAdminController::class, 'fileIndex'])->name('superadmin.file');
-    Route::post('/superadmin/file/upload', [SuperAdminController::class, 'uploadFile'])->name('superadmin.file.upload');
-    Route::get('/superadmin/file/{id}/download', [SuperAdminController::class, 'downloadFile'])->name('superadmin.file.download');
-    Route::put('/superadmin/user/{id}', [SuperAdminController::class, 'updateUser'])->name('superadmin.user.update');
-    Route::post('/superadmin/user', [SuperAdminController::class, 'storeUser'])->name('superadmin.user.store');
+    Route::middleware('role:superadmin')->group(function () {
+        Route::get('/superadmin', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
+        Route::get('/superadmin/log', [SuperAdminController::class, 'logIndex'])->name('superadmin.log');
+        Route::get('/superadmin/file', [SuperAdminController::class, 'fileIndex'])->name('superadmin.file');
+        Route::post('/superadmin/file/upload', [SuperAdminController::class, 'uploadFile'])->name('superadmin.file.upload');
+        Route::get('/superadmin/file/{id}/download', [SuperAdminController::class, 'downloadFile'])->name('superadmin.file.download');
+        Route::put('/superadmin/user/{id}', [SuperAdminController::class, 'updateUser'])->name('superadmin.user.update');
+        Route::post('/superadmin/user', [SuperAdminController::class, 'storeUser'])->name('superadmin.user.store');
+    });
+
+    Route::middleware('role:bendahara,superadmin')->prefix('bendahara')->name('bendahara.')->group(function () {
+        Route::get('/', [BendaharaController::class, 'index'])->name('dashboard');
+        Route::get('/pemasukan', [BendaharaController::class, 'pemasukan'])->name('pemasukan');
+        Route::get('/pengeluaran', [BendaharaController::class, 'pengeluaran'])->name('pengeluaran');
+        Route::get('/iuran', [BendaharaController::class, 'iuran'])->name('iuran');
+        Route::get('/laporan', [BendaharaController::class, 'laporan'])->name('laporan');
+        Route::get('/verifikasi', [BendaharaController::class, 'verifikasi'])->name('verifikasi');
+    });
 });

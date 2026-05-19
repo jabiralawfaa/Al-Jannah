@@ -19,7 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             return match ($role) {
                 'sekretaris' => '/sekretaris',
                 'superadmin' => '/superadmin',
-                default => '/superadmin',
+                'bendahara' => '/bendahara',
+                'ketua' => '/ketua',
+                'logistik' => '/logistik',
+                'adminweb' => '/adminweb',
+                default => '/login',
             };
         });
 

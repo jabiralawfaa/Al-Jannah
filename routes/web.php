@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SekretarisController;
 use App\Http\Controllers\PendaftaranController;
+use App\Http\Controllers\LogistikController;
 
 Route::get('/', function () {
     return view('public.index');
@@ -37,6 +38,20 @@ Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['auth', 'role:logistik,superadmin'])->group(function () {
+    Route::get('/logistik', [LogistikController::class, 'index'])->name('logistik.dashboard');
+
+    Route::get('/logistik/stok', [LogistikController::class, 'stok'])->name('logistik.stok');
+
+    Route::get('/logistik/aset', [LogistikController::class, 'aset'])->name('logistik.aset');
+
+    Route::get('/logistik/barang-masuk', [LogistikController::class, 'barangMasuk'])->name('logistik.barang-masuk');
+
+    Route::get('/logistik/barang-keluar', [LogistikController::class, 'barangKeluar'])->name('logistik.barang-keluar');
+
+    Route::get('/logistik/riwayat', [LogistikController::class, 'riwayat'])->name('logistik.riwayat');
 });
 
 Route::middleware('auth')->group(function () {

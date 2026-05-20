@@ -1,7 +1,7 @@
 @extends('layouts.dashboard', [
     'menuItems' => [
         ['label' => 'Beranda', 'url' => '/adminweb', 'active' => 'adminweb'],
-        ['label' => 'Posts', 'url' => '#', 'active' => 'adminweb/posts'],
+        ['label' => 'Posts', 'url' => '/adminweb/posts', 'active' => 'adminweb/posts*'],
         ['label' => 'Pages', 'url' => '#', 'active' => 'adminweb/pages'],
         ['label' => 'Menus', 'url' => '#', 'active' => 'adminweb/menus'],
         ['label' => 'Files & Images', 'url' => '#', 'active' => 'adminweb/files'],

@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/bendahara.css') }}">
+    @livewireStyles
+    @stack('styles')
 </head>
 <body>
     @include('components.dashboard.navbar')
@@ -61,5 +63,7 @@
         document.querySelector('.file-upload .upload-placeholder').textContent = 'Upload here...';
     }
     </script>
+    @stack('scripts')
+    @livewireScripts
 </body>
 </html>

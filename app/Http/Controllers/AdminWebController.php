@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\Page;
 use App\Models\Category;
-use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AdminWebController extends Controller
 {
@@ -27,5 +28,51 @@ class AdminWebController extends Controller
             'bulan',
             'pengunjungPerBulan'
         ));
+    }
+
+    public function posts(Request $request)
+    {
+        $search = $request->get('search');
+
+        $posts = Post::with(['category', 'media'])
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhereHas('category', function ($cq) use ($search) {
+                          $cq->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = Category::all();
+
+        return view('dashboard.adminweb.posts', compact('posts', 'categories'));
+    }
+
+    public function storeCategory(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+        ]);
+
+        $data['slug'] = Str::slug($data['name']);
+
+        Category::create($data);
+
+        return redirect()->route('adminweb.posts')->with('success', 'Kategori "' . e($data['name']) . '" berhasil ditambahkan.');
+    }
+
+    public function createPost()
+    {
+        return view('dashboard.adminweb.editor');
+    }
+
+    public function editPost($id)
+    {
+        $post = Post::with('category')->findOrFail($id);
+        return view('dashboard.adminweb.editor', compact('post'));
     }
 }

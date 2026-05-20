@@ -92,4 +92,8 @@ Route::middleware(['auth', 'role:ketua'])->group(function () {
 
 Route::middleware(['auth', 'role:adminweb'])->group(function () {
     Route::get('/adminweb', [AdminWebController::class, 'index'])->name('adminweb.dashboard');
+    Route::get('/adminweb/posts', [AdminWebController::class, 'posts'])->name('adminweb.posts');
+    Route::get('/adminweb/posts/buat', [AdminWebController::class, 'createPost'])->name('adminweb.posts.create');
+    Route::get('/adminweb/posts/{id}/edit', [AdminWebController::class, 'editPost'])->name('adminweb.posts.edit');
+    Route::post('/adminweb/kategori', [AdminWebController::class, 'storeCategory'])->name('adminweb.kategori.store');
 });

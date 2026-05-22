@@ -86,8 +86,28 @@ Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
 
 Route::middleware(['auth', 'role:ketua'])->group(function () {
     Route::get('/ketua', function () {
-        return response()->view('errors.555', [], 555);
+        return view('dashboard.ketua.index');
     })->name('ketua.dashboard');
+
+    Route::get('/ketua/anggota', function () {
+        return view('dashboard.ketua.anggota');
+    })->name('ketua.anggota');
+
+    Route::get('/ketua/keuangan', function () {
+        return view('dashboard.ketua.keuangan');
+    })->name('ketua.keuangan');
+
+    Route::get('/ketua/aset', function () {
+        return view('dashboard.ketua.aset');
+    })->name('ketua.aset');
+
+    Route::get('/ketua/log', function () {
+        return view('dashboard.ketua.log');
+    })->name('ketua.log');
+
+    Route::get('/ketua/izin', function () {
+        return view('dashboard.ketua.izin');
+    })->name('ketua.izin');
 });
 
 Route::middleware(['auth', 'role:adminweb'])->group(function () {

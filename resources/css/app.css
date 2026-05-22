@@ -11,3 +11,52 @@
     --font-navbar: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.fi-fo-rich-editor .tiptap a,
+.fi-fo-rich-editor-content a {
+    color: var(--color-primary-600);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+}
+
+.fi-fo-rich-editor .tiptap .file-embed,
+.fi-fo-rich-editor-content .file-embed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 0.5rem;
+    background: var(--color-gray-50);
+    margin: 0.25rem 0;
+    cursor: default;
+}
+
+.fi-fo-rich-editor .tiptap .file-embed-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.fi-fo-rich-editor .tiptap .file-embed-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary-600);
+}
+
+.fi-fo-rich-editor-content .file-embed-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 0.5rem;
+    background: var(--color-gray-50);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.fi-fo-rich-editor-content .file-embed-link:hover {
+    background: var(--color-gray-100);
+}

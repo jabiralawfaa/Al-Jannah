@@ -90,9 +90,7 @@ class SuperAdminController extends Controller
             default => 'file_ditolak',
         };
 
-        $safeFilename = pathinfo($originalName, PATHINFO_FILENAME);
-        $safeFilename = preg_replace('/[^a-zA-Z0-9\-\_]/i', '_', $safeFilename);
-        $storedPath = $safeFilename . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+        $storedPath = \App\Services\FileRenamer::rename($originalName);
 
         $path = $uploadedFile->storeAs('', $storedPath, $disk);
 

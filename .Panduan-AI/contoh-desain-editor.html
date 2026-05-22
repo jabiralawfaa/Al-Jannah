@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Rich Editor</title>
+    <!-- Font diubah ke Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --toolbar-bg: #16423C;
+            --toolbar-hover: #1e5a50;
+            --toolbar-active: #0d2e29;
+            --toolbar-border: #1e5a50;
+            --accent: #E8B931;
+            --accent-hover: #f0c94a;
+            --field-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --border: #d4d4d4;
+            --border-focus: #16423C;
+            --muted: #6b7280;
+            --card-bg: #f8f9fa;
+            --danger: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f1f1c;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(22,66,60,0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(22,66,60,0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(232,185,49,0.06) 0%, transparent 40%);
+        }
+
+        .editor-wrapper {
+            width: 100%;
+            max-width: 900px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .editor-header {
+            background: var(--field-bg);
+            border-radius: 16px 16px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            padding: 28px 32px 20px;
+        }
+
+        .editor-header input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-color);
+            background: transparent;
+        }
+
+        .editor-header input::placeholder {
+            color: #b0b0b0;
+        }
+
+        .meta-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .meta-input {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+
+        .meta-input i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .meta-input input,
+        .meta-input select {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            color: var(--text-color);
+            background: var(--card-bg);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .meta-input input:focus,
+        .meta-input select:focus {
+            border-color: var(--border-focus);
+        }
+
+        .meta-input input::placeholder {
+            color: #aaa;
+        }
+
+        .toolbar {
+            background: var(--toolbar-bg);
+            padding: 6px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            border: 1px solid var(--toolbar-border);
+            border-top: none;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .toolbar .separator {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.15);
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+
+        .toolbar button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.78);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .toolbar button:hover {
+            background: var(--toolbar-hover);
+            color: #fff;
+        }
+
+        .toolbar button:active {
+            background: var(--toolbar-active);
+            transform: scale(0.92);
+        }
+
+        .toolbar button.active {
+            background: rgba(232,185,49,0.2);
+            color: var(--accent);
+        }
+
+        .toolbar button[title]::after {
+            content: attr(title);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #111;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 200;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .toolbar button:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .heading-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.85);
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.15s;
+        }
+
+        .heading-select:hover,
+        .heading-select:focus {
+            background: var(--toolbar-hover);
+            color: #fff;
+        }
+
+        .heading-select option {
+            background: var(--toolbar-bg);
+            color: #fff;
+        }
+
+        .color-picker-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .color-picker-wrap input[type="color"] {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .color-indicator {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .editor-content {
+            background: var(--field-bg);
+            min-height: 480px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding: 32px;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-color);
+            caret-color: var(--toolbar-bg);
+        }
+
+        .editor-content:empty::before {
+            content: 'Mulai menulis postingan blog Anda di sini...';
+            color: #b0b0b0;
+            font-style: italic;
+            pointer-events: none;
+        }
+
+        .editor-content h1 { font-family: 'Poppins', sans-serif; font-size: 2em; margin: 0.6em 0 0.3em; line-height: 1.3; font-weight: 700; }
+        .editor-content h2 { font-family: 'Poppins', sans-serif; font-size: 1.5em; margin: 0.5em 0 0.25em; line-height: 1.35; font-weight: 700; }
+        .editor-content h3 { font-family: 'Poppins', sans-serif; font-size: 1.25em; margin: 0.4em 0 0.2em; line-height: 1.4; font-weight: 600; }
+        .editor-content p { margin: 0.4em 0; }
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent);
+            margin: 1em 0;
+            padding: 12px 20px;
+            background: #fdf8e8;
+            border-radius: 0 8px 8px 0;
+            color: #5a5a5a;
+            font-style: italic;
+        }
+        .editor-content pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 1em 0;
+            line-height: 1.6;
+        }
+        .editor-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #be185d;
+        }
+        .editor-content pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        .editor-content ul, .editor-content ol {
+            padding-left: 24px;
+            margin: 0.5em 0;
+        }
+        .editor-content li { margin: 0.2em 0; }
+        .editor-content hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4d4d4, transparent);
+            margin: 1.5em 0;
+        }
+        .editor-content a {
+            color: #16423C;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .editor-content img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 0.5em 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .editor-content .img-caption {
+            display: block;
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .editor-content::-webkit-scrollbar { width: 6px; }
+        .editor-content::-webkit-scrollbar-track { background: transparent; }
+        .editor-content::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 3px; }
+        .editor-content::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        .editor-footer {
+            background: var(--field-bg);
+            border: 1px solid var(--border);
+            border-top: 1px solid #e8e8e8;
+            border-radius: 0 0 16px 16px;
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .word-count {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
+            gap: 16px;
+        }
+
+        .word-count span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-draft {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-draft:hover {
+            background: #eaeaea;
+            border-color: #bbb;
+        }
+
+        .btn-publish {
+            background: var(--toolbar-bg);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(22,66,60,0.3);
+        }
+
+        .btn-publish:hover {
+            background: var(--toolbar-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(22,66,60,0.35);
+        }
+
+        .btn-publish:active {
+            transform: translateY(0);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .modal-field {
+            margin-bottom: 16px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+            color: var(--text-color);
+        }
+
+        .modal-field input:focus {
+            border-color: var(--border-focus);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            padding: 9px 20px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1.5px solid #ddd;
+            color: var(--muted);
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-cancel:hover {
+            background: #f5f5f5;
+            color: var(--text-color);
+        }
+
+        .btn-insert {
+            padding: 9px 20px;
+            border-radius: 8px;
+            background: var(--toolbar-bg);
+            border: none;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-insert:hover {
+            background: var(--toolbar-hover);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: #fff;
+            padding: 14px 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: toastIn 0.35s ease;
+            min-width: 260px;
+            border-left: 4px solid var(--toolbar-bg);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .toast.success { border-left-color: #22c55e; }
+        .toast.info { border-left-color: var(--accent); }
+        .toast.error { border-left-color: var(--danger); }
+
+        .toast.removing {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(40px); }
+        }
+
+        .toast i { font-size: 16px; }
+        .toast.success i { color: #22c55e; }
+        .toast.info i { color: var(--accent); }
+        .toast.error i { color: var(--danger); }
+
+        .upload-zone {
+            border: 2px dashed #d0d0d0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--border-focus);
+            background: #f0faf8;
+        }
+
+        .upload-zone i {
+            font-size: 28px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .upload-zone p {
+            font-size: 14px;
+            color: var(--muted);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .upload-zone .browse-link {
+            color: var(--toolbar-bg);
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .upload-preview {
+            display: none;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .upload-preview img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .upload-preview .remove-img {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: background 0.15s;
+        }
+
+        .upload-preview .remove-img:hover {
+            background: var(--danger);
+        }
+
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--muted);
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .cover-section {
+            padding: 0 32px 16px;
+            background: var(--field-bg);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .cover-upload {
+            border: 2px dashed #d4d4d4;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cover-upload:hover {
+            border-color: var(--border-focus);
+            background: #f7fdfb;
+        }
+
+        .cover-upload.has-image {
+            padding: 0;
+            border-style: solid;
+        }
+
+        .cover-upload img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .cover-upload .cover-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cover-upload .cover-placeholder i {
+            font-size: 22px;
+            color: #aaa;
+        }
+
+        .cover-upload .cover-placeholder span {
+            font-size: 13px;
+            color: var(--muted);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .cover-upload .cover-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .cover-upload .cover-remove:hover {
+            background: var(--danger);
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 8px; }
+            .editor-header { padding: 20px 18px 14px; }
+            .editor-header input { font-size: 22px; }
+            .editor-content { padding: 20px 18px; min-height: 350px; }
+            .cover-section { padding: 0 18px 12px; }
+            .editor-footer { padding: 12px 18px; }
+            .toolbar { padding: 4px 6px; }
+            .toolbar button { width: 32px; height: 32px; font-size: 13px; }
+            .btn { padding: 8px 16px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="editor-wrapper">
+    <!-- Header: Judul & Meta -->
+    <div class="editor-header">
+        <input type="text" id="postTitle" placeholder="Judul Postingan..." autocomplete="off">
+        <div class="meta-row">
+            <div class="meta-input">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="postAuthor" placeholder="Nama penulis...">
+            </div>
+            <div class="meta-input">
+                <i class="fa-regular fa-folder"></i>
+                <select id="postCategory">
+                    <option value="">Pilih kategori...</option>
+                    <option value="teknologi">Teknologi</option>
+                    <option value="desain">Desain</option>
+                    <option value="bisnis">Bisnis</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="edukasi">Edukasi</option>
+                    <option value="travel">Travel</option>
+                    <option value="kuliner">Kuliner</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cover Image -->
+    <div class="cover-section">
+        <div class="cover-upload" id="coverUpload" onclick="document.getElementById('coverFileInput').click()">
+            <div class="cover-placeholder" id="coverPlaceholder">
+                <i class="fa-regular fa-image"></i>
+                <span>Upload gambar sampul (klik atau seret gambar)</span>
+            </div>
+            <input type="file" id="coverFileInput" accept="image/*" style="display:none">
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" id="toolbar">
+        <select class="heading-select" id="headingSelect" title="Heading">
+            <option value="p">Paragraf</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+        </select>
+
+        <div class="separator"></div>
+
+        <button onclick="execCmd('bold')" title="Tebal (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+        <button onclick="execCmd('italic')" title="Miring (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+        <button onclick="execCmd('underline')" title="Garis Bawah (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+        <button onclick="execCmd('strikeThrough')" title="Coret"><i class="fa-solid fa-strikethrough"></i></button>
+
+        <div class="separator"></div>
+
+        <div class="color-picker-wrap">
+            <button title="Warna Teks"><i class="fa-solid fa-font"></i><span class="color-indicator" style="background:#16423C;"></span></button>
+            <input type="color" id="textColor" value="#16423C" onchange="execCmd('foreColor', this.value); updateColorIndicator(this.value)">
+        </div>
+        <div class="color-picker-wrap">
+            <button title="Warna Latar"><i class="fa-solid fa-highlighter"></i><span class="color-indicator" style="background:#fdf8e8;"></span></button>
+            <input type="color" id="bgColor" value="#fdf8e8" onchange="execCmd('hiliteColor', this.value)">
+        </div>
+
+        <div class="separator"></div>
+
+        <button onclick="execCmd('justifyLeft')" title="Rata Kiri"><i class="fa-solid fa-align-left"></i></button>
+        <button onclick="execCmd('justifyCenter')" title="Rata Tengah"><i class="fa-solid fa-align-center"></i></button>
+        <button onclick="execCmd('justifyRight')" title="Rata Kanan"><i class="fa-solid fa-align-right"></i></button>
+        <button onclick="execCmd('justifyFull')" title="Rata Kiri-Kanan"><i class="fa-solid fa-align-justify"></i></button>
+
+        <div class="separator"></div>
+
+        <button onclick="execCmd('insertUnorderedList')" title="Daftar Bullet"><i class="fa-solid fa-list-ul"></i></button>
+        <button onclick="execCmd('insertOrderedList')" title="Daftar Nomor"><i class="fa-solid fa-list-ol"></i></button>
+
+        <div class="separator"></div>
+
+        <button onclick="insertBlockquote()" title="Kutipan"><i class="fa-solid fa-quote-left"></i></button>
+        <button onclick="insertCodeBlock()" title="Blok Kode"><i class="fa-solid fa-code"></i></button>
+        <button onclick="execCmd('insertHorizontalRule')" title="Garis Pemisah"><i class="fa-solid fa-minus"></i></button>
+
+        <div class="separator"></div>
+
+        <button onclick="openLinkModal()" title="Sisipkan Tautan"><i class="fa-solid fa-link"></i></button>
+        <button onclick="openImageModal()" title="Sisipkan Gambar"><i class="fa-regular fa-image"></i></button>
+
+        <div class="separator"></div>
+
+        <button onclick="execCmd('undo')" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+        <button onclick="execCmd('redo')" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+
+        <div class="separator"></div>
+
+        <button onclick="execCmd('removeFormat')" title="Hapus Format"><i class="fa-solid fa-eraser"></i></button>
+    </div>
+
+    <!-- Editor Content -->
+    <div class="editor-content" id="editor" contenteditable="true" spellcheck="true"></div>
+
+    <!-- Footer -->
+    <div class="editor-footer">
+        <div class="word-count">
+            <span><i class="fa-regular fa-file-lines"></i> <span id="wordCount">0</span> kata</span>
+            <span><i class="fa-regular fa-clock"></i> <span id="readTime">0</span> menit baca</span>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-draft" onclick="saveDraft()">
+                <i class="fa-regular fa-floppy-disk"></i> Simpan Draft
+            </button>
+            <button class="btn btn-publish" onclick="publishPost()">
+                <i class="fa-solid fa-paper-plane"></i> Publikasikan
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Link Modal -->
+<div class="modal-overlay" id="linkModal">
+    <div class="modal">
+        <h3>Sisipkan Tautan</h3>
+        <div class="modal-field">
+            <label>URL Tautan</label>
+            <input type="url" id="linkUrl" placeholder="https://example.com">
+        </div>
+        <div class="modal-field">
+            <label>Teks Tampilan</label>
+            <input type="text" id="linkText" placeholder="Klik di sini">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeLinkModal()">Batal</button>
+            <button class="btn-insert" onclick="insertLink()">Sisipkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal-overlay" id="imageModal">
+    <div class="modal">
+        <h3>Sisipkan Gambar</h3>
+        <div class="upload-zone" id="imageUploadZone" onclick="document.getElementById('imageFileInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Seret gambar ke sini atau <span class="browse-link">pilih file</span></p>
+            <input type="file" id="imageFileInput" accept="image/*" style="display:none">
+        </div>
+        <div class="upload-preview" id="imagePreview">
+            <img id="imagePreviewImg" src="" alt="Preview">
+            <button class="remove-img" onclick="removeImagePreview()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="or-divider">atau masukkan URL</div>
+        <div class="modal-field">
+            <label>URL Gambar</label>
+            <input type="url" id="imageUrl" placeholder="https://example.com/gambar.jpg">
+        </div>
+        <div class="modal-field">
+            <label>Caption (opsional)</label>
+            <input type="text" id="imageCaption" placeholder="Deskripsi gambar...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeImageModal()">Batal</button>
+            <button class="btn-insert" onclick="insertImage()">Sisipkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ===== Elemen Utama =====
+    const editor = document.getElementById('editor');
+    const toolbar = document.getElementById('toolbar');
+    const headingSelect = document.getElementById('headingSelect');
+
+    // ===== Simpan & Pulihkan Seleksi Kursor =====
+    let savedRange = null;
+
+    function saveSelection() {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            if (editor.contains(range.commonAncestorContainer)) {
+                savedRange = range.cloneRange();
+            } else {
+                savedRange = null;
+            }
+        }
+    }
+
+    function restoreSelection() {
+        if (savedRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        } else {
+            editor.focus();
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    // ===== Eksekusi Perintah =====
+    function execCmd(command, value = null) {
+        document.execCommand(command, false, value);
+        editor.focus();
+        updateToolbarState();
+    }
+
+    // ===== Heading Dropdown =====
+    headingSelect.addEventListener('change', function () {
+        const val = this.value;
+        if (val === 'p') {
+            execCmd('formatBlock', '<p>');
+        } else {
+            execCmd('formatBlock', '<' + val + '>');
+        }
+        editor.focus();
+    });
+
+    // ===== Blockquote =====
+    function insertBlockquote() {
+        execCmd('formatBlock', '<blockquote>');
+    }
+
+    // ===== Code Block =====
+    function insertCodeBlock() {
+        const selection = window.getSelection();
+        const selectedText = selection.toString() || '// kode di sini';
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.textContent = selectedText;
+        pre.appendChild(code);
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(pre);
+
+        range.setStartAfter(pre);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        editor.focus();
+    }
+
+    // ===== Link Modal =====
+    function openLinkModal() {
+        saveSelection();
+        const sel = window.getSelection();
+        const selectedText = sel.toString();
+        document.getElementById('linkText').value = selectedText;
+        document.getElementById('linkUrl').value = '';
+        document.getElementById('linkModal').classList.add('active');
+        setTimeout(() => document.getElementById('linkUrl').focus(), 100);
+    }
+
+    function closeLinkModal() {
+        document.getElementById('linkModal').classList.remove('active');
+    }
+
+    function insertLink() {
+        const url = document.getElementById('linkUrl').value.trim();
+        const text = document.getElementById('linkText').value.trim() || url;
+        if (!url) {
+            showToast('Masukkan URL terlebih dahulu', 'error');
+            return;
+        }
+        closeLinkModal();
+        restoreSelection();
+
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const a = document.createElement('a');
+            a.href = url;
+            a.textContent = text;
+            a.target = '_blank';
+            range.insertNode(a);
+            range.setStartAfter(a);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        editor.focus();
+    }
+
+    // ===== Image Modal =====
+    let uploadedImageData = null;
+
+    function openImageModal() {
+        saveSelection();
+        uploadedImageData = null;
+        document.getElementById('imageUrl').value = '';
+        document.getElementById('imageCaption').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('imageUploadZone').style.display = '';
+        document.getElementById('imageFileInput').value = '';
+        document.getElementById('imageModal').classList.add('active');
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.remove('active');
+        uploadedImageData = null;
+    }
+
+    document.getElementById('imageFileInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) handleImageFile(file);
+    });
+
+    const uploadZone = document.getElementById('imageUploadZone');
+    uploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', function () {
+        this.classList.remove('dragover');
+    });
+    uploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) handleImageFile(file);
+    });
+
+    function handleImageFile(file) {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Ukuran gambar maksimal 5MB', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            uploadedImageData = e.target.result;
+            document.getElementById('imagePreviewImg').src = uploadedImageData;
+            document.getElementById('imagePreview').style.display = 'block';
+            document.getElementById('imageUploadZone').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImagePreview() {
+        uploadedImageData = null;
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('imageUploadZone').style.display = '';
+        document.getElementById('imageFileInput').value = '';
+    }
+
+    function insertImage() {
+        const url = document.getElementById('imageUrl').value.trim();
+        const caption = document.getElementById('imageCaption').value.trim();
+        const imgSrc = uploadedImageData || url;
+
+        if (!imgSrc) {
+            showToast('Upload gambar atau masukkan URL gambar', 'error');
+            return;
+        }
+
+        closeImageModal();
+        restoreSelection();
+
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = caption || 'Gambar postingan';
+        img.style.maxWidth = '100%';
+
+        const frag = document.createDocumentFragment();
+        frag.appendChild(document.createElement('br'));
+        frag.appendChild(img);
+
+        if (caption) {
+            const cap = document.createElement('span');
+            cap.className = 'img-caption';
+            cap.textContent = caption;
+            frag.appendChild(cap);
+        }
+
+        frag.appendChild(document.createElement('br'));
+
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(frag);
+            range.collapse(false);
+        }
+        editor.focus();
+        updateWordCount();
+    }
+
+    // ===== Cover Image =====
+    const coverUpload = document.getElementById('coverUpload');
+    const coverFileInput = document.getElementById('coverFileInput');
+    let coverImageData = null;
+
+    coverFileInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) setCoverImage(file);
+    });
+
+    coverUpload.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.style.borderColor = '#16423C';
+        this.style.background = '#f0faf8';
+    });
+    coverUpload.addEventListener('dragleave', function () {
+        this.style.borderColor = '#d4d4d4';
+        this.style.background = '';
+    });
+    coverUpload.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.style.borderColor = '#d4d4d4';
+        this.style.background = '';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) setCoverImage(file);
+    });
+
+    function setCoverImage(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            coverImageData = e.target.result;
+            coverUpload.classList.add('has-image');
+            coverUpload.innerHTML = `
+                <img src="${coverImageData}" alt="Cover">
+                <button class="cover-remove" onclick="removeCoverImage(event)"><i class="fa-solid fa-xmark"></i></button>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeCoverImage(e) {
+        e.stopPropagation();
+        coverImageData = null;
+        coverUpload.classList.remove('has-image');
+        coverUpload.innerHTML = `
+            <div class="cover-placeholder" id="coverPlaceholder">
+                <i class="fa-regular fa-image"></i>
+                <span>Upload gambar sampul (klik atau seret gambar)</span>
+            </div>
+        `;
+        coverFileInput.value = '';
+    }
+
+    // ===== Update Toolbar State =====
+    function updateToolbarState() {
+        const buttons = toolbar.querySelectorAll('button');
+        const commands = ['bold', 'italic', 'underline', 'strikeThrough',
+            'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
+            'insertUnorderedList', 'insertOrderedList'];
+
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        commands.forEach(cmd => {
+            if (document.queryCommandState(cmd)) {
+                const btn = toolbar.querySelector(`button[onclick*="${cmd}"]`);
+                if (btn) btn.classList.add('active');
+            }
+        });
+
+        const block = document.queryCommandValue('formatBlock');
+        if (block) {
+            const tag = block.toLowerCase().replace(/[<>]/g, '');
+            if (['h1', 'h2', 'h3', 'p'].includes(tag)) {
+                headingSelect.value = tag;
+            } else {
+                headingSelect.value = 'p';
+            }
+        }
+    }
+
+    // ===== Word Count =====
+    function updateWordCount() {
+        const text = editor.innerText.trim();
+        const words = text ? text.split(/\s+/).length : 0;
+        const readMins = Math.max(1, Math.ceil(words / 200));
+        document.getElementById('wordCount').textContent = words;
+        document.getElementById('readTime').textContent = words === 0 ? '0' : readMins;
+    }
+
+    editor.addEventListener('input', updateWordCount);
+    editor.addEventListener('keyup', updateToolbarState);
+    editor.addEventListener('mouseup', updateToolbarState);
+
+    // ===== Color Indicator =====
+    function updateColorIndicator(color) {
+        const indicator = document.querySelector('.color-picker-wrap:first-child .color-indicator');
+        if (indicator) indicator.style.background = color;
+    }
+
+    // ===== Toast Notification =====
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icons = {
+            success: 'fa-solid fa-circle-check',
+            error: 'fa-solid fa-circle-exclamation',
+            info: 'fa-solid fa-circle-info'
+        };
+        toast.innerHTML = `<i class="${icons[type] || icons.info}"></i> ${message}`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ===== Save Draft =====
+    function saveDraft() {
+        const title = document.getElementById('postTitle').value.trim();
+        if (!title) {
+            showToast('Judul postingan belum diisi', 'error');
+            return;
+        }
+        const data = {
+            title: title,
+            author: document.getElementById('postAuthor').value,
+            category: document.getElementById('postCategory').value,
+            cover: coverImageData,
+            content: editor.innerHTML,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('blog_draft', JSON.stringify(data));
+        showToast('Draft berhasil disimpan', 'success');
+    }
+
+    // ===== Publish =====
+    function publishPost() {
+        const title = document.getElementById('postTitle').value.trim();
+        const textContent = editor.innerText.trim();
+
+        if (!title) {
+            showToast('Judul postingan belum diisi', 'error');
+            document.getElementById('postTitle').focus();
+            return;
+        }
+        if (!textContent) {
+            showToast('Konten postingan masih kosong', 'error');
+            editor.focus();
+            return;
+        }
+
+        showToast('Postingan berhasil dipublikasikan!', 'success');
+    }
+
+    // ===== Load Draft =====
+    function loadDraft() {
+        const saved = localStorage.getItem('blog_draft');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.title) document.getElementById('postTitle').value = data.title;
+                if (data.author) document.getElementById('postAuthor').value = data.author;
+                if (data.category) document.getElementById('postCategory').value = data.category;
+                if (data.content) editor.innerHTML = data.content;
+                if (data.cover) {
+                    coverImageData = data.cover;
+                    coverUpload.classList.add('has-image');
+                    coverUpload.innerHTML = `
+                        <img src="${coverImageData}" alt="Cover">
+                        <button class="cover-remove" onclick="removeCoverImage(event)"><i class="fa-solid fa-xmark"></i></button>
+                    `;
+                }
+                updateWordCount();
+            } catch (e) { /* abaikan */ }
+        }
+    }
+
+    // ===== Keyboard Shortcuts =====
+    editor.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key.toLowerCase()) {
+                case 'b':
+                    e.preventDefault();
+                    execCmd('bold');
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    execCmd('italic');
+                    break;
+                case 'u':
+                    e.preventDefault();
+                    execCmd('underline');
+                    break;
+                case 's':
+                    e.preventDefault();
+                    saveDraft();
+                    break;
+            }
+        }
+
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            execCmd('insertHTML', '&nbsp;&nbsp;&nbsp;&nbsp;');
+        }
+    });
+
+    // ===== Close Modal on Overlay Click =====
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+
+    // ===== Close Modal with Escape =====
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        }
+    });
+
+    // ===== Paste: bersihkan format, tapi tangani paste gambar =====
+    editor.addEventListener('paste', function (e) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const file = items[i].getAsFile();
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    const img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.style.maxWidth = '100%';
+                    const sel = window.getSelection();
+                    if (sel.rangeCount) {
+                        const range = sel.getRangeAt(0);
+                        range.deleteContents();
+                        range.insertNode(img);
+                        range.collapse(false);
+                    }
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+        }
+
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+    });
+
+    // ===== Inisialisasi =====
+    loadDraft();
+    updateWordCount();
+    updateToolbarState();
+</script>
+
+</body>
+</html>

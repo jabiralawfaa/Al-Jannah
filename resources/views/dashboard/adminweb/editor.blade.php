@@ -10,6 +10,7 @@
 
 @push('styles')
     @filamentStyles
+    <link rel="stylesheet" href="{{ asset('css/filament/filament/app.css') }}">
 @endpush
 
 @push('scripts')
@@ -17,6 +18,8 @@
 @endpush
 
 @section('title', 'Editor')
+
+@php $post ??= null; @endphp
 
 @section('content')
 <style>
@@ -60,7 +63,6 @@
         font-weight: 700;
         color: #16423c;
     }
-
 </style>
 
 <div class="editor-header">
@@ -70,5 +72,5 @@
     <h1 class="editor-title">Editor</h1>
 </div>
 
-@livewire('post-editor', ['post' => $post ?? null], key(($post->id ?? 'create')))
+@livewire('post-editor', ['post' => $post ?? null], key($post ? 'edit-' . $post->id : 'create'))
 @endsection

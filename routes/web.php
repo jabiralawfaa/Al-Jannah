@@ -7,6 +7,7 @@ use App\Http\Controllers\SekretarisController;
 use App\Http\Controllers\AdminWebController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LogistikController;
+use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\BendaharaController;
 
 Route::get('/', function () {
@@ -58,6 +59,7 @@ Route::middleware(['auth', 'role:logistik,superadmin'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/editor/upload', [EditorUploadController::class, 'store'])->name('editor.upload');
 });
 
 Route::middleware(['auth', 'role:superadmin'])->group(function () {

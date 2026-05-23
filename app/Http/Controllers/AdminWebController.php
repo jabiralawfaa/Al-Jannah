@@ -75,4 +75,24 @@ class AdminWebController extends Controller
         $post = Post::with('category')->findOrFail($id);
         return view('dashboard.adminweb.editor', compact('post'));
     }
+
+    public function publishPost($id)
+    {
+        $post = Post::findOrFail($id);
+        $post->update([
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        return redirect()->route('adminweb.posts')->with('success', 'Postingan "' . e($post->title) . '" berhasil diterbitkan.');
+    }
+
+    public function destroyPost($id)
+    {
+        $post = Post::findOrFail($id);
+        $title = $post->title;
+        $post->delete();
+
+        return redirect()->route('adminweb.posts')->with('success', 'Postingan "' . e($title) . '" berhasil dihapus.');
+    }
 }

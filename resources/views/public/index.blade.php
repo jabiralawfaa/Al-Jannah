@@ -1186,179 +1186,27 @@
                 <h2 class="news-title">Kanal Berita</h2>
             </div>
             <div class="news-content" id="newsContent">
-                    <!-- Row 1 -->
-                    <div class="news-col">
+                @forelse($posts as $index => $post)
+                    @php
+                        $imageUrl = $post->media
+                            ? asset('storage/' . $post->media->file_path)
+                            : 'https://via.placeholder.com/600x400?text=No+Image';
+                        $tags = $post->category ? [$post->category->name] : ['Umum'];
+                        $isHidden = $index >= 6;
+                    @endphp
+                    <div class="news-col" {{ $isHidden ? 'data-hidden="true"' : '' }}>
                         <x-news-card 
-                            image="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Kegiatan']"
-                            title="Kegiatan Rutin RKM Al-Jannah Bulan Ini"
-                            url="/berita/kegiatan-rutin-rkm-al-jannah-bulan-ini"
+                            image="{{ $imageUrl }}"
+                            :tags="$tags"
+                            title="{{ $post->title }}"
+                            url="{{ route('post.show', $post->slug) }}"
                         />
                     </div>
-                    <div class="news-col">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Pengumuman']"
-                            title="Pengumuman Penting Untuk Anggota Baru"
-                            url="#berita-2"
-                        />
+                @empty
+                    <div class="news-col" style="flex: 0 0 100%; max-width: 100%; text-align: center; color: rgba(255,255,255,0.8); padding: 2rem;">
+                        Belum ada berita.
                     </div>
-                    <div class="news-col">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Sosial']"
-                            title="Bantuan Kematian Untuk Keluarga Anggota"
-                            url="#berita-3"
-                        />
-                    </div>
-
-                    <!-- Row 2 -->
-                    <div class="news-col">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1551818255-e6e10975bc17?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Kegiatan']"
-                            title="Rapat Koordinasi Bulanan Pengurus"
-                            url="#berita-4"
-                        />
-                    </div>
-                    <div class="news-col">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1521791136064-7986c2920216?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Edukasi']"
-                            title="Sosialisasi Tata Cara Pengurusan Jenazah"
-                            url="#berita-5"
-                        />
-                    </div>
-                    <div class="news-col">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Pengumuman']"
-                            title="Jadwal Piket Minggu Ini"
-                            url="#berita-6"
-                        />
-                    </div>
-
-                    <!-- Row 3 (Hidden initially) -->
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita']"
-                            title="Penyaluran Bantuan Untuk Keluarga Terdampak"
-                            url="#berita-7"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Kegiatan', 'Sosial']"
-                            title="Bakti Sosial RKM Al-Jannah"
-                            url="#berita-8"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Edukasi']"
-                            title="Workshop Manajemen Organisasi"
-                            url="#berita-9"
-                        />
-                    </div>
-
-                    <!-- Row 4 (Hidden initially) -->
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Pengumuman']"
-                            title="Update Sistem Informasi Anggota"
-                            url="#berita-10"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Kegiatan']"
-                            title="Pelatihan Relawan Baru"
-                            url="#berita-11"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita']"
-                            title="Laporan Keuangan Semester 1"
-                            url="#berita-12"
-                        />
-                    </div>
-
-                    <!-- Row 5 (Hidden initially) -->
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Pengumuman']"
-                            title="Perubahan Jadwal Kegiatan"
-                            url="#berita-13"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Kegiatan']"
-                            title="Kunjungan Dari Organisasi Mitra"
-                            url="#berita-14"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Sosial']"
-                            title="Penyerahan Bantuan Akhir Tahun"
-                            url="#berita-15"
-                        />
-                    </div>
-
-                    <!-- Row 6 (Hidden initially) -->
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1551818255-e6e10975bc17?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita']"
-                            title="Evaluasi Program Kerja 2026"
-                            url="#berita-16"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1521791136064-7986c2920216?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Edukasi', 'Kegiatan']"
-                            title="Seminar Kesehatan Mental"
-                            url="#berita-17"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Pengumuman']"
-                            title="Pendaftaran Anggota Baru Dibuka"
-                            url="#berita-18"
-                        />
-                    </div>
-
-                    <!-- Row 7 (Hidden initially) -->
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Berita', 'Sosial']"
-                            title="Program Beasiswa Untuk Yatim"
-                            url="#berita-19"
-                        />
-                    </div>
-                    <div class="news-col" data-hidden="true">
-                        <x-news-card 
-                            image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
-                            :tags="['Kegiatan']"
-                            title="Gathering Anggota Tahunan"
-                            url="#berita-20"
-                        />
-                    </div>
+                @endforelse
                 </div>
                 <div class="news-footer">
                     <a href="#semua-berita" class="btn-see-all">Lihat Selengkapnya</a>

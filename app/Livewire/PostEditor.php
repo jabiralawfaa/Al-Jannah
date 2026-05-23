@@ -41,12 +41,14 @@ class PostEditor extends Component implements HasActions, HasForms
 
         if ($post) {
             $this->post->load('media');
-            $this->form->fill([
-                'content' => $post->content,
-            ]);
-            $this->data['title'] = $post->title;
-            $this->data['category_id'] = $post->category_id;
         }
+
+        $this->form->fill([
+            'content' => $post?->content ?? null,
+        ]);
+
+        $this->data['title'] = $post?->title ?? '';
+        $this->data['category_id'] = $post?->category_id ?? null;
     }
 
     public function removeThumbnail()
@@ -64,6 +66,8 @@ class PostEditor extends Component implements HasActions, HasForms
                 RichEditor::make('content')
                     ->hiddenLabel()
                     ->required()
+                    ->live()
+                    ->preventFileAttachmentPathTampering(fn (): bool => $this->post !== null)
                     ->toolbarButtons([
                         ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link', 'h2', 'h3', 'h4', 'alignStart', 'alignCenter', 'alignEnd', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
                         ['pickImage', 'pickFile', 'table', 'tableAddColumnBefore', 'tableAddColumnAfter', 'tableDeleteColumn', 'tableAddRowBefore', 'tableAddRowAfter', 'tableDeleteRow', 'tableMergeCells', 'tableSplitCell', 'tableToggleHeaderRow', 'tableToggleHeaderCell', 'tableDelete'],
@@ -78,9 +82,21 @@ class PostEditor extends Component implements HasActions, HasForms
     {
         $this->validate();
 
-        $data = $this->data;
-        $data['slug'] = Str::slug($data['title']);
-        $data['status'] = 'draft';
+        $formState = $this->form->getState();
+
+        $content = $formState['content'] ?? '';
+
+        if ($content) {
+            $content = Str::sanitizeHtml($content);
+        }
+
+        $data = [
+            'title' => $this->data['title'],
+            'slug' => Str::slug($this->data['title']),
+            'content' => $content,
+            'category_id' => $this->data['category_id'] ?? null,
+            'status' => 'draft',
+        ];
 
         if ($this->thumbnail) {
             $storedName = \App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName());
@@ -89,10 +105,9 @@ class PostEditor extends Component implements HasActions, HasForms
                 'file_path' => $path,
                 'file_name' => $this->thumbnail->getClientOriginalName(),
                 'mime_type' => $this->thumbnail->getMimeType(),
+                'file_size' => $this->thumbnail->getSize(),
             ]);
             $data['media_id'] = $media->id;
-        } elseif (!isset($data['media_id'])) {
-            $data['media_id'] = null;
         }
 
         if ($this->post) {

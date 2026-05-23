@@ -274,7 +274,7 @@
                             <span class="material-icons" style="font-size:14px;">edit</span>
                             Edit
                         </a>
-                        <form method="POST" action="#" style="display:inline;" onsubmit="return confirm('Hapus postingan ini?')">
+                        <form method="POST" action="{{ route('adminweb.posts.destroy', $post->id) }}" style="display:inline;" onsubmit="return confirm('Hapus postingan ini?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn-action btn-action-danger">
@@ -287,7 +287,7 @@
                                 Diterapkan
                             </span>
                         @else
-                            <form method="POST" action="#" style="display:inline;">
+                            <form method="POST" action="{{ route('adminweb.posts.publish', $post->id) }}" style="display:inline;">
                                 @csrf
                                 @method('PUT')
                                 <button type="submit" class="btn-action btn-action-success">

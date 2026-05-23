@@ -11,11 +11,28 @@ use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\BendaharaController;
 
 Route::get('/', function () {
-    return view('public.index');
+    $posts = App\Models\Post::with(['category', 'media'])
+        ->where('status', 'published')
+        ->latest('published_at')
+        ->get();
+
+    return view('public.index', compact('posts'));
 })->name('home');
 
-Route::get('/berita/{slug}', function ($slug = 'kegiatan-rutin-rkm-al-jannah-bulan-ini') {
-    return view('public.berita-detail');
+Route::get('/berita/{slug}', function ($slug) {
+    $post = App\Models\Post::with(['category', 'media'])
+        ->where('slug', $slug)
+        ->where('status', 'published')
+        ->firstOrFail();
+
+    $relatedPosts = App\Models\Post::with('media')
+        ->where('id', '!=', $post->id)
+        ->where('status', 'published')
+        ->latest('published_at')
+        ->take(3)
+        ->get();
+
+    return view('public.berita-detail', compact('post', 'relatedPosts'));
 })->name('post.show');
 
 Route::get('/daftar', [PendaftaranController::class, 'create'])->name('register');
@@ -117,6 +134,8 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
     Route::get('/adminweb/posts', [AdminWebController::class, 'posts'])->name('adminweb.posts');
     Route::get('/adminweb/posts/buat', [AdminWebController::class, 'createPost'])->name('adminweb.posts.create');
     Route::get('/adminweb/posts/{id}/edit', [AdminWebController::class, 'editPost'])->name('adminweb.posts.edit');
+    Route::put('/adminweb/posts/{id}/publish', [AdminWebController::class, 'publishPost'])->name('adminweb.posts.publish');
+    Route::delete('/adminweb/posts/{id}', [AdminWebController::class, 'destroyPost'])->name('adminweb.posts.destroy');
 
     Route::post('/adminweb/kategori', [AdminWebController::class, 'storeCategory'])->name('adminweb.kategori.store');
 });

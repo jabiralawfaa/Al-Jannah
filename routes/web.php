@@ -9,6 +9,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LogistikController;
 use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\BendaharaController;
+use App\Http\Controllers\FileController;
 
 Route::get('/', function () {
     $posts = App\Models\Post::with(['category', 'media'])
@@ -139,3 +140,10 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
 
     Route::post('/adminweb/kategori', [AdminWebController::class, 'storeCategory'])->name('adminweb.kategori.store');
 });
+
+// Public file serving — zero-trust (download only)
+Route::get('/file/{id}', [FileController::class, 'downloadFile'])->name('file.download');
+Route::get('/media/{id}', [FileController::class, 'downloadMedia'])->name('media.download');
+
+// Catch-all: intercept legacy /storage/* paths after symlink removal
+Route::get('/storage/{path}', [FileController::class, 'serveStorage'])->where('path', '.*');

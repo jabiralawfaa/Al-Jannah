@@ -145,7 +145,10 @@ class SuperAdminController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return Storage::disk($disk)->download($file->file_path, $file->nama_file);
+        return Storage::disk($disk)->download($file->file_path, $file->nama_file, [
+            'Content-Type' => 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     private function klasifikasikanEkstensi(string $extension): string

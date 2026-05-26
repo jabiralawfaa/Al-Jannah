@@ -49,7 +49,7 @@ class EditorUploadController extends Controller
             'uploaded_by' => auth()->id(),
         ]);
 
-        $url = Storage::disk($disk)->url($storedPath);
+        $url = route('file.download', $fileRecord);
 
         return response()->json([
             'success' => true,

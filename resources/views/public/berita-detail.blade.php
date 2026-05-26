@@ -230,6 +230,14 @@
             text-decoration: none;
         }
 
+        .post-content .file-embed-link:empty::after {
+            content: 'Download File';
+        }
+
+        .post-content .file-embed-link[data-file-name]:not([data-file-name=""]):empty::after {
+            content: attr(data-file-name);
+        }
+
         .post-content .file-embed-link:hover {
             text-decoration: underline;
         }
@@ -438,7 +446,7 @@
 
     @php
         $imageUrl = $post->media
-            ? asset('storage/' . $post->media->file_path)
+            ? route('media.download', $post->media)
             : null;
         $postDate = $post->published_at
             ? \Carbon\Carbon::parse($post->published_at)->locale('id')->isoFormat('D MMMM YYYY')
@@ -535,7 +543,7 @@
                     @foreach($relatedPosts as $related)
                         @php
                             $relatedImageUrl = $related->media
-                                ? asset('storage/' . $related->media->file_path)
+                                ? route('media.download', $related->media)
                                 : 'https://via.placeholder.com/400x250?text=No+Image';
                         @endphp
                         <a href="{{ route('post.show', $related->slug) }}" style="background: linear-gradient(135deg, #6A9C89 0%, #16423C 100%); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(22, 66, 60, 0.3); transition: transform 0.3s ease, box-shadow 0.3s ease; display: block;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(22, 66, 60, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(22, 66, 60, 0.3)'">

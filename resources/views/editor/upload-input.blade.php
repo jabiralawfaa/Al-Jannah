@@ -236,10 +236,6 @@
         document.getElementById('fi-uploaded-file-json').dispatchEvent(new Event('input', { bubbles: true }));
     }
 }">
-    <!-- Livewire-bound hidden inputs -->
-    <input type="hidden" id="fi-uploaded-file-json" wire:model="mountedActions.0.data.uploaded_file_json" />
-    <input type="hidden" id="fi-alt-text" wire:model="mountedActions.0.data.alt_text" />
-
     <!-- DROP ZONE -->
     <div x-show="!fileName"
          @dragover.prevent="isDragOver = true"

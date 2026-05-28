@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Filament\RichEditor\FileEmbedPlugin;
 use App\Models\Category;
 use App\Models\Media;
 use App\Models\Post;
@@ -69,7 +70,7 @@ class PostEditor extends Component implements HasActions, HasForms
                     ->hiddenLabel()
                     ->required()
                     ->live()
-                    ->preventFileAttachmentPathTampering(fn (): bool => $this->post !== null)
+                    ->plugins([new FileEmbedPlugin])
                     ->toolbarButtons([
                         ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link', 'h2', 'h3', 'h4', 'alignStart', 'alignCenter', 'alignEnd', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
                         ['pickImage', 'pickFile', 'table', 'tableAddColumnBefore', 'tableAddColumnAfter', 'tableDeleteColumn', 'tableAddRowBefore', 'tableAddRowAfter', 'tableDeleteRow', 'tableMergeCells', 'tableSplitCell', 'tableToggleHeaderRow', 'tableToggleHeaderCell', 'tableDelete'],
@@ -86,19 +87,51 @@ class PostEditor extends Component implements HasActions, HasForms
 
         $rawContent = $this->data['content'] ?? '';
         if (is_array($rawContent)) {
-            $content = app(\Filament\Forms\Components\RichEditor\RichContentRenderer::class, ['content' => $rawContent])->toUnsafeHtml();
+            $renderer = app(\Filament\Forms\Components\RichEditor\RichContentRenderer::class, ['content' => $rawContent]);
+            $content = $renderer->getEditor()->getHTML();
         } else {
             $content = (string) $rawContent;
         }
 
         if ($content) {
-            $content = preg_replace_callback(
-                '/<a\s+([^>]*data-file-name="([^"]*)"[^>]*)><\/a>/i',
-                fn ($m) => '<a ' . $m[1] . '>' . (strlen($m[2]) ? htmlspecialchars($m[2], ENT_QUOTES, 'UTF-8') : 'Download File') . '</a>',
+            $content = preg_replace(
+                '/<div([^>]*data-type="file-embed"[^>]*)>\s*<a([^>]*)>.*?<\/a>\s*<\/div>/is',
+                '<div$1><a$2></a></div>',
                 $content,
             );
 
-            $content = Str::sanitizeHtml($content);
+            $content = preg_replace_callback(
+                '/<a\s+([^>]*href\s*=\s*")([^"]*)("[^>]*>)/i',
+                function ($m) {
+                    $href = $m[2];
+                    if ($href !== '' && !preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]*:/', $href) && $href[0] !== '/' && $href[0] !== '#') {
+                        $href = 'https://' . $href;
+                    }
+                    return '<a ' . $m[1] . $href . $m[3];
+                },
+                $content,
+            );
+
+            $content = (new \Symfony\Component\HtmlSanitizer\HtmlSanitizer(
+                (new \Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig)
+                    ->allowSafeElements()
+                    ->allowRelativeLinks()
+                    ->allowAttribute('class', allowedElements: '*')
+                    ->allowAttribute('data-color', allowedElements: '*')
+                    ->allowAttribute('data-cols', allowedElements: '*')
+                    ->allowAttribute('data-col-span', allowedElements: '*')
+                    ->allowAttribute('data-from-breakpoint', allowedElements: '*')
+                    ->allowAttribute('data-id', allowedElements: '*')
+                    ->allowAttribute('data-type', allowedElements: '*')
+                    ->allowAttribute('data-file-id', allowedElements: '*')
+                    ->allowAttribute('data-file-name', allowedElements: '*')
+                    ->allowAttribute('data-file-url', allowedElements: '*')
+                    ->allowAttribute('data-mime-type', allowedElements: '*')
+                    ->allowAttribute('style', allowedElements: '*')
+                    ->allowAttribute('width', allowedElements: 'img')
+                    ->allowAttribute('height', allowedElements: 'img')
+                    ->withMaxInputLength(500000),
+            ))->sanitize($content);
         }
 
         $baseSlug = Str::slug($this->data['title']);

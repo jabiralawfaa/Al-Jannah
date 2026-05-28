@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             StokBarangSeeder::class,
             AsetKendaraanSeeder::class,
             CmsSeeder::class,
+            PageSeeder::class,
         ]);
     }
 }

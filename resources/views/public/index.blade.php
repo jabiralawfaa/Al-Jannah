@@ -1126,8 +1126,8 @@
         <div class="hero-content">
             <div class="hero-logo-container">
                 <img src="{{ asset('images/logo-al-jannah.png') }}" alt="RKM Al-Jannah Logo" class="hero-logo">
-                <h1 class="hero-title">RKM Al-Jannah</h1>
-                <p class="hero-subtitle">Bersama dalam Kepedulian, Hadir saat Masa Duka dengan Amanah dan Transparan</p>
+                <h1 class="hero-title">{{ $content['hero']['title'] ?? 'RKM Al-Jannah' }}</h1>
+                <p class="hero-subtitle">{{ $content['hero']['subtitle'] ?? 'Bersama dalam Kepedulian, Hadir saat Masa Duka dengan Amanah dan Transparan' }}</p>
             </div>
         </div>
 
@@ -1139,14 +1139,13 @@
     <section class="about-section" id="visi-misi">
         <div class="about-container">
             <div class="about-box">
-                <h2 class="about-title">Apa itu RKM AL JANNAH ?</h2>
+                <h2 class="about-title">{{ $content['about']['title'] ?? 'Apa itu RKM AL JANNAH ?' }}</h2>
                 <p class="about-content">
-                    Rukun Kematian (RKM) AL Jannah adalah bentuk kerjasama antara yayasan Sa'ad Bin Abi Waqqosh dengan sanggar Ma'e, sebagai tanda bakti kepada masyarakat dalam memberikan pertolongan kepada anggota Rukun Kematian yang meninggal dunia yang sesuai Sunnah (tata cara yang rosululloh shallallahu Aalaihi wasallam ajarkan).
+                    {{ $content['about']['content'] ?? 'Rukun Kematian (RKM) AL Jannah adalah bentuk kerjasama antara yayasan Sa\'ad Bin Abi Waqqosh dengan sanggar Ma\'e, sebagai tanda bakti kepada masyarakat dalam memberikan pertolongan kepada anggota Rukun Kematian yang meninggal dunia yang sesuai Sunnah (tata cara yang rosululloh shallallahu Aalaihi wasallam ajarkan).' }}
                 </p>
             </div>
             <p class="about-footer">
-                Berdiri sejak: 2017<br>
-                Di bawah naungan Yayasan Sa'ad Bin Abi Waqqash
+                {!! $content['about']['footer'] ?? 'Berdiri sejak: 2017<br>Di bawah naungan Yayasan Sa\'ad Bin Abi Waqqash' !!}
             </p>
         </div>
     </section>
@@ -1158,7 +1157,7 @@
             <article class="vm-box">
                 <h2 class="vm-title">Visi</h2>
                 <p class="vm-content center">
-                    Rukun kematian yang mampu mengangkat harkat dan martabat keluarga anggotanya yang meninggal dunia.
+                    {{ $content['vision'] ?? 'Rukun kematian yang mampu mengangkat harkat dan martabat keluarga anggotanya yang meninggal dunia.' }}
                 </p>
             </article>
 
@@ -1166,14 +1165,17 @@
             <article class="vm-box">
                 <h2 class="vm-title">Misi</h2>
                 <div class="vm-content">
-                    <p>1. Memberikan pertolongan yang adil dan merata bagi seluruh anggota RKM.</p>
-                    <p>Pertolongan yang dimaksud adalah:</p>
+                    @php $mission = $content['mission'] ?? []; @endphp
+                    <p>{{ $mission['heading'] ?? 'Memberikan pertolongan yang adil dan merata bagi seluruh anggota RKM.' }}</p>
+                    @if(($mission['subheading'] ?? null))
+                        <p>{{ $mission['subheading'] }}</p>
+                    @endif
                     <ul>
-                        <li>Bantuan materi</li>
-                        <li>Bantuan Tenaga</li>
-                        <li>Bantuan Jasa</li>
+                        @foreach(($mission['items'] ?? ['Bantuan materi', 'Bantuan Tenaga', 'Bantuan Jasa']) as $item)
+                            <li>{{ $item }}</li>
+                        @endforeach
                     </ul>
-                    <p>2. Membantu masyarakat yang membutuhkan bantuan dalam hal kepengurusan jenazah</p>
+                    <p>{{ $mission['closing'] ?? 'Membantu masyarakat yang membutuhkan bantuan dalam hal kepengurusan jenazah' }}</p>
                 </div>
             </article>
         </div>
@@ -1217,68 +1219,33 @@
     <!-- Benefits Section (Layanan & Keuntungan) -->
     <section class="benefits-section" id="layanan-keuntungan">
         <div class="benefits-container">
-            <h2 class="benefits-title">Layanan Kami</h2>
+            @php $services = $content['services'] ?? []; @endphp
+            <h2 class="benefits-title">{{ $services['title'] ?? 'Layanan Kami' }}</h2>
             <div class="benefits-grid">
-                <!-- Card 1: Perawatan Jenazah -->
-                <div class="benefits-card">
-                    <div class="benefits-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
+                @php
+                    $defaultServices = [
+                        ['title' => 'Perawatan Jenazah', 'desc' => 'Melaksanakan proses pemulasaraan jenazah sesuai syariat Islam, meliputi pemandian dan perawatan jenazah oleh petugas yang telah ditetapkan.'],
+                        ['title' => 'Pengafanan', 'desc' => 'Menyediakan 1 (satu) set perlengkapan kain kafan lengkap beserta kebutuhan lainnya, serta pelaksanaan pengafanan sesuai tuntunan syariat.'],
+                        ['title' => 'Ambulance', 'desc' => 'Menyediakan layanan mobil ambulance untuk pengantaran jenazah ke tempat pemakaman dengan pengaturan jadwal dan rute yang terkoordinasi.'],
+                        ['title' => 'Pemakaman', 'desc' => 'Mengatur dan mendampingi pelaksanaan sholat jenazah serta proses pemakaman hingga selesai sesuai ketentuan yang berlaku.'],
+                    ];
+                    $svgs = [
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>',
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4 8 4v14"></path><path d="M17 21v-8.5a1.5 1.5 0 0 0-3 0V21"></path></svg>',
+                    ];
+                    $items = $services['items'] ?? $defaultServices;
+                @endphp
+                @foreach($items as $i => $svc)
+                    <div class="benefits-card">
+                        <div class="benefits-card-icon">
+                            {!! $svgs[$i] ?? $svgs[0] !!}
+                        </div>
+                        <h3 class="benefits-card-title">{{ $svc['title'] ?? $defaultServices[$i]['title'] ?? '' }}</h3>
+                        <p class="benefits-card-text">{{ $svc['description'] ?? $svc['desc'] ?? $defaultServices[$i]['desc'] ?? '' }}</p>
                     </div>
-                    <h3 class="benefits-card-title">Perawatan Jenazah</h3>
-                    <p class="benefits-card-text">
-                        Melaksanakan proses pemulasaraan jenazah sesuai syariat Islam, meliputi pemandian dan perawatan jenazah oleh petugas yang telah ditetapkan.
-                    </p>
-                </div>
-
-                <!-- Card 2: Pengafanan -->
-                <div class="benefits-card">
-                    <div class="benefits-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="6" cy="6" r="3"></circle>
-                            <circle cx="6" cy="18" r="3"></circle>
-                            <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
-                            <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
-                            <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
-                        </svg>
-                    </div>
-                    <h3 class="benefits-card-title">Pengafanan</h3>
-                    <p class="benefits-card-text">
-                        Menyediakan 1 (satu) set perlengkapan kain kafan lengkap beserta kebutuhan lainnya, serta pelaksanaan pengafanan sesuai tuntunan syariat.
-                    </p>
-                </div>
-
-                <!-- Card 3: Ambulance -->
-                <div class="benefits-card">
-                    <div class="benefits-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="1" y="3" width="15" height="13"></rect>
-                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                        </svg>
-                    </div>
-                    <h3 class="benefits-card-title">Ambulance</h3>
-                    <p class="benefits-card-text">
-                        Menyediakan layanan mobil ambulance untuk pengantaran jenazah ke tempat pemakaman dengan pengaturan jadwal dan rute yang terkoordinasi.
-                    </p>
-                </div>
-
-                <!-- Card 4: Pemakaman -->
-                <div class="benefits-card">
-                    <div class="benefits-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 21h18"></path>
-                            <path d="M5 21V7l8-4 8 4v14"></path>
-                            <path d="M17 21v-8.5a1.5 1.5 0 0 0-3 0V21"></path>
-                        </svg>
-                    </div>
-                    <h3 class="benefits-card-title">Pemakaman</h3>
-                    <p class="benefits-card-text">
-                        Mengatur dan mendampingi pelaksanaan sholat jenazah serta proses pemakaman hingga selesai sesuai ketentuan yang berlaku.
-                    </p>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -1286,31 +1253,28 @@
     <!-- Member Benefits Section (Keuntungan Anggota) -->
     <section class="member-benefits-section">
         <div class="member-benefits-container">
-            <h2 class="member-benefits-title">Keuntungan Anggota</h2>
+            @php $memberBenefits = $content['member_benefits'] ?? []; @endphp
+            <h2 class="member-benefits-title">{{ $memberBenefits['title'] ?? 'Keuntungan Anggota' }}</h2>
             <div class="member-benefits-grid">
-                <!-- Card 1: Santunan -->
-                <div class="member-benefits-card">
-                    <img src="{{ asset('images/keuntungan/santunan.png') }}" alt="Santunan" class="member-benefits-image">
-                    <h3 class="member-benefits-card-title">Santunan</h3>
-                </div>
-
-                <!-- Card 2: Paket Pengurusan Jenazah -->
-                <div class="member-benefits-card">
-                    <img src="{{ asset('images/keuntungan/paket-pengurusan-jenazah.png') }}" alt="Paket Pengurusan Jenazah" class="member-benefits-image">
-                    <h3 class="member-benefits-card-title">Paket Pengurusan Jenazah</h3>
-                </div>
-
-                <!-- Card 3: Hak Suara dalam Rapat -->
-                <div class="member-benefits-card">
-                    <img src="{{ asset('images/keuntungan/hak-suara.png') }}" alt="Hak Suara dalam Rapat" class="member-benefits-image">
-                    <h3 class="member-benefits-card-title">Hak Suara dalam Rapat</h3>
-                </div>
-
-                <!-- Card 4: Pelayanan Setara -->
-                <div class="member-benefits-card">
-                    <img src="{{ asset('images/keuntungan/pelayanan-setara.png') }}" alt="Pelayanan Setara" class="member-benefits-image">
-                    <h3 class="member-benefits-card-title">Pelayanan Setara</h3>
-                </div>
+                @php
+                    $defaultBenefits = [
+                        ['title' => 'Santunan', 'image' => 'santunan.png'],
+                        ['title' => 'Paket Pengurusan Jenazah', 'image' => 'paket-pengurusan-jenazah.png'],
+                        ['title' => 'Hak Suara dalam Rapat', 'image' => 'hak-suara.png'],
+                        ['title' => 'Pelayanan Setara', 'image' => 'pelayanan-setara.png'],
+                    ];
+                    $items = $memberBenefits['items'] ?? $defaultBenefits;
+                @endphp
+                @foreach($items as $i => $benefit)
+                    @php
+                        $img = $benefit['image'] ?? $defaultBenefits[$i]['image'] ?? '';
+                        $ttl = $benefit['title'] ?? $defaultBenefits[$i]['title'] ?? '';
+                    @endphp
+                    <div class="member-benefits-card">
+                        <img src="{{ asset('images/keuntungan/'.$img) }}" alt="{{ $ttl }}" class="member-benefits-image">
+                        <h3 class="member-benefits-card-title">{{ $ttl }}</h3>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -1319,7 +1283,8 @@
     <section class="contact-section" id="hubungi-kami">
         <div class="contact-container">
             <div class="contact-header">
-                <h2 class="contact-title">Hubungi Kami</h2>
+                @php $contact = $content['contact'] ?? []; @endphp
+                <h2 class="contact-title">{{ $contact['title'] ?? 'Hubungi Kami' }}</h2>
             </div>
             <div class="contact-grid">
                 <div class="contact-card">
@@ -1331,9 +1296,7 @@
                     </div>
                     <h3 class="contact-card-title">Alamat</h3>
                     <p class="contact-card-text">
-                        Yayasan Sa'ad Bin Abi Waqqosh<br>
-                        Sanggar Ma'e<br>
-                        Indonesia
+                        {!! $contact['address'] ?? 'Yayasan Sa\'ad Bin Abi Waqqosh<br>Sanggar Ma\'e<br>Indonesia' !!}
                     </p>
                 </div>
 
@@ -1346,7 +1309,7 @@
                     </div>
                     <h3 class="contact-card-title">Email</h3>
                     <p class="contact-card-text">
-                        <a href="mailto:info@aljannah.org">info@aljannah.org</a>
+                        <a href="mailto:{{ $contact['email'] ?? 'info@aljannah.org' }}">{{ $contact['email'] ?? 'info@aljannah.org' }}</a>
                     </p>
                 </div>
 
@@ -1358,7 +1321,7 @@
                     </div>
                     <h3 class="contact-card-title">Telepon</h3>
                     <p class="contact-card-text">
-                        <a href="tel:+6281234567890">+62 812-3456-7890</a>
+                        <a href="tel:{{ $contact['phone'] ?? '+6281234567890' }}">{{ $contact['phone'] ?? '+62 812-3456-7890' }}</a>
                     </p>
                 </div>
             </div>

@@ -11,13 +11,18 @@ use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\BendaharaController;
 use App\Http\Controllers\FileController;
 
+use App\Models\Page;
+
 Route::get('/', function () {
     $posts = App\Models\Post::with(['category', 'media'])
         ->where('status', 'published')
         ->latest('published_at')
         ->get();
 
-    return view('public.index', compact('posts'));
+    $page = Page::where('slug', 'beranda')->where('status', 'published')->first();
+    $content = $page ? json_decode($page->content, true) : [];
+
+    return view('public.index', compact('posts', 'content'));
 })->name('home');
 
 Route::get('/berita/{slug}', function ($slug) {
@@ -35,6 +40,11 @@ Route::get('/berita/{slug}', function ($slug) {
 
     return view('public.berita-detail', compact('post', 'relatedPosts'));
 })->name('post.show');
+
+Route::get('/page/{slug}', function ($slug) {
+    $page = App\Models\Page::where('slug', $slug)->where('status', 'published')->firstOrFail();
+    return view('public.page-detail', compact('page'));
+})->name('page.show');
 
 Route::get('/daftar', [PendaftaranController::class, 'create'])->name('register');
 Route::post('/register-member', [PendaftaranController::class, 'store'])->name('register-member.store');
@@ -139,6 +149,11 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
     Route::delete('/adminweb/posts/{id}', [AdminWebController::class, 'destroyPost'])->name('adminweb.posts.destroy');
 
     Route::post('/adminweb/kategori', [AdminWebController::class, 'storeCategory'])->name('adminweb.kategori.store');
+
+    Route::get('/adminweb/pages', [AdminWebController::class, 'pages'])->name('adminweb.pages');
+    Route::get('/adminweb/pages/{id}/edit', [AdminWebController::class, 'editPage'])->name('adminweb.pages.edit');
+    Route::put('/adminweb/pages/{id}/publish', [AdminWebController::class, 'publishPage'])->name('adminweb.pages.publish');
+    Route::delete('/adminweb/pages/{id}', [AdminWebController::class, 'destroyPage'])->name('adminweb.pages.destroy');
 });
 
 // Public file serving — zero-trust (download only)

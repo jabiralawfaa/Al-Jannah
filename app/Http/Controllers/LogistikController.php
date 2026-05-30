@@ -56,16 +56,6 @@ class LogistikController extends Controller
         return view('dashboard.logistik.aset');
     }
 
-    public function barangMasuk()
-    {
-        return view('dashboard.logistik.barang-masuk');
-    }
-
-    public function barangKeluar()
-    {
-        return view('dashboard.logistik.barang-keluar');
-    }
-
     public function riwayat()
     {
         return view('dashboard.logistik.riwayat');

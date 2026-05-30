@@ -49,10 +49,6 @@ Route::middleware(['auth', 'role:logistik,superadmin'])->group(function () {
 
     Route::get('/logistik/aset', [LogistikController::class, 'aset'])->name('logistik.aset');
 
-    Route::get('/logistik/barang-masuk', [LogistikController::class, 'barangMasuk'])->name('logistik.barang-masuk');
-
-    Route::get('/logistik/barang-keluar', [LogistikController::class, 'barangKeluar'])->name('logistik.barang-keluar');
-
     Route::get('/logistik/riwayat', [LogistikController::class, 'riwayat'])->name('logistik.riwayat');
 });
 

@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\FileOrganisasi;
+use App\Models\Media;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
+
+class FileController extends Controller
+{
+    public function downloadFile(int $id): Response
+    {
+        $file = FileOrganisasi::find($id);
+
+        if (! $file) {
+            abort(404);
+        }
+
+        $disk = match ($file->kategori) {
+            'diterima' => 'file_diterima',
+            'mencurigakan' => 'file_mencurigakan',
+            'ditolak' => 'file_ditolak',
+            default => 'file_diterima',
+        };
+
+        if (blank($file->file_path)) {
+            abort(404, 'File path is missing for this record.');
+        }
+
+        $diskDriver = Storage::disk($disk);
+
+        if (! $diskDriver->exists($file->file_path)) {
+            abort(404);
+        }
+
+        $fullPath = $diskDriver->path($file->file_path);
+
+        return $this->serve($fullPath, $file->nama_file);
+    }
+
+    public function downloadMedia(int $id): Response
+    {
+        $media = Media::find($id);
+
+        if (! $media) {
+            abort(404);
+        }
+
+        $diskDriver = Storage::disk('local');
+
+        if (! $diskDriver->exists($media->file_path)) {
+            abort(404);
+        }
+
+        $fullPath = $diskDriver->path($media->file_path);
+
+        return $this->serve($fullPath, $media->file_name);
+    }
+
+    public function serveStorage(string $path): Response
+    {
+        $pattern = '#^file_organisasi/(diterima|mencurigakan|ditolak)/(.+)$#';
+        if (preg_match($pattern, $path, $m)) {
+            $kategori = $m[1];
+            $filePath = $m[2];
+            $disk = match ($kategori) {
+                'diterima' => 'file_diterima',
+                'mencurigakan' => 'file_mencurigakan',
+                'ditolak' => 'file_ditolak',
+            };
+            $diskDriver = Storage::disk($disk);
+
+            if (! $diskDriver->exists($filePath)) {
+                abort(404);
+            }
+
+            return $this->serve($diskDriver->path($filePath), basename($filePath));
+        }
+
+        if (str_starts_with($path, 'thumbnails/')) {
+            $diskDriver = Storage::disk('local');
+
+            if (! $diskDriver->exists($path)) {
+                abort(404);
+            }
+
+            return $this->serve($diskDriver->path($path), basename($path));
+        }
+
+        abort(404);
+    }
+
+    private function serve(string $fullPath, string $filename): Response
+    {
+        $secFetchDest = strtolower(request()->header('Sec-Fetch-Dest', ''));
+        $accept = strtolower(request()->header('Accept', ''));
+
+        $headers = [
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, private',
+        ];
+
+        if ($secFetchDest === 'image' || ($secFetchDest === '' && str_contains($accept, 'image/'))) {
+            $headers['Content-Disposition'] = 'inline; filename="' . addcslashes($filename, '"') . '"';
+
+            return response()->file($fullPath, $headers);
+        }
+
+        $headers['Content-Type'] = 'application/octet-stream';
+        $headers['Content-Disposition'] = 'attachment; filename="' . addcslashes($filename, '"') . '"';
+        $headers['Pragma'] = 'no-cache';
+
+        return response()->download($fullPath, $filename, $headers);
+    }
+}

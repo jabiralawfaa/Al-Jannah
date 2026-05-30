@@ -33,7 +33,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
@@ -49,9 +49,8 @@ return [
 
         'file_diterima' => [
             'driver' => 'local',
-            'root' => storage_path('app/public/file_organisasi/diterima'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/file_organisasi/diterima',
-            'visibility' => 'public',
+            'root' => storage_path('app/private/file_organisasi/diterima'),
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
         ],

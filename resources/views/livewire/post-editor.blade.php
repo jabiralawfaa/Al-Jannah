@@ -321,7 +321,7 @@
                     <img src="{{ $thumbnail->temporaryUrl() }}" alt="Preview">
                     <button type="button" class="cover-remove" wire:click="$set('thumbnail', null)" x-on:click.stop>&times;</button>
                 @elseif ($post && $post->media)
-                    <img src="{{ asset('storage/' . $post->media->file_path) }}" alt="Current thumbnail">
+                    <img src="{{ route('media.download', $post->media) }}" alt="Current thumbnail">
                     <button type="button" class="cover-remove" wire:click="removeThumbnail" x-on:click.stop>&times;</button>
                 @else
                     <div class="cover-placeholder">

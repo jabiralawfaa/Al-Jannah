@@ -98,7 +98,57 @@ class AdminWebController extends Controller
 
     public function editPage($id)
     {
-        return view('errors.555');
+        $page = Page::findOrFail($id);
+
+        if ($page->slug === 'beranda') {
+            $data = json_decode($page->content, true) ?? [];
+            return view('dashboard.adminweb.page-edit-beranda', compact('page', 'data'));
+        }
+
+        return view('dashboard.adminweb.page-edit', compact('page'));
+    }
+
+    public function updatePage(Request $request, $id)
+    {
+        $page = Page::findOrFail($id);
+
+        if ($page->slug === 'beranda') {
+            $data = $this->sanitizeData($request->except('_token', '_method'));
+
+            $page->update([
+                'content' => json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            ]);
+
+            return redirect()->route('adminweb.pages.edit', $id)
+                ->with('success', 'Halaman Beranda berhasil diperbarui.');
+        }
+
+        $page->update($request->only(['title', 'content']));
+
+        return redirect()->route('adminweb.pages.edit', $id)
+            ->with('success', 'Halaman "' . e($page->title) . '" berhasil diperbarui.');
+    }
+
+    private function sanitizeData(array $data): array
+    {
+        $sanitizer = new \Symfony\Component\HtmlSanitizer\HtmlSanitizer(
+            (new \Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig)
+                ->allowSafeElements()
+                ->allowRelativeLinks()
+                ->allowAttribute('class', allowedElements: '*')
+                ->allowAttribute('style', allowedElements: '*')
+                ->allowAttribute('href', allowedElements: 'a')
+                ->allowAttribute('target', allowedElements: 'a')
+                ->withMaxInputLength(500000),
+        );
+
+        array_walk_recursive($data, function (&$value) use ($sanitizer) {
+            if (is_string($value)) {
+                $value = $sanitizer->sanitize($value);
+            }
+        });
+
+        return $data;
     }
 
     public function pages(Request $request)

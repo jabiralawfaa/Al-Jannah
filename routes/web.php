@@ -152,6 +152,7 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
 
     Route::get('/adminweb/pages', [AdminWebController::class, 'pages'])->name('adminweb.pages');
     Route::get('/adminweb/pages/{id}/edit', [AdminWebController::class, 'editPage'])->name('adminweb.pages.edit');
+    Route::put('/adminweb/pages/{id}', [AdminWebController::class, 'updatePage'])->name('adminweb.pages.update');
     Route::put('/adminweb/pages/{id}/publish', [AdminWebController::class, 'publishPage'])->name('adminweb.pages.publish');
     Route::delete('/adminweb/pages/{id}', [AdminWebController::class, 'destroyPage'])->name('adminweb.pages.destroy');
 });

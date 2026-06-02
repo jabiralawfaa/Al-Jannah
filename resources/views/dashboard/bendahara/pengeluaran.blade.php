@@ -35,8 +35,9 @@
                 <div class="select-wrap">
                     <select id="jenisPengeluaran">
                         <option value="">Pilih salah satu</option>
-                        <option value="Santunan">Santunan</option>
-                        <option value="Operasional">Operasional</option>
+                        @foreach($kategoriList as $k)
+                        <option value="{{ $k->id }}">{{ $k->nama }}</option>
+                        @endforeach
                     </select>
                     <span class="material-icons dropdown-icon">expand_more</span>
                 </div>
@@ -121,7 +122,39 @@
 </div>
 
 <script>
-    function catatPengeluaran() { _catat('Pengeluaran', 'emptyRowPengeluaran', 'riwayatPengeluaranBody'); }
+    function catatPengeluaran() {
+        var formData = new FormData();
+        formData.append('tanggal', document.getElementById('tanggalPengeluaran').value);
+        formData.append('kategori_pengeluaran_id', document.getElementById('jenisPengeluaran').value);
+        formData.append('jumlah', document.getElementById('nominalPengeluaran').value.replace(/[^0-9]/g, ''));
+        formData.append('keterangan', document.getElementById('keteranganPengeluaran').value);
+        var fileInput = document.querySelector('#keteranganPengeluaran').closest('.form-row-2').querySelector('.file-upload input[type=file]');
+        if (fileInput && fileInput.files[0]) formData.append('file_bukti', fileInput.files[0]);
+
+        fetch('/bendahara/pengeluaran', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success) return alert('Gagal menyimpan data');
+            var d = res.data;
+            var emptyRow = document.getElementById('emptyRowPengeluaran');
+            if (emptyRow) emptyRow.remove();
+            var tbody = document.getElementById('riwayatPengeluaranBody');
+            var row = document.createElement('tr');
+            row.innerHTML = '<td>' + d.tanggal + '</td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td>';
+            tbody.appendChild(row);
+            document.getElementById('tanggalPengeluaran').value = '';
+            document.getElementById('jenisPengeluaran').value = '';
+            document.getElementById('nominalPengeluaran').value = '';
+            document.getElementById('keteranganPengeluaran').value = '';
+            var upl = document.querySelector('.file-upload .upload-placeholder');
+            if (upl) upl.textContent = 'Upload here...';
+        })
+        .catch(function() { alert('Terjadi kesalahan'); });
+    }
 </script>
 @endsection
 

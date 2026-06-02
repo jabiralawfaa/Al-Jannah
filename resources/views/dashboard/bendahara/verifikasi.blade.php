@@ -43,19 +43,41 @@
     (function() {
         if (!document.getElementById('vpBody')) return;
 
-        var data = [{no:1,tanggal:'4/22/2026',nama:'Budi Santoso',nominal:'Rp. 30.000',status:'Belum Lunas'}];
+        var data = [];
+
+        function fetchVerifikasiData() {
+            fetch('/bendahara/verifikasi/data')
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    data = res.data;
+                    renderVerifikasiTable();
+                });
+        }
 
         function renderVerifikasiTable() {
             var tbody = document.getElementById('vpBody'), html = '';
             for (var i = 0; i < data.length; i++) {
-                var row = data[i], isLunas = row.status === 'Lunas';
-                html += '<tr><td>' + row.no + '</td><td>' + row.tanggal + '</td><td style="font-weight:600;">' + row.nama + '</td><td>' + row.nominal + '</td><td><span class="badge-status ' + (isLunas ? 'lunas' : 'belum-lunas') + '">' + row.status + '</span></td><td><button class="btn-action sudah-dibayar"' + (isLunas ? ' disabled' : '') + ' onclick="verifikasi(' + i + ')">' + (isLunas ? 'Terverifikasi' : 'Sudah Dibayar') + '</button></td></tr>';
+                var row = data[i];
+                html += '<tr><td>' + row.no + '</td><td>' + row.tanggal + '</td><td style="font-weight:600;">' + row.nama + '</td><td>' + row.nominal + '</td><td><span class="badge-status ' + (row.is_lunas ? 'lunas' : 'belum-lunas') + '">' + row.status + '</span></td><td><button class="btn-action sudah-dibayar"' + (row.is_lunas ? ' disabled' : '') + ' onclick="verifikasi(' + row.id + ')">' + (row.is_lunas ? 'Terverifikasi' : 'Sudah Dibayar') + '</button></td></tr>';
+            }
+            if (!data.length) {
+                html = '<tr><td colspan="6" style="padding:60px 32px;text-align:center;color:#9ca3af;">Belum ada data verifikasi</td></tr>';
             }
             tbody.innerHTML = html;
         }
 
-        window.verifikasi = function(index) { data[index].status = 'Lunas'; renderVerifikasiTable(); };
-        renderVerifikasiTable();
+        window.verifikasi = function(id) {
+            fetch('/bendahara/verifikasi/' + id, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success) fetchVerifikasiData();
+            });
+        };
+
+        fetchVerifikasiData();
     })();
 </script>
 @endsection

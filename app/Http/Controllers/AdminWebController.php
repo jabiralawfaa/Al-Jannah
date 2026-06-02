@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Media;
 use App\Models\Post;
 use App\Models\Page;
 use App\Models\Category;
+use App\Services\FileRenamer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminWebController extends Controller
@@ -113,7 +116,34 @@ class AdminWebController extends Controller
         $page = Page::findOrFail($id);
 
         if ($page->slug === 'beranda') {
+            $request->validate([
+                'services.items.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                'member_benefits.items.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            ]);
+
             $data = $this->sanitizeData($request->except('_token', '_method'));
+
+            if (isset($data['services']['items'])) {
+                foreach ($data['services']['items'] as $i => &$svc) {
+                    if ($request->hasFile("services.items.{$i}.image_file")) {
+                        $svc['image'] = $this->storePageImage($request->file("services.items.{$i}.image_file"));
+                    } else {
+                        $svc['image'] = $svc['existing_image'] ?? '';
+                    }
+                    unset($svc['existing_image']);
+                }
+            }
+
+            if (isset($data['member_benefits']['items'])) {
+                foreach ($data['member_benefits']['items'] as $i => &$item) {
+                    if ($request->hasFile("member_benefits.items.{$i}.image_file")) {
+                        $item['image'] = $this->storePageImage($request->file("member_benefits.items.{$i}.image_file"));
+                    } else {
+                        $item['image'] = $item['existing_image'] ?? '';
+                    }
+                    unset($item['existing_image']);
+                }
+            }
 
             $page->update([
                 'content' => json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
@@ -127,6 +157,22 @@ class AdminWebController extends Controller
 
         return redirect()->route('adminweb.pages.edit', $id)
             ->with('success', 'Halaman "' . e($page->title) . '" berhasil diperbarui.');
+    }
+
+    private function storePageImage($file): string
+    {
+        $storedName = FileRenamer::rename($file->getClientOriginalName());
+        $path = $file->storeAs('page-images', $storedName, 'local');
+        $fileSize = Storage::disk('local')->size($path);
+
+        $media = Media::create([
+            'file_path' => $path,
+            'file_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $fileSize,
+        ]);
+
+        return (string) $media->id;
     }
 
     private function sanitizeData(array $data): array

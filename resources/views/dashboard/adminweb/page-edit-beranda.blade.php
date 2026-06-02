@@ -3,7 +3,7 @@
         ['label' => 'Beranda', 'url' => '/adminweb', 'active' => 'adminweb'],
         ['label' => 'Posts', 'url' => '/adminweb/posts', 'active' => 'adminweb/posts*'],
         ['label' => 'Pages', 'url' => '/adminweb/pages', 'active' => 'adminweb/pages*'],
-        ['label' => 'Menus', 'url' => '#', 'active' => 'adminweb/menus'],
+        ['label' => 'Menus', 'url' => '/adminweb/menus', 'active' => 'adminweb/menus*'],
         ['label' => 'Files & Images', 'url' => '#', 'active' => 'adminweb/files'],
     ]
 ])
@@ -249,7 +249,7 @@
         </a>
     </div>
 
-    <form method="POST" action="{{ route('adminweb.pages.update', $page->id) }}">
+    <form method="POST" action="{{ route('adminweb.pages.update', $page->id) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -392,7 +392,20 @@
                             <textarea name="services[items][{{ $i }}][description]" rows="2" placeholder="Deskripsi">{{ $svc['description'] ?? '' }}</textarea>
                         </div>
                         <div style="margin-top:8px;">
-                            <textarea name="services[items][{{ $i }}][image]" rows="2" placeholder="SVG icon atau path gambar (contoh: &lt;svg...&gt; atau images/icon.svg)" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;background:#f8f9fa;outline:none;box-sizing:border-box;resize:vertical;">{{ $svc['image'] ?? '' }}</textarea>
+                            <input type="hidden" name="services[items][{{ $i }}][existing_image]" value="{{ $svc['image'] ?? '' }}">
+                            <input type="file" name="services[items][{{ $i }}][image_file]" accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp" style="width:100%;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;">
+                            @if(!empty($svc['image']))
+                            <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                                @if(is_numeric($svc['image']))
+                                <img src="{{ route('media.download', (int)$svc['image']) }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #e0e0e0;">
+                                @elseif(str_starts_with($svc['image'], '<svg'))
+                                <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #e0e0e0;border-radius:6px;">{!! $svc['image'] !!}</div>
+                                @else
+                                <img src="{{ asset($svc['image']) }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #e0e0e0;">
+                                @endif
+                                <span style="font-size:11px;color:#6b7280;">Gambar saat ini</span>
+                            </div>
+                            @endif
                         </div>
                     </div>
                     @endforeach
@@ -413,7 +426,8 @@
                             <textarea name="services[items][__INDEX__][description]" rows="2" placeholder="Deskripsi"></textarea>
                         </div>
                         <div style="margin-top:8px;">
-                            <textarea name="services[items][__INDEX__][image]" rows="2" placeholder="SVG icon atau path gambar" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;background:#f8f9fa;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
+                            <input type="hidden" name="services[items][__INDEX__][existing_image]" value="">
+                            <input type="file" name="services[items][__INDEX__][image_file]" accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp" style="width:100%;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;">
                         </div>
                     </div>
                 </template>
@@ -443,7 +457,22 @@
                         </div>
                         <div class="page-edit-subgrid">
                             <input type="text" name="member_benefits[items][{{ $i }}][title]" value="{{ $mb['title'] ?? '' }}" placeholder="Judul">
-                            <input type="text" name="member_benefits[items][{{ $i }}][image]" value="{{ $mb['image'] ?? '' }}" placeholder="SVG, path, atau nama file (contoh: santunan.png)">
+                            <div>
+                                <input type="hidden" name="member_benefits[items][{{ $i }}][existing_image]" value="{{ $mb['image'] ?? '' }}">
+                                <input type="file" name="member_benefits[items][{{ $i }}][image_file]" accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp" style="width:100%;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;">
+                                @if(!empty($mb['image']))
+                                <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                                    @if(is_numeric($mb['image']))
+                                    <img src="{{ route('media.download', (int)$mb['image']) }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #e0e0e0;">
+                                    @elseif(str_starts_with($mb['image'], '<svg'))
+                                    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #e0e0e0;border-radius:6px;">{!! $mb['image'] !!}</div>
+                                    @else
+                                    <img src="{{ asset($mb['image']) }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #e0e0e0;">
+                                    @endif
+                                    <span style="font-size:11px;color:#6b7280;">Gambar saat ini</span>
+                                </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     @endforeach
@@ -461,7 +490,10 @@
                         </div>
                         <div class="page-edit-subgrid">
                             <input type="text" name="member_benefits[items][__INDEX__][title]" placeholder="Judul">
-                            <input type="text" name="member_benefits[items][__INDEX__][image]" placeholder="SVG, path, atau nama file (contoh: santunan.png)">
+                            <div>
+                                <input type="hidden" name="member_benefits[items][__INDEX__][existing_image]" value="">
+                                <input type="file" name="member_benefits[items][__INDEX__][image_file]" accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp" style="width:100%;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;box-sizing:border-box;">
+                            </div>
                         </div>
                     </div>
                 </template>

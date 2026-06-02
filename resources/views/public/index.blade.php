@@ -1249,7 +1249,9 @@
                     @endphp
                     <div class="benefits-card">
                         <div class="benefits-card-icon">
-                            @if(str_starts_with($img, '<svg'))
+                            @if(is_numeric($img))
+                                <img src="{{ route('media.download', (int)$img) }}" alt="{{ $svc['title'] ?? '' }}" style="width:36px;height:36px;object-fit:contain;">
+                            @elseif(str_starts_with($img, '<svg'))
                                 {!! $img !!}
                             @elseif($img)
                                 <img src="{{ asset($img) }}" alt="{{ $svc['title'] ?? '' }}">
@@ -1286,7 +1288,9 @@
                         $ttl = $benefit['title'] ?? $defaultBenefits[$i]['title'] ?? '';
                     @endphp
                     <div class="member-benefits-card">
-                        @if(str_starts_with($img, '<svg'))
+                        @if(is_numeric($img))
+                            <img src="{{ route('media.download', (int)$img) }}" alt="{{ $ttl }}" class="member-benefits-image" style="object-fit:contain;">
+                        @elseif(str_starts_with($img, '<svg'))
                             <div class="member-benefits-image" style="display:flex;align-items:center;justify-content:center;">{!! $img !!}</div>
                         @elseif($img)
                             @php $imgPath = str_contains($img, '/') ? $img : 'images/keuntungan/'.$img; @endphp

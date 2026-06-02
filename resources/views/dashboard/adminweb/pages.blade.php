@@ -3,7 +3,7 @@
         ['label' => 'Beranda', 'url' => '/adminweb', 'active' => 'adminweb'],
         ['label' => 'Posts', 'url' => '/adminweb/posts', 'active' => 'adminweb/posts*'],
         ['label' => 'Pages', 'url' => '/adminweb/pages', 'active' => 'adminweb/pages*'],
-        ['label' => 'Menus', 'url' => '#', 'active' => 'adminweb/menus'],
+        ['label' => 'Menus', 'url' => '/adminweb/menus', 'active' => 'adminweb/menus*'],
         ['label' => 'Files & Images', 'url' => '#', 'active' => 'adminweb/files'],
     ]
 ])

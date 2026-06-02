@@ -1,5 +1,17 @@
 @props(['menus' => []])
 
+@php
+    if (count($menus) === 0) {
+        $menus = \App\Models\Menu::where('is_active', true)
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->with(['children' => function ($q) {
+                $q->where('is_active', true)->orderBy('sort_order');
+            }])
+            ->get();
+    }
+@endphp
+
 <nav class="navbar">
     <!-- Logo -->
     <a href="/" class="navbar-logo">RKM Al-Jannah</a>
@@ -17,11 +29,28 @@
         @if(count($menus) > 0)
             <ul class="nav-menu" id="navMenu">
                 @foreach($menus as $menu)
-                    @if($menu['is_active'] ?? true)
-                        <li>
-                            <a href="{{ $menu['url'] ?? '#' }}" class="nav-link scroll-link">{{ $menu['title'] ?? 'Menu' }}</a>
-                        </li>
-                    @endif
+                    @php
+                        $url = $menu->custom_url ?: '#';
+                        $hasChildren = $menu->children && $menu->children->count() > 0;
+                    @endphp
+                    <li class="{{ $hasChildren ? 'nav-item-has-children' : '' }}">
+                        <a href="{{ $url }}" class="nav-link scroll-link{{ $hasChildren ? ' nav-link-children' : '' }}">
+                            {{ $menu->label }}
+                            @if($hasChildren)
+                                <span class="nav-arrow">▾</span>
+                            @endif
+                        </a>
+                        @if($hasChildren)
+                            <ul class="nav-submenu">
+                                @foreach($menu->children as $child)
+                                    @php $childUrl = $child->custom_url ?: '#'; @endphp
+                                    <li>
+                                        <a href="{{ $childUrl }}" class="nav-sub-link scroll-link">{{ $child->label }}</a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </li>
                 @endforeach
             </ul>
         @else
@@ -65,7 +94,7 @@
             });
 
             // Close menu when clicking on a link
-            document.querySelectorAll('.nav-link').forEach(link => {
+            document.querySelectorAll('.nav-link, .nav-sub-link').forEach(link => {
                 link.addEventListener('click', () => {
                     mobileMenuToggle.classList.remove('active');
                     navMenuWrapper.classList.remove('active');
@@ -118,6 +147,17 @@
                         // Redirect to homepage with hash
                         window.location.href = '/' + href;
                     }
+                }
+            });
+        });
+
+        // Mobile: toggle sub-menu on click for touch devices
+        document.querySelectorAll('.nav-item-has-children > .nav-link-children').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    const parent = this.closest('.nav-item-has-children');
+                    parent.classList.toggle('mobile-sub-open');
                 }
             });
         });

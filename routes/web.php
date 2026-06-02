@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SekretarisController;
 use App\Http\Controllers\AdminWebController;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LogistikController;
 use App\Http\Controllers\EditorUploadController;
@@ -155,6 +156,14 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
     Route::put('/adminweb/pages/{id}', [AdminWebController::class, 'updatePage'])->name('adminweb.pages.update');
     Route::put('/adminweb/pages/{id}/publish', [AdminWebController::class, 'publishPage'])->name('adminweb.pages.publish');
     Route::delete('/adminweb/pages/{id}', [AdminWebController::class, 'destroyPage'])->name('adminweb.pages.destroy');
+
+    Route::get('/adminweb/menus', [MenuController::class, 'index'])->name('adminweb.menus');
+    Route::get('/adminweb/menus/create', [MenuController::class, 'create'])->name('adminweb.menus.create');
+    Route::post('/adminweb/menus', [MenuController::class, 'store'])->name('adminweb.menus.store');
+    Route::get('/adminweb/menus/{id}/edit', [MenuController::class, 'edit'])->name('adminweb.menus.edit');
+    Route::put('/adminweb/menus/{id}', [MenuController::class, 'update'])->name('adminweb.menus.update');
+    Route::delete('/adminweb/menus/{id}', [MenuController::class, 'destroy'])->name('adminweb.menus.destroy');
+    Route::put('/adminweb/menus/{id}/toggle', [MenuController::class, 'toggle'])->name('adminweb.menus.toggle');
 });
 
 // Public file serving — zero-trust (download only)

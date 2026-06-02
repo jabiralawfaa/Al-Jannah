@@ -161,7 +161,7 @@
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" onclick="closeModal('statusModal')" style="background: white; color: #374151; border: 1px solid #d1d5db; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Batal</button>
-                <button type="submit" style="background: #dc2626; color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Hapus</button>
+                <button type="submit" style="background: var(--primary-900); color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Simpan</button>
             </div>
         </form>
     </div>

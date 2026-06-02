@@ -33,23 +33,28 @@
                     </thead>
                     <tbody>
                         @php
-                            $riwayatList = [
-                                ['waktu' => '4/16/2026', 'tipe' => 'Dipinjam', 'tipeBg' => '#2563eb', 'barang' => 'Toyota Hiace', 'jumlah' => '1', 'ket' => 'Pengantaran Jenazah'],
-                                ['waktu' => '4/12/2026', 'tipe' => 'Masuk', 'tipeBg' => '#166534', 'barang' => 'Tinta Kuning', 'jumlah' => '10', 'ket' => 'Isi Stok'],
-                                ['waktu' => '4/12/2026', 'tipe' => 'Keluar', 'tipeBg' => '#8b0000', 'barang' => 'Tinta Hitam', 'jumlah' => '2', 'ket' => 'Isi Ulang Tinta Printer'],
+                            $tipeColors = [
+                                'masuk' => '#166534',
+                                'keluar' => '#8b0000',
+                                'dipinjam' => '#2563eb',
+                                'dikembalikan' => '#166534',
                             ];
                         @endphp
-                        @foreach($riwayatList as $item)
+                        @forelse($riwayat as $item)
                         <tr>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['waktu'] }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ \Carbon\Carbon::parse($item->waktu)->format('d/m/Y H:i') }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2; text-align: center;">
-                                <span style="background-color: {{ $item['tipeBg'] }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $item['tipe'] }}</span>
+                                <span style="background-color: {{ $tipeColors[$item->tipe] ?? '#6b7280' }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ ucfirst($item->tipe) }}</span>
                             </td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['barang'] }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['jumlah'] }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['ket'] }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->nama_barang ?? $item->kode_barang ?? '-' }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->jumlah }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->keterangan ?? '-' }}</td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="5" style="padding: 20px; text-align: center; color: #6b7280; font-size: 13px;">Belum ada riwayat.</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

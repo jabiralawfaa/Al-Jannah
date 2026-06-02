@@ -88,7 +88,7 @@
                         <tr>
                             <td style="font-weight: 600;">{{ $barang->kode_barang }}</td>
                             <td>{{ $barang->nama_barang }}</td>
-                            <td>{{ $barang->kategori }}</td>
+                            <td>{{ $barang->kategoriBarang->nama ?? '-' }}</td>
                             <td>{{ $barang->stok }} {{ $barang->satuan }}</td>
                             <td>
                                 <span style="background-color: #f0b400; color: var(--black); padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px; text-align: center;">Segera Restock</span>

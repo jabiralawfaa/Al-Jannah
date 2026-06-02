@@ -75,6 +75,10 @@ Route::middleware(['auth', 'role:logistik,superadmin'])->group(function () {
     Route::get('/logistik', [LogistikController::class, 'index'])->name('logistik.dashboard');
 
     Route::get('/logistik/stok', [LogistikController::class, 'stok'])->name('logistik.stok');
+    Route::post('/logistik/stok', [LogistikController::class, 'storeBarang'])->name('logistik.stok.store');
+    Route::delete('/logistik/stok/{id}', [LogistikController::class, 'destroyBarang'])->name('logistik.stok.destroy');
+    Route::post('/logistik/stok/masuk', [LogistikController::class, 'storeBarangMasuk'])->name('logistik.stok.masuk');
+    Route::post('/logistik/stok/keluar', [LogistikController::class, 'storeBarangKeluar'])->name('logistik.stok.keluar');
 
     Route::get('/logistik/aset', [LogistikController::class, 'aset'])->name('logistik.aset');
 

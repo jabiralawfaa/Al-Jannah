@@ -1,113 +1,103 @@
-@extends('layouts.dashboard')
+@extends('layouts.dashboard', [
+    'menuItems' => [
+        ['label' => 'Beranda', 'url' => '/logistik', 'active' => 'logistik'],
+        ['label' => 'Stok Barang', 'url' => '/logistik/stok', 'active' => 'logistik/stok*'],
+        ['label' => 'Aset & Kendaraan', 'url' => '/logistik/aset', 'active' => 'logistik/aset*'],
+        ['label' => 'Riwayat', 'url' => '/logistik/riwayat', 'active' => 'logistik/riwayat*'],
+    ]
+])
 
 @section('title', 'Dashboard Logistik')
 
-@php
-    $menuItems = [
-        [
-            'label' => 'Beranda',
-            'url' => route('logistik.dashboard'),
-            'active' => 'logistik'
-        ],
-        [
-            'label' => 'Stok Barang',
-            'url' => route('logistik.stok'),
-            'active' => 'logistik/stok*'
-        ],
-        [
-            'label' => 'Barang Masuk',
-            'url' => route('logistik.barang-masuk'),
-            'active' => 'logistik/barang-masuk*'
-        ],
-        [
-            'label' => 'Aset & Kendaraan',
-            'url' => route('logistik.aset'),
-            'active' => 'logistik/aset*'
-        ],
-        [
-            'label' => 'Riwayat',
-            'url' => route('logistik.riwayat'),
-            'active' => 'logistik/riwayat*'
-        ],
-    ];
-@endphp
+@section('activeMenu', 'beranda')
 
 @section('content')
-<div style="background-color: #d8e4e1; min-height: 100vh; margin: -30px; padding: 30px; font-family: 'Inter', 'Poppins', sans-serif;">
-    <h1 style="color: #14524b; font-weight: bold; margin-bottom: 24px; font-size: 24px;">Dashboard</h1>
+    <h1 style="color: var(--primary-900); font-weight: bold; margin-bottom: 30px; text-transform: lowercase;">dashboard</h1>
 
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #c8d6d3; padding: 20px;">
+    @if(session('success'))
+        <div style="background-color: #d8efdd; border: 1px solid #35ab50; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; color: #154420;">
+            <span class="material-icons" style="color: #35ab50; font-size: 20px;">check_circle</span>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div style="background-color: #fde8e8; border: 1px solid #e53e3e; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; color: #742a2a;">
+            <span class="material-icons" style="color: #e53e3e; font-size: 20px;">error</span>
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="stats-grid">
+        <div class="stat-card">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-icons" style="font-size: 40px; color: #14524b;">inventory_2</span>
+                <span class="material-icons" style="font-size: 48px; color: var(--primary-900);">inventory_2</span>
                 <div>
-                    <div style="font-size: 28px; font-weight: 700; color: #1a1a1a;">{{ $totalBarang }}</div>
-                    <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">Jenis Barang</div>
+                    <div class="stat-label">Jenis Barang</div>
+                    <div class="stat-value">{{ $totalBarang }}</div>
                 </div>
             </div>
         </div>
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #c8d6d3; padding: 20px;">
+        <div class="stat-card">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-icons" style="font-size: 40px; color: #14524b;">south_west</span>
+                <span class="material-icons" style="font-size: 48px; color: var(--primary-900);">south_west</span>
                 <div>
-                    <div style="font-size: 28px; font-weight: 700; color: #1a1a1a;">{{ $barangMasukHariIni }}</div>
-                    <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">Barang Masuk Hari ini</div>
+                    <div class="stat-label">Barang masuk hari ini</div>
+                    <div class="stat-value">{{ $barangMasukHariIni }}</div>
                 </div>
             </div>
         </div>
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #c8d6d3; padding: 20px;">
+        <div class="stat-card">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-icons" style="font-size: 40px; color: #b91c1c;">north_east</span>
+                <span class="material-icons" style="font-size: 48px; color: var(--danger-500);">north_east</span>
                 <div>
-                    <div style="font-size: 28px; font-weight: 700; color: #1a1a1a;">{{ $barangKeluarHariIni }}</div>
-                    <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">Barang Keluar Hari ini</div>
+                    <div class="stat-label">Barang keluar hari ini</div>
+                    <div class="stat-value">{{ $barangKeluarHariIni }}</div>
                 </div>
             </div>
         </div>
-        <div style="background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #c8d6d3; padding: 20px;">
+        <div class="stat-card">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-icons" style="font-size: 40px; color: #eab308;">error_outline</span>
+                <span class="material-icons" style="font-size: 48px; color: var(--warning-500);">error_outline</span>
                 <div>
-                    <div style="font-size: 28px; font-weight: 700; color: #1a1a1a;">{{ $totalStokMenipis }}</div>
-                    <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">Stok Menipis (&lt;10)</div>
+                    <div class="stat-label">Stok menipis (&lt;10)</div>
+                    <div class="stat-value">{{ $totalStokMenipis }}</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div style="background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #c8d6d3; overflow: hidden;">
+    <div class="card" style="padding: 0; overflow: hidden;">
         <div style="background-color: #f0b400; padding: 12px 24px;">
-            <h2 style="color: black; font-size: 16px; font-weight: bold; margin: 0;">PERINGATAN STOK MENIPIS</h2>
+            <h2 style="color: var(--black); font-size: 18px; font-weight: bold; margin: 0;">PERINGATAN STOK MENIPIS</h2>
         </div>
-        <div style="padding: 0; background-color: #d8e4e1;">
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background-color: transparent;">
+        <div style="padding: 24px;">
+            <div class="table-container">
+                <table class="table">
                     <thead>
-                        <tr style="border-bottom: 2px solid #14524b;">
-                            <th style="background-color: transparent; color: black; font-weight: 700; font-size: 13px; padding: 12px 20px; border: 1px solid #94a3b8;">Kode Barang</th>
-                            <th style="background-color: transparent; color: black; font-weight: 700; font-size: 13px; padding: 12px 20px; border: 1px solid #94a3b8;">Nama Barang</th>
-                            <th style="background-color: transparent; color: black; font-weight: 700; font-size: 13px; padding: 12px 20px; border: 1px solid #94a3b8;">Kategori</th>
-                            <th style="background-color: transparent; color: black; font-weight: 700; font-size: 13px; padding: 12px 20px; border: 1px solid #94a3b8;">Sisa Stok</th>
-                            <th style="background-color: transparent; color: black; font-weight: 700; font-size: 13px; padding: 12px 20px; border: 1px solid #94a3b8;">Status</th>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Sisa Stok</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($stokMenipis as $barang)
-                        <tr style="border-bottom: 1px solid #94a3b8;">
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $barang->kode_barang }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $barang->nama_barang }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $barang->kategori }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #94a3b8;">{{ $barang->stok }} {{ $barang->satuan }}</td>
-                            <td style="padding: 12px 20px; border: 1px solid #94a3b8;">
-                                <span style="background-color: #f0b400; color: black; padding: 4px 16px; border-radius: 999px; font-size: 11px; font-weight: 700; display: inline-block;">Segera Restock</span>
+                        <tr>
+                            <td style="font-weight: 600;">{{ $barang->kode_barang }}</td>
+                            <td>{{ $barang->nama_barang }}</td>
+                            <td>{{ $barang->kategoriBarang->nama ?? '-' }}</td>
+                            <td>{{ $barang->stok }} {{ $barang->satuan }}</td>
+                            <td>
+                                <span style="background-color: #f0b400; color: var(--black); padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px; text-align: center;">Segera Restock</span>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <div style="background-color: white; height: 250px;"></div>
         </div>
     </div>
-</div>
 @endsection

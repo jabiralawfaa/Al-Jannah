@@ -1165,17 +1165,29 @@
             <article class="vm-box">
                 <h2 class="vm-title">Misi</h2>
                 <div class="vm-content">
-                    @php $mission = $content['mission'] ?? []; @endphp
-                    <p>{{ $mission['heading'] ?? 'Memberikan pertolongan yang adil dan merata bagi seluruh anggota RKM.' }}</p>
-                    @if(($mission['subheading'] ?? null))
-                        <p>{{ $mission['subheading'] }}</p>
-                    @endif
-                    <ul>
-                        @foreach(($mission['items'] ?? ['Bantuan materi', 'Bantuan Tenaga', 'Bantuan Jasa']) as $item)
-                            <li>{{ $item }}</li>
-                        @endforeach
-                    </ul>
-                    <p>{{ $mission['closing'] ?? 'Membantu masyarakat yang membutuhkan bantuan dalam hal kepengurusan jenazah' }}</p>
+                    @php $missionItems = $content['mission']['items'] ?? []; @endphp
+                    @forelse($missionItems as $i => $point)
+                        <p>{{ ($i + 1) . '. ' . ($point['text'] ?? '') }}</p>
+                        @if(!empty($point['subheading']))
+                            <p>{{ $point['subheading'] }}</p>
+                        @endif
+                        @if(!empty($point['sub_items']))
+                            <ul>
+                                @foreach($point['sub_items'] as $sub)
+                                    <li>{{ $sub }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    @empty
+                        <p>1. Memberikan pertolongan yang adil dan merata bagi seluruh anggota RKM.</p>
+                        <p>Pertolongan yang dimaksud adalah:</p>
+                        <ul>
+                            <li>Bantuan materi</li>
+                            <li>Bantuan Tenaga</li>
+                            <li>Bantuan Jasa</li>
+                        </ul>
+                        <p>2. Membantu masyarakat yang membutuhkan bantuan dalam hal kepengurusan jenazah</p>
+                    @endforelse
                 </div>
             </article>
         </div>
@@ -1224,23 +1236,26 @@
             <div class="benefits-grid">
                 @php
                     $defaultServices = [
-                        ['title' => 'Perawatan Jenazah', 'desc' => 'Melaksanakan proses pemulasaraan jenazah sesuai syariat Islam, meliputi pemandian dan perawatan jenazah oleh petugas yang telah ditetapkan.'],
-                        ['title' => 'Pengafanan', 'desc' => 'Menyediakan 1 (satu) set perlengkapan kain kafan lengkap beserta kebutuhan lainnya, serta pelaksanaan pengafanan sesuai tuntunan syariat.'],
-                        ['title' => 'Ambulance', 'desc' => 'Menyediakan layanan mobil ambulance untuk pengantaran jenazah ke tempat pemakaman dengan pengaturan jadwal dan rute yang terkoordinasi.'],
-                        ['title' => 'Pemakaman', 'desc' => 'Mengatur dan mendampingi pelaksanaan sholat jenazah serta proses pemakaman hingga selesai sesuai ketentuan yang berlaku.'],
-                    ];
-                    $svgs = [
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>',
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4 8 4v14"></path><path d="M17 21v-8.5a1.5 1.5 0 0 0-3 0V21"></path></svg>',
+                        ['title' => 'Perawatan Jenazah', 'desc' => 'Melaksanakan proses pemulasaraan jenazah sesuai syariat Islam, meliputi pemandian dan perawatan jenazah oleh petugas yang telah ditetapkan.', 'image' => '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>'],
+                        ['title' => 'Pengafanan', 'desc' => 'Menyediakan 1 (satu) set perlengkapan kain kafan lengkap beserta kebutuhan lainnya, serta pelaksanaan pengafanan sesuai tuntunan syariat.', 'image' => '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>'],
+                        ['title' => 'Ambulance', 'desc' => 'Menyediakan layanan mobil ambulance untuk pengantaran jenazah ke tempat pemakaman dengan pengaturan jadwal dan rute yang terkoordinasi.', 'image' => '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>'],
+                        ['title' => 'Pemakaman', 'desc' => 'Mengatur dan mendampingi pelaksanaan sholat jenazah serta proses pemakaman hingga selesai sesuai ketentuan yang berlaku.', 'image' => '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4 8 4v14"></path><path d="M17 21v-8.5a1.5 1.5 0 0 0-3 0V21"></path></svg>'],
                     ];
                     $items = $services['items'] ?? $defaultServices;
                 @endphp
                 @foreach($items as $i => $svc)
+                    @php
+                        $img = $svc['image'] ?? $defaultServices[$i]['image'] ?? '';
+                    @endphp
                     <div class="benefits-card">
                         <div class="benefits-card-icon">
-                            {!! $svgs[$i] ?? $svgs[0] !!}
+                            @if(str_starts_with($img, '<svg'))
+                                {!! $img !!}
+                            @elseif($img)
+                                <img src="{{ asset($img) }}" alt="{{ $svc['title'] ?? '' }}">
+                            @else
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                            @endif
                         </div>
                         <h3 class="benefits-card-title">{{ $svc['title'] ?? $defaultServices[$i]['title'] ?? '' }}</h3>
                         <p class="benefits-card-text">{{ $svc['description'] ?? $svc['desc'] ?? $defaultServices[$i]['desc'] ?? '' }}</p>
@@ -1271,7 +1286,16 @@
                         $ttl = $benefit['title'] ?? $defaultBenefits[$i]['title'] ?? '';
                     @endphp
                     <div class="member-benefits-card">
-                        <img src="{{ asset('images/keuntungan/'.$img) }}" alt="{{ $ttl }}" class="member-benefits-image">
+                        @if(str_starts_with($img, '<svg'))
+                            <div class="member-benefits-image" style="display:flex;align-items:center;justify-content:center;">{!! $img !!}</div>
+                        @elseif($img)
+                            @php $imgPath = str_contains($img, '/') ? $img : 'images/keuntungan/'.$img; @endphp
+                            <img src="{{ asset($imgPath) }}" alt="{{ $ttl }}" class="member-benefits-image">
+                        @else
+                            <div class="member-benefits-image" style="display:flex;align-items:center;justify-content:center;background:#f0f7f5;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16423c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                            </div>
+                        @endif
                         <h3 class="member-benefits-card-title">{{ $ttl }}</h3>
                     </div>
                 @endforeach

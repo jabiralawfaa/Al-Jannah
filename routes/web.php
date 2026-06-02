@@ -104,14 +104,21 @@ Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
     Route::get('/bendahara', [BendaharaController::class, 'index'])->name('bendahara.dashboard');
 
     Route::get('/bendahara/pemasukan', [BendaharaController::class, 'pemasukan'])->name('bendahara.pemasukan');
+    Route::post('/bendahara/pemasukan', [BendaharaController::class, 'storePemasukan'])->name('bendahara.pemasukan.store');
 
     Route::get('/bendahara/pengeluaran', [BendaharaController::class, 'pengeluaran'])->name('bendahara.pengeluaran');
+    Route::post('/bendahara/pengeluaran', [BendaharaController::class, 'storePengeluaran'])->name('bendahara.pengeluaran.store');
 
     Route::get('/bendahara/iuran', [BendaharaController::class, 'iuran'])->name('bendahara.iuran');
+    Route::get('/bendahara/iuran/data', [BendaharaController::class, 'getIuranData'])->name('bendahara.iuran.data');
+    Route::post('/bendahara/iuran', [BendaharaController::class, 'storeIuran'])->name('bendahara.iuran.store');
 
     Route::get('/bendahara/laporan', [BendaharaController::class, 'laporan'])->name('bendahara.laporan');
+    Route::get('/bendahara/laporan/data', [BendaharaController::class, 'getLaporanData'])->name('bendahara.laporan.data');
 
     Route::get('/bendahara/verifikasi', [BendaharaController::class, 'verifikasi'])->name('bendahara.verifikasi');
+    Route::get('/bendahara/verifikasi/data', [BendaharaController::class, 'getVerifikasiData'])->name('bendahara.verifikasi.data');
+    Route::post('/bendahara/verifikasi/{id}', [BendaharaController::class, 'verifikasiPembayaran'])->name('bendahara.verifikasi.store');
 });
 
 Route::middleware(['auth', 'role:ketua'])->group(function () {

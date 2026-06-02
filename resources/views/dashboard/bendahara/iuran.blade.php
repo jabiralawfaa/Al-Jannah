@@ -117,21 +117,29 @@
 
 <script>
     var bulanListIuran = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    var members = [
-        { no:1,noAnggota:'RKM-001',nama:'Ahmad Fauzi',telpon:'081234567890',bulan:[
-            {status:'paid',date:'02/01/2026'},{status:'paid',date:'03/02/2026'},{status:'paid',date:'05/03/2026'},{status:'paid',date:'01/04/2026'},
-            {status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},
-            {status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''}]},
-        { no:2,noAnggota:'RKM-003',nama:'Siti Nurhaliza',telpon:'082112233445',bulan:[
-            {status:'paid',date:'10/01/2026'},{status:'paid',date:'12/02/2026'},{status:'unpaid',date:''},{status:'paid',date:'08/04/2026'},
-            {status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},
-            {status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''}]},
-        { no:3,noAnggota:'RKM-005',nama:'Bambang Suprapto',telpon:'085712345678',bulan:[
-            {status:'paid',date:'15/01/2026'},{status:'paid',date:'14/02/2026'},{status:'paid',date:'12/03/2026'},{status:'paid',date:'11/04/2026'},
-            {status:'paid',date:'10/05/2026'},{status:'paid',date:'09/06/2026'},{status:'unpaid',date:''},{status:'unpaid',date:''},
-            {status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''},{status:'unpaid',date:''}]},
-    ];
+    var members = [];
     var selectedMi = -1, selectedBi = -1, monthQty = 1, nominalPerMonth = 10000;
+    var currentYear = {{ date('Y') }};
+
+    function fetchIuranData(tahun) {
+        fetch('/bendahara/iuran/data?tahun=' + (tahun || currentYear))
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                members = res.anggota.map(function(a, i) {
+                    return {
+                        no: i + 1,
+                        id: a.id,
+                        noAnggota: a.nomor_anggota,
+                        nama: a.nama,
+                        telpon: a.telepon,
+                        bulan: a.bulan.map(function(b) {
+                            return { status: b.status === 'lunas' ? 'paid' : 'unpaid', date: b.tanggal_bayar || '' };
+                        })
+                    };
+                });
+                renderIuranTable();
+            });
+    }
 
     function renderIuranTable() {
         var tbody = document.getElementById('iuranBody'), html = '';
@@ -143,6 +151,9 @@
                 html += '<td class="month-cell"><span class="status-dot" data-mi="' + i + '" data-bi="' + b + '" data-paid="' + (isPaid ? '1' : '0') + '"><span class="dot ' + (isPaid ? 'paid' : 'unpaid') + '"></span>' + (bln.date ? '<span class="date-label">' + bln.date + '</span>' : '') + '</span></td>';
             }
             html += '<td><a href="tel:' + m.telpon + '" class="phone-link"><span class="material-icons" style="font-size:14px;">phone</span>' + m.telpon + '</a></td></tr>';
+        }
+        if (!members.length) {
+            html = '<tr><td colspan="15" style="padding:60px 32px;text-align:center;color:#9ca3af;">Belum ada data anggota</td></tr>';
         }
         tbody.innerHTML = html;
         document.querySelectorAll('.status-dot').forEach(function(el) {
@@ -166,21 +177,50 @@
     function decrMonth() { if (monthQty > 1) { monthQty--; updateNominal(); } }
     function incrMonth() { var maxQty = 12 - selectedBi; if (monthQty < maxQty) { monthQty++; updateNominal(); } }
     function updateNominal() { document.getElementById('modalNominal').value = formatNominal(nominalPerMonth * monthQty); document.getElementById('monthCount').textContent = monthQty + ' Bulan'; }
+
     function submitIuran() {
         var member = members[selectedMi];
         var bulanAkhir = Math.min(selectedBi + monthQty - 1, 11);
         var rangeLabel = bulanListIuran[selectedBi] + (monthQty > 1 ? '-' + bulanListIuran[bulanAkhir] : '');
-        for (var b = selectedBi; b <= bulanAkhir; b++) {
-            member.bulan[b].status = 'paid';
-            if (!member.bulan[b].date) member.bulan[b].date = today();
-        }
-        closeIuranModal(); renderIuranTable();
-        showToast(document.getElementById('toastMsg'), 'Pembayaran ' + member.nama + ' untuk ' + rangeLabel + ' (' + monthQty + ' bln) berhasil dicatat');
+
+        var formData = new FormData();
+        formData.append('anggota_id', member.id);
+        formData.append('tahun', currentYear);
+        formData.append('bulan_mulai', selectedBi + 1);
+        formData.append('jumlah_bulan', monthQty);
+        formData.append('nominal', nominalPerMonth);
+        formData.append('keterangan', document.getElementById('modalKeterangan').value);
+        var fi = document.getElementById('fileInput');
+        if (fi && fi.files[0]) formData.append('file_bukti', fi.files[0]);
+
+        fetch('/bendahara/iuran', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success) return alert('Gagal menyimpan iuran');
+            for (var b = selectedBi; b <= bulanAkhir; b++) {
+                member.bulan[b].status = 'paid';
+                if (!member.bulan[b].date) member.bulan[b].date = today();
+            }
+            closeIuranModal();
+            renderIuranTable();
+            showToast(document.getElementById('toastMsg'), 'Pembayaran ' + member.nama + ' untuk ' + rangeLabel + ' (' + monthQty + ' bln) berhasil dicatat');
+        })
+        .catch(function() { alert('Terjadi kesalahan'); });
     }
+
+    document.querySelector('.year-selector select').addEventListener('change', function() {
+        currentYear = parseInt(this.value);
+        document.querySelector('.table-header-card h3').textContent = 'Tabel Iuran Tahunan RKM Al-Jannah - Tahun ' + currentYear;
+        fetchIuranData(currentYear);
+    });
 
     document.querySelector('.modal-bg-iuran').addEventListener('click', function() { closeIuranModal(); });
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeIuranModal(); });
-    renderIuranTable();
+    fetchIuranData(currentYear);
 
     window.decrMonth = decrMonth;
     window.incrMonth = incrMonth;

@@ -86,44 +86,41 @@
 
         var tableBody = document.getElementById('tableBody');
         var searchInput = document.getElementById('searchInput');
-        var filterBtns = document.querySelectorAll('.filter-btn');
         var dataCount = document.getElementById('dataCount');
-        var allData = [
-            {tanggal:'04-04-2026',kategori:'Infaq/Amal',nominal:'+ 200.000',type:'masuk'},
-            {tanggal:'04-04-2026',kategori:'Infaq/Amal',nominal:'- 200.000',type:'keluar'},
-            {tanggal:'04-04-2026',kategori:'Infaq/Amal',nominal:'+ 300.000',type:'masuk'},
-            {tanggal:'03-04-2026',kategori:'Iuran Anggota',nominal:'+ 500.000',type:'masuk'},
-            {tanggal:'03-04-2026',kategori:'Operasional',nominal:'- 150.000',type:'keluar'},
-            {tanggal:'02-04-2026',kategori:'Infaq/Amal',nominal:'+ 1.000.000',type:'masuk'},
-            {tanggal:'02-04-2026',kategori:'Santunan',nominal:'- 500.000',type:'keluar'},
-            {tanggal:'01-04-2026',kategori:'Infaq/Amal',nominal:'+ 700.000',type:'masuk'},
-            {tanggal:'01-04-2026',kategori:'Operasional',nominal:'- 300.000',type:'keluar'},
-            {tanggal:'01-04-2026',kategori:'Iuran Anggota',nominal:'+ 200.000',type:'masuk'},
-        ];
+        var statValueEls = document.querySelectorAll('.stat-value');
+        var allData = [];
+
+        function fetchLaporanData(search) {
+            var url = '/bendahara/laporan/data';
+            if (search) url += '?search=' + encodeURIComponent(search);
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (statValueEls[0]) statValueEls[0].textContent = 'Rp ' + Number(res.totalPemasukan).toLocaleString('id-ID');
+                    if (statValueEls[1]) statValueEls[1].textContent = 'Rp ' + Number(res.totalPengeluaran).toLocaleString('id-ID');
+                    if (statValueEls[2]) statValueEls[2].textContent = 'Rp ' + Number(res.saldo).toLocaleString('id-ID');
+                    allData = res.transaksi;
+                    renderTable(allData);
+                    dataCount.textContent = res.totalData;
+                });
+        }
 
         function renderTable(data) {
-            if (!data || !data.length) { tableBody.innerHTML = '<tr><td colspan="4" style="padding:40px 22px;text-align:center;color:#9ca3af;">Tidak ada data ditemukan</td></tr>'; dataCount.textContent = '0'; return; }
-            var html = '', keluarCount = 0;
+            if (!data || !data.length) { tableBody.innerHTML = '<tr><td colspan="4" style="padding:40px 22px;text-align:center;color:#9ca3af;">Tidak ada data ditemukan</td></tr>'; return; }
+            var html = '';
             data.forEach(function(row) {
-                if (row.type === 'keluar') keluarCount++;
                 html += '<tr><td>' + row.tanggal + '</td><td style="font-weight:600;">' + row.kategori + '</td><td class="' + (row.type === 'masuk' ? 'nominal-plus' : 'nominal-minus') + '">' + row.nominal + '</td><td><span class="badge-status ' + (row.type === 'masuk' ? 'masuk' : 'keluar') + '">' + (row.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran') + '</span></td></tr>';
             });
             tableBody.innerHTML = html;
-            dataCount.textContent = keluarCount;
         }
 
-        function filterData() {
-            var q = searchInput.value.toLowerCase();
-            var result = allData.filter(function(row) {
-                return row.tanggal.toLowerCase().indexOf(q) > -1 || row.kategori.toLowerCase().indexOf(q) > -1 || row.nominal.indexOf(q) > -1 || (row.type === 'masuk' && 'pemasukan'.indexOf(q) > -1) || (row.type === 'keluar' && 'pengeluaran'.indexOf(q) > -1);
-            });
-            renderTable(result);
-        }
+        searchInput.addEventListener('input', function() {
+            fetchLaporanData(this.value);
+        });
 
-        searchInput.addEventListener('input', filterData);
-        filterBtns.forEach(function(btn) { btn.addEventListener('click', function() { filterBtns.forEach(function(b) { b.classList.remove('active'); }); this.classList.add('active'); filterData(); }); });
         document.querySelectorAll('.page-dot').forEach(function(dot) { dot.addEventListener('click', function() { document.querySelectorAll('.page-dot').forEach(function(d) { d.classList.remove('active'); }); this.classList.add('active'); }); });
-        renderTable(allData);
+
+        fetchLaporanData('');
 
         document.getElementById('saveModal').addEventListener('click', function(e) { if (e.target === this) closeSaveModal(); });
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSaveModal(); });

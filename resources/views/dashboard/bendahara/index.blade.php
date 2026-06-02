@@ -14,18 +14,12 @@
 @section('content')
 @php
 $stats = [
-    ['icon' => 'trending_up', 'bg' => '#e2f0e9', 'color' => '#1f5c52', 'label' => 'Total Pemasukan', 'value' => 'Rp 3.000.000'],
-    ['icon' => 'trending_down', 'bg' => '#fde8e0', 'color' => '#c2410c', 'label' => 'Total Pengeluaran', 'value' => 'Rp 1.250.000'],
-    ['icon' => 'account_balance', 'bg' => '#e0f2fe', 'color' => '#0369a1', 'label' => 'Saldo Saat Ini', 'value' => 'Rp 1.750.000'],
+    ['icon' => 'trending_up', 'bg' => '#e2f0e9', 'color' => '#1f5c52', 'label' => 'Total Pemasukan', 'value' => 'Rp ' . number_format($totalPemasukan, 0, ',', '.')],
+    ['icon' => 'trending_down', 'bg' => '#fde8e0', 'color' => '#c2410c', 'label' => 'Total Pengeluaran', 'value' => 'Rp ' . number_format($totalPengeluaran, 0, ',', '.')],
+    ['icon' => 'account_balance', 'bg' => '#e0f2fe', 'color' => '#0369a1', 'label' => 'Saldo Saat Ini', 'value' => 'Rp ' . number_format($saldo, 0, ',', '.')],
 ];
 
-$transactions = [
-    ['no' => '01', 'date' => '10 Jan 2026', 'name' => 'Intan', 'type' => 'masuk', 'nominal' => 'Rp 1.200.000', 'ket' => 'Iuran Anggota'],
-    ['no' => '02', 'date' => '11 Jan 2026', 'name' => 'Leny', 'type' => 'keluar', 'nominal' => 'Rp 500.000', 'ket' => 'Santunan'],
-    ['no' => '03', 'date' => '14 Jan 2026', 'name' => 'Rakha', 'type' => 'masuk', 'nominal' => 'Rp 300.000', 'ket' => 'Iuran Anggota'],
-    ['no' => '04', 'date' => '16 Jan 2026', 'name' => 'Jabir', 'type' => 'masuk', 'nominal' => 'Rp 750.000', 'ket' => 'Iuran Anggota'],
-    ['no' => '05', 'date' => '18 Jan 2026', 'name' => 'Naza', 'type' => 'keluar', 'nominal' => 'Rp 750.000', 'ket' => 'Santunan'],
-];
+$no = 1;
 @endphp
 
 <div class="page-index">
@@ -78,15 +72,15 @@ $transactions = [
                 </tr>
             </thead>
             <tbody>
-                @foreach($transactions as $t)
-                @php $isMasuk = $t['type'] === 'masuk'; @endphp
+                @foreach($transaksi as $t)
+                @php $isMasuk = $t->jenis === 'pemasukan'; @endphp
                 <tr>
-                    <td>{{ $t['no'] }}</td>
-                    <td>{{ $t['date'] }}</td>
-                    <td class="name">{{ $t['name'] }}</td>
+                    <td>{{ $no++ }}</td>
+                    <td>{{ $t->created_at->format('d/m/Y') }}</td>
+                    <td class="name">{{ $t->nama }}</td>
                     <td><span class="badge {{ $isMasuk ? 'badge-pemasukan' : 'badge-pengeluaran' }}"><span class="dot"></span>{{ $isMasuk ? 'Pemasukan' : 'Pengeluaran' }}</span></td>
-                    <td class="nominal">{{ $t['nominal'] }}</td>
-                    <td>{{ $t['ket'] }}</td>
+                    <td class="nominal">Rp {{ number_format($t->nominal, 0, ',', '.') }}</td>
+                    <td>{{ $t->keterangan }}</td>
                 </tr>
                 @endforeach
             </tbody>

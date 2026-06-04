@@ -36,27 +36,26 @@ class EditorUploadController extends Controller
 
         $this->validasiMime($extension, $mimeType);
 
-        $disk = 'file_diterima';
-
-        $storedPath = FileRenamer::rename($originalName);
-        $uploadedFile->storeAs('', $storedPath, $disk);
-
         $fileRecord = FileOrganisasi::create([
             'nama_file' => $originalName,
-            'file_path' => $storedPath,
+            'file_path' => '',
             'kategori' => $kategori,
             'status' => 'aktif',
             'uploaded_by' => auth()->id(),
         ]);
 
-        $url = route('file.download', $fileRecord);
+        $fileRecord
+            ->addMedia($uploadedFile->getRealPath())
+            ->usingFileName(FileRenamer::rename($originalName))
+            ->toMediaCollection('uploads');
+
+        $url = $fileRecord->getDownloadUrl();
 
         return response()->json([
             'success' => true,
             'file' => [
                 'id' => $fileRecord->id,
                 'nama_file' => $originalName,
-                'file_path' => $storedPath,
                 'url' => $url,
                 'mime_type' => $mimeType,
                 'extension' => $extension,

@@ -252,8 +252,8 @@
             <tr>
                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
                 <td>
-                    @if($post->media && $post->media->file_path)
-                        <img src="{{ route('media.download', $post->media) }}" alt="{{ $post->media->alt_text ?? $post->title }}" class="posts-thumb">
+                    @if($post->getThumbnailUrl())
+                        <img src="{{ $post->getThumbnailUrl() }}" alt="{{ $post->title }}" class="posts-thumb">
                     @else
                         <div class="posts-thumb-placeholder">
                             <span class="material-icons">image</span>

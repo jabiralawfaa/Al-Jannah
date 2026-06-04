@@ -15,7 +15,7 @@ use App\Http\Controllers\FileController;
 use App\Models\Page;
 
 Route::get('/', function () {
-    $posts = App\Models\Post::with(['category', 'media'])
+    $posts = App\Models\Post::with(['category', 'legacyMedia'])
         ->where('status', 'published')
         ->latest('published_at')
         ->get();
@@ -27,12 +27,12 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/berita/{slug}', function ($slug) {
-    $post = App\Models\Post::with(['category', 'media'])
+    $post = App\Models\Post::with(['category', 'legacyMedia'])
         ->where('slug', $slug)
         ->where('status', 'published')
         ->firstOrFail();
 
-    $relatedPosts = App\Models\Post::with('media')
+    $relatedPosts = App\Models\Post::with('legacyMedia')
         ->where('id', '!=', $post->id)
         ->where('status', 'published')
         ->latest('published_at')
@@ -176,6 +176,7 @@ Route::middleware(['auth', 'role:adminweb'])->group(function () {
 // Public file serving — zero-trust (download only)
 Route::get('/file/{id}', [FileController::class, 'downloadFile'])->name('file.download');
 Route::get('/media/{id}', [FileController::class, 'downloadMedia'])->name('media.download');
+Route::get('/spatie-media/{id}', [FileController::class, 'serveSpatieMedia'])->name('media.spatie');
 
 // Catch-all: intercept legacy /storage/* paths after symlink removal
 Route::get('/storage/{path}', [FileController::class, 'serveStorage'])->where('path', '.*');

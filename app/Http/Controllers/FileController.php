@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FileOrganisasi;
 use App\Models\Media;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
 use Symfony\Component\HttpFoundation\Response;
 
 class FileController extends Controller
@@ -15,6 +16,17 @@ class FileController extends Controller
 
         if (! $file) {
             abort(404);
+        }
+
+        $spatieMedia = $file->getFirstMedia('uploads');
+        if ($spatieMedia) {
+            $fullPath = $spatieMedia->getPath();
+
+            if (! file_exists($fullPath)) {
+                abort(404);
+            }
+
+            return $this->serve($fullPath, $spatieMedia->file_name);
         }
 
         $disk = match ($file->kategori) {
@@ -41,6 +53,17 @@ class FileController extends Controller
 
     public function downloadMedia(int $id): Response
     {
+        $spatieMedia = SpatieMedia::find($id);
+        if ($spatieMedia) {
+            $fullPath = $spatieMedia->getPath();
+
+            if (! file_exists($fullPath)) {
+                abort(404);
+            }
+
+            return $this->serve($fullPath, $spatieMedia->file_name);
+        }
+
         $media = Media::find($id);
 
         if (! $media) {
@@ -89,6 +112,23 @@ class FileController extends Controller
         }
 
         abort(404);
+    }
+
+    public function serveSpatieMedia(int $id): Response
+    {
+        $media = SpatieMedia::find($id);
+
+        if (! $media) {
+            abort(404);
+        }
+
+        $fullPath = $media->getPath();
+
+        if (! file_exists($fullPath)) {
+            abort(404);
+        }
+
+        return $this->serve($fullPath, $media->file_name);
     }
 
     private function serve(string $fullPath, string $filename): Response

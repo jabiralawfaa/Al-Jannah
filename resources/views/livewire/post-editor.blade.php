@@ -313,15 +313,15 @@
 
         <div class="editor-cover-section">
             <div
-                class="cover-upload {{ $thumbnail || ($post && $post->media) ? 'has-image' : '' }}"
+                class="cover-upload {{ $thumbnail || ($post && $post->getThumbnailUrl()) ? 'has-image' : '' }}"
                 x-data
                 x-on:click="$refs.thumbnailInput.click()"
             >
                 @if ($thumbnail)
                     <img src="{{ $thumbnail->temporaryUrl() }}" alt="Preview">
                     <button type="button" class="cover-remove" wire:click="$set('thumbnail', null)" x-on:click.stop>&times;</button>
-                @elseif ($post && $post->media)
-                    <img src="{{ route('media.download', $post->media) }}" alt="Current thumbnail">
+                @elseif ($post && ($post->getThumbnailUrl()))
+                    <img src="{{ $post->getThumbnailUrl() }}" alt="Current thumbnail">
                     <button type="button" class="cover-remove" wire:click="removeThumbnail" x-on:click.stop>&times;</button>
                 @else
                     <div class="cover-placeholder">

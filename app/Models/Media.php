@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Media extends Model
 {
+    protected $table = 'media_legacy';
+
     protected $fillable = [
         'file_name',
         'file_path',

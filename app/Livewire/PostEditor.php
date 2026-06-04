@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Filament\RichEditor\FileEmbedPlugin;
 use App\Models\Category;
-use App\Models\Media;
 use App\Models\Post;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -16,7 +15,6 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class PostEditor extends Component implements HasActions, HasForms
 {
@@ -43,7 +41,7 @@ class PostEditor extends Component implements HasActions, HasForms
         $this->post = $post;
 
         if ($post) {
-            $this->post->load('media');
+            $this->post->load(['media', 'legacyMedia']);
         }
 
         $this->form->fill([
@@ -57,8 +55,8 @@ class PostEditor extends Component implements HasActions, HasForms
     public function removeThumbnail()
     {
         $this->thumbnail = null;
-        if ($this->post && $this->post->media) {
-            $this->data['media_id'] = null;
+        if ($this->post && $this->post->getThumbnailUrl()) {
+            $this->post->clearMediaCollection('thumbnails');
         }
     }
 
@@ -149,30 +147,33 @@ class PostEditor extends Component implements HasActions, HasForms
             'status' => 'draft',
         ];
 
-        if ($this->thumbnail) {
-            try {
-                $storedName = \App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName());
-                $path = $this->thumbnail->storeAs('thumbnails', $storedName, 'local');
-
-                $fileSize = Storage::disk('local')->size($path);
-
-                $media = Media::create([
-                    'file_path' => $path,
-                    'file_name' => $this->thumbnail->getClientOriginalName(),
-                    'mime_type' => $this->thumbnail->getMimeType(),
-                    'file_size' => $fileSize,
-                ]);
-                $data['media_id'] = $media->id;
-            } catch (\Exception $e) {
-                Log::warning('Thumbnail upload failed: ' . $e->getMessage());
-            }
-        }
-
         if ($this->post) {
             $this->post->update($data);
+
+            if ($this->thumbnail) {
+                try {
+                    $this->post->addMedia($this->thumbnail->getRealPath())
+                        ->usingFileName(\App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName()))
+                        ->toMediaCollection('thumbnails');
+                } catch (\Exception $e) {
+                    Log::warning('Thumbnail upload failed: ' . $e->getMessage());
+                }
+            }
+
             session()->flash('success', 'Postingan berhasil diperbarui.');
         } else {
-            Post::create($data);
+            $post = Post::create($data);
+
+            if ($this->thumbnail) {
+                try {
+                    $post->addMedia($this->thumbnail->getRealPath())
+                        ->usingFileName(\App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName()))
+                        ->toMediaCollection('thumbnails');
+                } catch (\Exception $e) {
+                    Log::warning('Thumbnail upload failed: ' . $e->getMessage());
+                }
+            }
+
             session()->flash('success', 'Postingan berhasil dibuat.');
         }
 

@@ -1202,9 +1202,7 @@
             <div class="news-content" id="newsContent">
                 @forelse($posts as $index => $post)
                     @php
-        $imageUrl = $post->media
-            ? route('media.download', $post->media)
-            : 'https://via.placeholder.com/600x400?text=No+Image';
+        $imageUrl = $post->getThumbnailUrl() ?? 'https://via.placeholder.com/600x400?text=No+Image';
                         $tags = $post->category ? [$post->category->name] : ['Umum'];
                         $isHidden = $index >= 6;
                     @endphp

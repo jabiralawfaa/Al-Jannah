@@ -445,9 +445,7 @@
     <x-navbar />
 
     @php
-        $imageUrl = $post->media
-            ? route('media.download', $post->media)
-            : null;
+        $imageUrl = $post->getThumbnailUrl();
         $postDate = $post->published_at
             ? \Carbon\Carbon::parse($post->published_at)->locale('id')->isoFormat('D MMMM YYYY')
             : now()->locale('id')->isoFormat('D MMMM YYYY');
@@ -542,9 +540,7 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
                     @foreach($relatedPosts as $related)
                         @php
-                            $relatedImageUrl = $related->media
-                                ? route('media.download', $related->media)
-                                : 'https://via.placeholder.com/400x250?text=No+Image';
+                            $relatedImageUrl = $related->getThumbnailUrl() ?? 'https://via.placeholder.com/400x250?text=No+Image';
                         @endphp
                         <a href="{{ route('post.show', $related->slug) }}" style="background: linear-gradient(135deg, #6A9C89 0%, #16423C 100%); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(22, 66, 60, 0.3); transition: transform 0.3s ease, box-shadow 0.3s ease; display: block;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px rgba(22, 66, 60, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(22, 66, 60, 0.3)'">
                             <img src="{{ $relatedImageUrl }}" alt="{{ $related->title }}" style="width: 100%; height: 180px; object-fit: cover;">

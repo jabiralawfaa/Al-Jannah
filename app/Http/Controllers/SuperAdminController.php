@@ -83,28 +83,18 @@ class SuperAdminController extends Controller
 
         $kategori = $this->klasifikasikanEkstensi($extension);
 
-        $disk = match ($kategori) {
-            'diterima' => 'file_diterima',
-            'mencurigakan' => 'file_mencurigakan',
-            'ditolak' => 'file_ditolak',
-            default => 'file_ditolak',
-        };
-
-        $storedPath = \App\Services\FileRenamer::rename($originalName);
-
-        $path = $uploadedFile->storeAs('', $storedPath, $disk);
-
-        if (!$path) {
-            return redirect('/superadmin/file')->with('error', 'Gagal menyimpan file.');
-        }
-
         $fileRecord = FileOrganisasi::create([
             'nama_file' => $originalName,
-            'file_path' => $storedPath,
+            'file_path' => '',
             'kategori' => $kategori,
             'status' => 'aktif',
             'uploaded_by' => auth()->id(),
         ]);
+
+        $fileRecord
+            ->addMedia($uploadedFile->getRealPath())
+            ->usingFileName(\App\Services\FileRenamer::rename($originalName))
+            ->toMediaCollection('uploads');
 
         LogSuperadmin::create([
             'user_id' => auth()->id(),
@@ -123,6 +113,24 @@ class SuperAdminController extends Controller
     public function downloadFile(Request $request, $id)
     {
         $file = FileOrganisasi::findOrFail($id);
+
+        $spatieMedia = $file->getFirstMedia('uploads');
+        if ($spatieMedia) {
+            LogSuperadmin::create([
+                'user_id' => auth()->id(),
+                'aksi' => 'download',
+                'deskripsi' => 'Mengunduh file: ' . $file->nama_file . ' (kategori: ' . config("file-pemilah.labels.{$file->kategori}") . ')',
+                'modul' => 'File',
+                'referensi_id' => $file->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $fullPath = $spatieMedia->getPath();
+            return response()->download($fullPath, $spatieMedia->file_name, [
+                'Content-Type' => 'application/octet-stream',
+            ]);
+        }
 
         $disk = match ($file->kategori) {
             'diterima' => 'file_diterima',

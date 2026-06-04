@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Media;
 use App\Models\Post;
 use App\Models\Page;
 use App\Models\Category;
 use App\Services\FileRenamer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminWebController extends Controller
@@ -37,7 +35,7 @@ class AdminWebController extends Controller
     {
         $search = $request->get('search');
 
-        $posts = Post::with(['category', 'media'])
+        $posts = Post::with(['category', 'legacyMedia'])
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -126,7 +124,7 @@ class AdminWebController extends Controller
             if (isset($data['services']['items'])) {
                 foreach ($data['services']['items'] as $i => &$svc) {
                     if ($request->hasFile("services.items.{$i}.image_file")) {
-                        $svc['image'] = $this->storePageImage($request->file("services.items.{$i}.image_file"));
+                        $svc['image'] = $this->storePageImage($request->file("services.items.{$i}.image_file"), $page);
                     } else {
                         $svc['image'] = $svc['existing_image'] ?? '';
                     }
@@ -137,7 +135,7 @@ class AdminWebController extends Controller
             if (isset($data['member_benefits']['items'])) {
                 foreach ($data['member_benefits']['items'] as $i => &$item) {
                     if ($request->hasFile("member_benefits.items.{$i}.image_file")) {
-                        $item['image'] = $this->storePageImage($request->file("member_benefits.items.{$i}.image_file"));
+                        $item['image'] = $this->storePageImage($request->file("member_benefits.items.{$i}.image_file"), $page);
                     } else {
                         $item['image'] = $item['existing_image'] ?? '';
                     }
@@ -159,18 +157,12 @@ class AdminWebController extends Controller
             ->with('success', 'Halaman "' . e($page->title) . '" berhasil diperbarui.');
     }
 
-    private function storePageImage($file): string
+    private function storePageImage($file, Page $page): string
     {
-        $storedName = FileRenamer::rename($file->getClientOriginalName());
-        $path = $file->storeAs('page-images', $storedName, 'local');
-        $fileSize = Storage::disk('local')->size($path);
-
-        $media = Media::create([
-            'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'file_size' => $fileSize,
-        ]);
+        $media = $page
+            ->addMedia($file->getRealPath())
+            ->usingFileName(FileRenamer::rename($file->getClientOriginalName()))
+            ->toMediaCollection('images');
 
         return (string) $media->id;
     }
@@ -201,7 +193,7 @@ class AdminWebController extends Controller
     {
         $search = $request->get('search');
 
-        $pages = Page::with('media')
+        $pages = Page::with('legacyMedia')
             ->when($search, function ($query, $search) {
                 return $query->where('title', 'like', "%{$search}%");
             })

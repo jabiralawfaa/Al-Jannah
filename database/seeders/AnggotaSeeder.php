@@ -17,7 +17,7 @@ class AnggotaSeeder extends Seeder
         $anggotas = [];
         foreach ($calonAnggota as $index => $ca) {
             $anggotas[] = [
-                'nomor_anggota' => 'AJ-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'nomor_anggota' => 'RKM-' . str_pad($index + 1, 5, '0', STR_PAD_LEFT),
                 'calon_anggota_id' => $ca->id,
                 'nama' => $ca->nama,
                 'email' => $ca->email,

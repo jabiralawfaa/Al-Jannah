@@ -828,7 +828,8 @@ tbody td.name-cell { font-weight: 600; color: #1f2937; }
 .page-vp .vp-table-wrap tbody tr:last-child td { border-bottom: none; }
 .page-vp .vp-table-wrap tbody tr:hover { background: #f8faf9; }
 
-.page-vp .btn-action { padding: 7px 20px; border-radius: 100px; font: 700 12px 'Poppins', sans-serif; border: none; cursor: pointer; transition: all .3s ease; }
+.page-vp .vp-subheader { color: #6b7280; font-size: 14px; margin-top: -8px; margin-bottom: 24px; }
+.page-vp .btn-action { padding: 7px 20px; border-radius: 100px; font: 700 12px 'Poppins', sans-serif; border: none; cursor: pointer; transition: all .3s ease; white-space: nowrap; }
 .page-vp .btn-action.sudah-dibayar { background: #0e4b43; color: #fff; }
 .page-vp .btn-action.sudah-dibayar:hover:not(:disabled) { background: #0a3a34; box-shadow: 0 3px 10px rgba(14,75,67,.25); transform: translateY(-1px); }
 .page-vp .btn-action:disabled { opacity: .65; cursor: not-allowed; background: #9ca3af; }

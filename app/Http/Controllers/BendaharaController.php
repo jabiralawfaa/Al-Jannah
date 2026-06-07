@@ -70,7 +70,7 @@ class BendaharaController extends Controller
 
     public function verifikasi()
     {
-        $calonAnggota = CalonAnggota::where('status', 'pending')->latest()->paginate(20);
+        $calonAnggota = CalonAnggota::where('status', 'menunggu_verifikasi')->latest()->paginate(20);
         return view('dashboard.bendahara.verifikasi', compact('calonAnggota'));
     }
 
@@ -286,45 +286,51 @@ class BendaharaController extends Controller
 
     public function getVerifikasiData()
     {
-        $pembayaran = Pembayaran::with('calonAnggota')
-            ->where('status', 'belum_lunas')
+        $calon = CalonAnggota::where('status', 'menunggu_verifikasi')
             ->latest()
             ->get();
 
         return response()->json([
-            'data' => $pembayaran->map(fn($p, $i) => [
+            'data' => $calon->map(fn($c, $i) => [
                 'no' => $i + 1,
-                'id' => $p->id,
-                'tanggal' => $p->created_at->format('m/d/Y'),
-                'nama' => $p->calonAnggota?->nama ?? '-',
-                'nominal' => 'Rp. ' . number_format($p->nominal_pembayaran, 0, ',', '.'),
-                'status' => $p->status === 'sudah_dibayar' ? 'Lunas' : 'Belum Lunas',
-                'is_lunas' => $p->status === 'sudah_dibayar',
+                'id' => $c->id,
+                'tanggal' => $c->created_at->format('d/m/Y'),
+                'nama' => $c->nama,
+                'telepon' => $c->telepon,
+                'status' => 'Belum Dibayar',
+                'is_lunas' => false,
             ]),
         ]);
     }
 
     public function verifikasiPembayaran($id)
     {
-        $pembayaran = Pembayaran::with('calonAnggota')->findOrFail($id);
-        $pembayaran->update([
-            'status' => 'sudah_dibayar',
-            'verified_by' => auth()->id(),
-        ]);
+        $calon = CalonAnggota::findOrFail($id);
+
+        if ($calon->status !== 'menunggu_verifikasi') {
+            return response()->json(['success' => false, 'message' => 'Status calon anggota tidak valid.'], 400);
+        }
+
+        $nominal = 30000;
 
         $pemasukan = Pemasukan::create([
             'tanggal' => now()->toDateString(),
-            'kategori_pemasukan_id' => 1,
-            'jumlah' => $pembayaran->nominal_pembayaran,
-            'keterangan' => 'Pembayaran pendaftaran - ' . ($pembayaran->calonAnggota?->nama ?? ''),
+            'kategori_pemasukan_id' => 3,
+            'jumlah' => $nominal,
+            'keterangan' => 'Pembayaran pendaftaran - ' . $calon->nama,
             'created_by' => auth()->id(),
         ]);
 
-        $pembayaran->update(['pemasukan_id' => $pemasukan->id]);
+        Pembayaran::create([
+            'tanggal_daftar' => now()->toDateString(),
+            'calon_anggota_id' => $calon->id,
+            'nominal_pembayaran' => $nominal,
+            'status' => 'sudah_dibayar',
+            'verified_by' => auth()->id(),
+            'pemasukan_id' => $pemasukan->id,
+        ]);
 
-        if ($pembayaran->calonAnggota) {
-            $pembayaran->calonAnggota->update(['status' => 'sudah_membayar']);
-        }
+        $calon->update(['status' => 'sudah_membayar']);
 
         return response()->json(['success' => true]);
     }

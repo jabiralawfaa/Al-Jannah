@@ -42,7 +42,7 @@ class SekretarisController extends Controller
         $calon->update(['status' => 'disetujui']);
 
         $lastId = Anggota::max('id') ?? 0;
-        $nomorAnggota = 'AJ-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+        $nomorAnggota = 'RKM-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
 
         Anggota::create([
             'nomor_anggota' => $nomorAnggota,
@@ -100,7 +100,7 @@ class SekretarisController extends Controller
         if (!$anggota) {
             $anggota = (object) [
                 'id' => $id,
-                'nomor_anggota' => "RKM-$id",
+                'nomor_anggota' => 'RKM-' . str_pad($id, 5, '0', STR_PAD_LEFT),
                 'nama' => 'Anggota',
                 'telepon' => '-',
             ];
@@ -116,7 +116,7 @@ class SekretarisController extends Controller
         if (!$anggota) {
             $anggota = (object) [
                 'id' => $id,
-                'nomor_anggota' => "RKM-$id",
+                'nomor_anggota' => 'RKM-' . str_pad($id, 5, '0', STR_PAD_LEFT),
                 'nama' => 'Anggota',
             ];
         }

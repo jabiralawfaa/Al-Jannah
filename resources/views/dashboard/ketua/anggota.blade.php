@@ -10,14 +10,6 @@ $menuItems = [
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
 
-$anggotaData = [
-    ['no' => 1, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Ketua', 'divisi' => 'Pimpinan', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-    ['no' => 2, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Bendahara', 'divisi' => 'Keuangan', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-    ['no' => 3, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Sekretaris', 'divisi' => 'Administrasi', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-    ['no' => 4, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Anggota', 'divisi' => 'Logistik', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-    ['no' => 5, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Anggota', 'divisi' => 'Keuangan', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-    ['no' => 6, 'nama' => 'Siti Nurhaliza', 'jabatan' => 'Anggota', 'divisi' => 'Keuangan', 'bergabung' => '1 Maret 2026', 'status' => 'Aktif'],
-];
 @endphp
 
 @section('title', 'Data Anggota')
@@ -84,7 +76,7 @@ body { background-color: #eef6f2; }
     <div class="ketua-anggota-card-header">
         <div class="ketua-card-header-left">
             <h2>Data Anggota</h2>
-            <span class="ketua-badge-count">5 Anggota</span>
+            <span class="ketua-badge-count">{{ $anggota->total() }} Anggota</span>
         </div>
         <div class="ketua-card-header-right">
             <div class="ketua-search-box">
@@ -111,27 +103,28 @@ body { background-color: #eef6f2; }
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Nama Anggota</th>
-                    <th>Jabatan</th>
-                    <th>Divisi</th>
+                    <th>No Anggota</th>
+                    <th>Nama</th>
+                    <th>Telepon</th>
                     <th>Bergabung</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody id="anggotaTbody">
-                @foreach($anggotaData as $a)
-                <tr data-status="{{ $a['status'] }}" data-divisi="{{ $a['divisi'] }}">
-                    <td>{{ $a['no'] }}</td>
-                    <td>{{ $a['nama'] }}</td>
-                    <td>{{ $a['jabatan'] }}</td>
-                    <td>{{ $a['divisi'] }}</td>
-                    <td>{{ $a['bergabung'] }}</td>
-                    <td><span class="ketua-status-aktif">{{ $a['status'] }}</span></td>
+                @forelse($anggota as $a)
+                <tr data-status="{{ $a->status }}" data-divisi="">
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $a->nomor_anggota }}</td>
+                    <td>{{ $a->nama }}</td>
+                    <td>{{ $a->telepon ?? '-' }}</td>
+                    <td>{{ $a->created_at->format('d/m/Y') }}</td>
+                    <td><span class="ketua-status-aktif">{{ $a->status }}</span></td>
                 </tr>
-                @endforeach
-                <tr class="ketua-table-empty" id="emptyRow">
+                @empty
+                <tr class="ketua-table-empty show" id="emptyRow">
                     <td colspan="6">Tidak ada anggota yang ditemukan</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

@@ -10,18 +10,6 @@ $menuItems = [
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
 
-$barang = [
-    ['kode' => 'TP-H', 'nama' => 'Tinta Printer Hitam', 'kategori' => 'ATK', 'stok' => 5, 'satuan' => 'Botol'],
-    ['kode' => 'TP-K', 'nama' => 'Tinta Printer Kuning', 'kategori' => 'ATK', 'stok' => 12, 'satuan' => 'Botol'],
-    ['kode' => 'PACK-W', 'nama' => 'Paket Jenazah (Wanita Dewasa)', 'kategori' => 'Bahan', 'stok' => 11, 'satuan' => 'PCS'],
-    ['kode' => 'PACK-P', 'nama' => 'Paket Jenazah (Pria Dewasa)', 'kategori' => 'Bahan', 'stok' => 2, 'satuan' => 'PCS'],
-    ['kode' => 'PACK-B', 'nama' => 'Paket Jenazah (bayi)', 'kategori' => 'Bahan', 'stok' => 3, 'satuan' => 'PCS'],
-];
-
-$inventaris = [
-    ['nama' => 'Toyota Hiace', 'plat' => 'BB 123 XYZ', 'tipe' => 'Mobil', 'status' => 'Dipakai', 'kondisi' => 'Mesin Baik, Body Lecet'],
-    ['nama' => 'Suzuki Carry', 'plat' => 'BB 123 XYZ', 'tipe' => 'Pickup', 'status' => 'Tersedia', 'kondisi' => 'Mesin Berfungsi'],
-];
 @endphp
 
 @section('title', 'Aset Organisasi')
@@ -116,18 +104,19 @@ body { background-color: #dbe7e4; }
                 </tr>
             </thead>
             <tbody id="barangTbody">
-                @foreach($barang as $b)
+                @forelse($barang as $b)
                 <tr>
-                    <td>{{ $b['kode'] }}</td>
-                    <td>{{ $b['nama'] }}</td>
-                    <td>{{ $b['kategori'] }}</td>
-                    <td>{{ $b['stok'] }}</td>
-                    <td>{{ $b['satuan'] }}</td>
+                    <td>{{ $b->kode_barang }}</td>
+                    <td>{{ $b->nama_barang }}</td>
+                    <td>{{ $b->kategoriBarang?->nama ?? '-' }}</td>
+                    <td>{{ $b->stok }}</td>
+                    <td>{{ $b->satuan }}</td>
                 </tr>
-                @endforeach
-                <tr class="aset-table-empty" id="barangEmpty">
+                @empty
+                <tr class="aset-table-empty show" id="barangEmpty">
                     <td colspan="5">Tidak ada barang yang ditemukan</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -156,25 +145,26 @@ body { background-color: #dbe7e4; }
                 </tr>
             </thead>
             <tbody id="inventarisTbody">
-                @foreach($inventaris as $i)
-                <tr data-status="{{ $i['status'] }}">
-                    <td>{{ $i['nama'] }}</td>
-                    <td>{{ $i['plat'] }}</td>
-                    <td>{{ $i['tipe'] }}</td>
+                @forelse($inventaris as $i)
+                <tr data-status="{{ $i->status }}">
+                    <td>{{ $i->nama_aset }}</td>
+                    <td>{{ $i->nomor_plat_seri ?? '-' }}</td>
+                    <td>{{ $i->kategoriAset?->nama ?? '-' }}</td>
                     <td>
-                        <span class="aset-status-badge {{ $i['status'] === 'Dipakai' ? 'dipakai' : 'tersedia' }}">
-                            <span class="dot"></span>{{ $i['status'] }}
+                        <span class="aset-status-badge {{ $i->status === 'Dipakai' ? 'dipakai' : 'tersedia' }}">
+                            <span class="dot"></span>{{ $i->status }}
                         </span>
                     </td>
-                    <td>{{ $i['kondisi'] }}</td>
+                    <td>-</td>
                     <td>
-                        <button class="aset-btn-ubah" onclick="ubahStatus(this)">Ubah Status</button>
+                        <span style="font-size:11px;color:#9ca3af;">Read Only</span>
                     </td>
                 </tr>
-                @endforeach
-                <tr class="aset-table-empty" id="inventarisEmpty">
+                @empty
+                <tr class="aset-table-empty show" id="inventarisEmpty">
                     <td colspan="6">Tidak ada inventaris yang ditemukan</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

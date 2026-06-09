@@ -1,0 +1,203 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Anggota;
+use App\Models\Pemasukan;
+use App\Models\Pengeluaran;
+use App\Models\StokBarang;
+use App\Models\AsetKendaraan;
+use App\Models\KategoriPemasukan;
+use App\Models\KategoriPengeluaran;
+use App\Models\LogAktivitas;
+use App\Models\PermintaanIzin;
+use Illuminate\Http\Request;
+
+class KetuaController extends Controller
+{
+    public function index()
+    {
+        $totalAnggota = Anggota::where('status', 'aktif')->count();
+        $totalPemasukan = Pemasukan::sum('jumlah');
+        $totalPengeluaran = Pengeluaran::sum('jumlah');
+        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalAset = AsetKendaraan::count();
+        $pendingIzin = PermintaanIzin::where('status', 'menunggu')->count();
+
+        $year = date('Y');
+        $monthlyPemasukan = Pemasukan::selectRaw("strftime('%m', created_at) as bulan, SUM(jumlah) as total")
+            ->whereRaw("strftime('%Y', created_at) = ?", [$year])
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+
+        $monthlyPengeluaran = Pengeluaran::selectRaw("strftime('%m', created_at) as bulan, SUM(jumlah) as total")
+            ->whereRaw("strftime('%Y', created_at) = ?", [$year])
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+
+        $chartLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $chartPemasukan = [];
+        $chartPengeluaran = [];
+        for ($b = 1; $b <= 12; $b++) {
+            $chartPemasukan[] = (int) ($monthlyPemasukan[$b] ?? 0);
+            $chartPengeluaran[] = (int) ($monthlyPengeluaran[$b] ?? 0);
+        }
+
+        $activities = LogAktivitas::with('user')->latest()->take(5)->get();
+
+        $requests = PermintaanIzin::with('user')->where('status', 'menunggu')->latest()->take(5)->get();
+
+        return view('dashboard.ketua.index', compact(
+            'totalAnggota', 'totalPemasukan', 'totalPengeluaran', 'saldo', 'totalAset', 'pendingIzin',
+            'chartLabels', 'chartPemasukan', 'chartPengeluaran',
+            'activities', 'requests'
+        ));
+    }
+
+    public function anggota(Request $request)
+    {
+        $anggota = Anggota::where('status', 'aktif')
+            ->when($request->search, fn($q, $s) => $q->where('nama', 'like', "%{$s}%"))
+            ->latest()
+            ->paginate(20);
+
+        return view('dashboard.ketua.anggota', compact('anggota'));
+    }
+
+    public function keuangan(Request $request)
+    {
+        $totalPemasukan = Pemasukan::sum('jumlah');
+        $totalPengeluaran = Pengeluaran::sum('jumlah');
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        $pemasukan = Pemasukan::with('kategoriPemasukan')->get();
+        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get();
+
+        $transactions = collect()
+            ->merge($pemasukan->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d/m/Y'),
+                'keterangan' => $p->keterangan ?? '',
+                'kategori' => 'Pemasukan',
+                'kategori_nama' => $p->kategoriPemasukan?->nama ?? '-',
+                'jumlah' => $p->jumlah,
+            ]))
+            ->merge($pengeluaran->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d/m/Y'),
+                'keterangan' => $p->keterangan ?? '',
+                'kategori' => 'Pengeluaran',
+                'kategori_nama' => $p->kategoriPengeluaran?->nama ?? '-',
+                'jumlah' => $p->jumlah,
+            ]))
+            ->sortByDesc('tanggal')
+            ->values();
+
+        if ($request->search) {
+            $s = $request->search;
+            $transactions = $transactions->filter(fn($t) =>
+                str_contains(strtolower($t['keterangan']), strtolower($s)) ||
+                str_contains(strtolower($t['kategori_nama']), strtolower($s))
+            )->values();
+        }
+
+        if ($request->kategori) {
+            $transactions = $transactions->where('kategori', $request->kategori)->values();
+        }
+
+        return view('dashboard.ketua.keuangan', compact('totalPemasukan', 'totalPengeluaran', 'saldo', 'transactions'));
+    }
+
+    public function aset()
+    {
+        $barang = StokBarang::with('kategoriBarang')->latest()->get();
+        $inventaris = AsetKendaraan::with('kategoriAset')->latest()->get();
+
+        return view('dashboard.ketua.aset', compact('barang', 'inventaris'));
+    }
+
+    public function log(Request $request)
+    {
+        $logs = LogAktivitas::with('user')
+            ->when($request->search, fn($q, $s) => $q->where('deskripsi', 'like', "%{$s}%"))
+            ->latest()
+            ->paginate(20);
+
+        return view('dashboard.ketua.log', compact('logs'));
+    }
+
+    public function izin()
+    {
+        $izinData = PermintaanIzin::with('user')->latest()->get();
+
+        return view('dashboard.ketua.izin', compact('izinData'));
+    }
+
+    public function approveIzin($id)
+    {
+        $izin = PermintaanIzin::findOrFail($id);
+        if ($izin->status !== 'menunggu') {
+            return response()->json(['success' => false, 'message' => 'Permintaan sudah diproses.'], 400);
+        }
+
+        $target = $izin->target_table === 'pemasukan'
+            ? Pemasukan::findOrFail($izin->target_id)
+            : Pengeluaran::findOrFail($izin->target_id);
+
+        $column = match ($izin->field_name) {
+            'nominal' => 'jumlah',
+            'keterangan' => 'keterangan',
+            'kategori' => $izin->target_table === 'pemasukan' ? 'kategori_pemasukan_id' : 'kategori_pengeluaran_id',
+            default => null,
+        };
+
+        if (!$column) {
+            return response()->json(['success' => false, 'message' => 'Field tidak dikenal.'], 400);
+        }
+
+        if ($izin->field_name === 'kategori') {
+            $kategoriModel = $izin->target_table === 'pemasukan' ? KategoriPemasukan::class : KategoriPengeluaran::class;
+            $kategori = $kategoriModel::where('nama', $izin->new_value)->first();
+            if (!$kategori) {
+                return response()->json(['success' => false, 'message' => 'Kategori tidak ditemukan.'], 400);
+            }
+            $target->{$column} = $kategori->id;
+        } elseif ($izin->field_name === 'nominal') {
+            $target->{$column} = preg_replace('/[^0-9]/', '', $izin->new_value);
+        } else {
+            $target->{$column} = $izin->new_value;
+        }
+
+        $target->save();
+
+        $izin->update([
+            'status' => 'disetujui',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        LogAktivitas::create([
+            'user_id' => auth()->id(),
+            'aksi' => 'setujui_izin_edit',
+            'deskripsi' => "Menyetujui perubahan {$izin->field_name} pada {$izin->target_table}#{$izin->target_id}: {$izin->old_value} \u2192 {$izin->new_value}",
+            'modul' => 'permintaan_izin',
+            'referensi_id' => $izin->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Permintaan berhasil disetujui dan data telah diperbarui.']);
+    }
+
+    public function rejectIzin($id)
+    {
+        $izin = PermintaanIzin::findOrFail($id);
+        if ($izin->status !== 'menunggu') {
+            return response()->json(['success' => false, 'message' => 'Permintaan sudah diproses.'], 400);
+        }
+
+        $izin->update([
+            'status' => 'ditolak',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Permintaan ditolak.']);
+    }
+}

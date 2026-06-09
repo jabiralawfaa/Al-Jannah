@@ -8,11 +8,17 @@ $menuItems = [
     ['label' => 'Log Aktivitas', 'url' => route('ketua.log'), 'active' => 'ketua/log*'],
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
-$izinData = [
-    ['waktu' => '06/12/2026 07:00', 'user' => 'Prayitno', 'alasan' => 'Perbaikan input Uang yang salah karena terdapat angka ganda pada nominal pemasukan'],
-    ['waktu' => '06/12/2026 07:00', 'user' => 'AgusNugroho', 'alasan' => 'Perbaikan input Uang yang salah karena nominal tidak sesuai dengan bukti transfer'],
-    ['waktu' => '06/12/2026 07:00', 'user' => 'BudiSantoso', 'alasan' => 'Perbaikan input Uang yang salah karena terdapat selisih pencatatan antara buku kas dan sistem'],
-];
+$izinDataJson = $izinData->map(fn($d) => [
+    'id' => $d->id,
+    'date' => $d->created_at->format('d M Y H:i'),
+    'user' => $d->user?->nama ?? '-',
+    'table' => $d->target_table,
+    'id_val' => $d->target_id,
+    'field' => $d->field_name,
+    'oldVal' => $d->old_value,
+    'newVal' => $d->new_value,
+    'alasan' => $d->alasan,
+])->values()->toJson();
 @endphp
 @section('title', 'Permintaan Izin')
 @push('styles')
@@ -53,6 +59,7 @@ body { background-color: #dbe7e4; }
 .pz-status-badge .material-symbols-outlined { font-size: 15px; }
 .pz-status-badge.approved { background: #d1fae5; color: #065f46; }
 .pz-status-badge.rejected { background: #fee2e2; color: #991b1b; }
+.pz-status-badge.pending { background: #fef3c7; color: #92400e; }
 .pz-table-empty { text-align: center; padding: 48px 16px; color: #9ca3af; font-size: 13px; display: none; }
 .pz-table-empty.show { display: table-row; }
 .pz-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
@@ -93,7 +100,7 @@ body { background-color: #dbe7e4; }
     <div class="pz-card-header"><h2>Daftar Log</h2></div>
     <div class="pz-card-body">
         <div class="pz-search-box"><span class="material-symbols-outlined">search</span><input type="text" placeholder="Cari permintaan..." id="searchIzin"></div>
-        <div class="pz-table-wrap"><table class="pz-table" id="izinTable"><thead><tr><th>Waktu</th><th>User</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody id="izinTbody">@foreach($izinData as $idx => $d)<tr><td>{{ $d['waktu'] }}</td><td>{{ $d['user'] }}</td><td>{{ $d['alasan'] }}</td><td id="action-{{ $idx }}"><button class="pz-btn-izinkan" onclick="openModal({{ $idx }})"><span class="material-symbols-outlined">visibility</span> Izinkan</button></td></tr>@endforeach<tr class="pz-table-empty" id="izinEmpty"><td colspan="4">Tidak ada permintaan izin yang ditemukan</td></tr></tbody></table></div>
+        <div class="pz-table-wrap"><table class="pz-table" id="izinTable"><thead><tr><th>Waktu</th><th>User</th><th>Target</th><th>Alasan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="izinTbody">@forelse($izinData as $d)<tr data-id="{{ $d->id }}"><td>{{ $d->created_at->format('d/m/Y H:i') }}</td><td>{{ $d->user?->nama ?? '-' }}</td><td>{{ $d->target_table }}:{{ $d->target_id }} ({{ $d->field_name }})</td><td>{{ $d->alasan }}</td><td><span class="pz-status-badge {{ $d->status === 'disetujui' ? 'approved' : ($d->status === 'ditolak' ? 'rejected' : 'pending') }}"><span class="material-symbols-outlined">{{ $d->status === 'menunggu' ? 'hourglass_top' : ($d->status === 'disetujui' ? 'check_circle' : 'cancel') }}</span> {{ ucfirst($d->status) }}</span></td><td>@if($d->status === 'menunggu')<button class="pz-btn-izinkan" onclick="openModal({{ $d->id }})"><span class="material-symbols-outlined">visibility</span> Izinkan</button>@else<span style="font-size:11px;color:#9ca3af;">-</span>@endif</td></tr>@empty<tr class="pz-table-empty show" id="izinEmpty"><td colspan="6">Tidak ada permintaan izin yang ditemukan</td></tr>@endforelse</tbody></table></div>
     </div>
 </div>
 <div class="pz-modal-overlay" id="izinModal">
@@ -101,10 +108,11 @@ body { background-color: #dbe7e4; }
         <div class="pz-modal-title">Setujui Permintaan Izin</div>
         <div class="pz-modal-desc">Anda akan menyetujui permintaan edit dari Bendahara.</div>
         <div class="pz-modal-detail">
-            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Tanggal:</span><span class="pz-modal-detail-value">05 Jan 2026</span></div>
-            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Bendahara:</span><span class="pz-modal-detail-value" id="modalUser">Nurhalimah</span></div>
-            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">ID Transaksi:</span><span class="pz-modal-detail-value">TRX-045</span></div>
-            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Alasan:</span><span class="pz-modal-detail-value">Akun transaksi terdapat angka yang membayar lebih dari nominal standar.</span></div>
+            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Tanggal:</span><span class="pz-modal-detail-value" id="modalDate">-</span></div>
+            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">User:</span><span class="pz-modal-detail-value" id="modalUser">-</span></div>
+            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Target:</span><span class="pz-modal-detail-value" id="modalTarget">-</span></div>
+            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Nilai:</span><span class="pz-modal-detail-value" id="modalValues">-</span></div>
+            <div class="pz-modal-detail-item"><span class="pz-modal-detail-label">Alasan:</span><span class="pz-modal-detail-value" id="modalReason">-</span></div>
         </div>
         <div class="pz-modal-actions"><button class="pz-btn-terima" onclick="handleApprove()">Terima</button><button class="pz-btn-tolak" onclick="handleReject()">Tolak</button></div>
     </div>
@@ -113,13 +121,14 @@ body { background-color: #dbe7e4; }
 @endsection
 @push('scripts')
 <script>
-(function(){var s=document.getElementById('searchIzin'),r=document.querySelectorAll('#izinTbody tr:not(.pz-table-empty)'),e=document.getElementById('izinEmpty'),b=document.getElementById('refreshBtn'),l=document.getElementById('lastUpdate');function f(){var q=s.value.toLowerCase().trim(),v=0;r.forEach(function(x){if(q===''||x.textContent.toLowerCase().indexOf(q)!==-1){x.style.display='';v++}else x.style.display='none'});e.classList.toggle('show',v===0)}function u(){var n=new Date();l.textContent='Terakhir : '+String(n.getHours()).padStart(2,'0')+'.'+String(n.getMinutes()).padStart(2,'0')+'.'+String(n.getSeconds()).padStart(2,'0')}s.addEventListener('input',f);b.addEventListener('click',function(){b.classList.remove('spinning');void b.offsetWidth;b.classList.add('spinning');u();setTimeout(function(){b.classList.remove('spinning')},600)});u()})();
-var pendingIdx=-1;
-function openModal(idx){pendingIdx=idx;document.getElementById('modalUser').textContent=(['Prayitno','AgusNugroho','BudiSantoso'][idx])||'Nurhalimah';document.getElementById('izinModal').classList.add('active')}
-function closeModal(){document.getElementById('izinModal').classList.remove('active');pendingIdx=-1}
+var izinData={!! $izinDataJson !!};
+var pendingId=-1;
+function openModal(id){var d=izinData.find(function(x){return x.id==id});if(!d)return;pendingId=id;document.getElementById('modalDate').textContent=d.date;document.getElementById('modalUser').textContent=d.user;document.getElementById('modalTarget').textContent=d.table+' #'+d.id_val+' - Kolom: '+d.field;document.getElementById('modalValues').textContent='Lama: '+(d.oldVal||'-')+' → Baru: '+(d.newVal||'-');document.getElementById('modalReason').textContent=d.alasan;document.getElementById('izinModal').classList.add('active')}
+function closeModal(){document.getElementById('izinModal').classList.remove('active');pendingId=-1}
 function showToast(msg,type){var t=document.getElementById('toast'),i=t.querySelector('.material-symbols-outlined'),x=document.getElementById('toastMsg');t.className='pz-toast';t.classList.add(type);i.textContent=type==='success'?'check_circle':'cancel';x.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
-function handleApprove(){if(pendingIdx<0)return;document.getElementById('action-'+pendingIdx).innerHTML='<span class="pz-status-badge approved"><span class="material-symbols-outlined">check_circle</span> Disetujui</span>';closeModal();showToast('Permintaan berhasil disetujui','success')}
-function handleReject(){if(pendingIdx<0)return;document.getElementById('action-'+pendingIdx).innerHTML='<span class="pz-status-badge rejected"><span class="material-symbols-outlined">cancel</span> Ditolak</span>';closeModal();showToast('Permintaan berhasil ditolak','error')}
+function handleApprove(){if(pendingId<0)return;var row=document.querySelector('tr[data-id="'+pendingId+'"]');if(row){var td=row.querySelector('td:last-child');if(td)td.innerHTML='<span class="pz-status-badge approved"><span class="material-symbols-outlined">check_circle</span> Disetujui</span>';var statusTd=row.querySelector('td:nth-child(5)');if(statusTd)statusTd.innerHTML='<span class="pz-status-badge approved"><span class="material-symbols-outlined">check_circle</span> Disetujui</span>'}fetch('/ketua/izin/'+pendingId+'/approve',{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}}).then(function(r){return r.json()}).then(function(res){if(res.success)showToast('Permintaan berhasil disetujui','success');else showToast(res.message||'Gagal','error')}).catch(function(){showToast('Terjadi kesalahan','error')});closeModal()}
+function handleReject(){if(pendingId<0)return;var row=document.querySelector('tr[data-id="'+pendingId+'"]');if(row){var td=row.querySelector('td:last-child');if(td)td.innerHTML='<span class="pz-status-badge rejected"><span class="material-symbols-outlined">cancel</span> Ditolak</span>';var statusTd=row.querySelector('td:nth-child(5)');if(statusTd)statusTd.innerHTML='<span class="pz-status-badge rejected"><span class="material-symbols-outlined">cancel</span> Ditolak</span>'}fetch('/ketua/izin/'+pendingId+'/reject',{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}}).then(function(r){return r.json()}).then(function(res){if(res.success)showToast('Permintaan ditolak','error');else showToast(res.message||'Gagal','error')}).catch(function(){showToast('Terjadi kesalahan','error')});closeModal()}
+(function(){var s=document.getElementById('searchIzin'),r=document.querySelectorAll('#izinTbody tr:not(.pz-table-empty)'),e=document.getElementById('izinEmpty'),b=document.getElementById('refreshBtn'),l=document.getElementById('lastUpdate');function f(){var q=s.value.toLowerCase().trim(),v=0;r.forEach(function(x){if(q===''||x.textContent.toLowerCase().indexOf(q)!==-1){x.style.display='';v++}else x.style.display='none'});e.classList.toggle('show',v===0)}function u(){var n=new Date();l.textContent='Terakhir : '+String(n.getHours()).padStart(2,'0')+'.'+String(n.getMinutes()).padStart(2,'0')+'.'+String(n.getSeconds()).padStart(2,'0')}s.addEventListener('input',f);b.addEventListener('click',function(){b.classList.remove('spinning');void b.offsetWidth;b.classList.add('spinning');u();setTimeout(function(){b.classList.remove('spinning')},600)});u()})();
 document.getElementById('izinModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 </script>
 @endpush

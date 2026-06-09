@@ -10,7 +10,9 @@ use App\Models\IuranTahunan;
 use App\Models\Pembayaran;
 use App\Models\KategoriPemasukan;
 use App\Models\KategoriPengeluaran;
+use App\Models\PermintaanIzin;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class BendaharaController extends Controller
 {
@@ -42,6 +44,102 @@ class BendaharaController extends Controller
             ->take(5);
 
         return view('dashboard.bendahara.index', compact('totalPemasukan', 'totalPengeluaran', 'saldo', 'transaksi'));
+    }
+
+    public function catatTransaksi()
+    {
+        $pemasukan = Pemasukan::with('kategoriPemasukan')->get()->map(fn($p) => [
+            'id' => $p->id,
+            'tipe' => 'Pemasukan',
+            'tanggal' => $p->created_at->format('d/m/Y'),
+            'jumlah' => $p->jumlah,
+            'kategori' => $p->kategoriPemasukan?->nama ?? '-',
+            'keterangan' => $p->keterangan ?? '-',
+            'created_at' => $p->created_at,
+        ]);
+
+        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get()->map(fn($p) => [
+            'id' => $p->id,
+            'tipe' => 'Pengeluaran',
+            'tanggal' => $p->created_at->format('d/m/Y'),
+            'jumlah' => $p->jumlah,
+            'kategori' => $p->kategoriPengeluaran?->nama ?? '-',
+            'keterangan' => $p->keterangan ?? '-',
+            'created_at' => $p->created_at,
+        ]);
+
+        $all = $pemasukan->concat($pengeluaran)->sortByDesc('created_at')->values();
+
+        $page = request()->get('page', 1);
+        $perPage = 20;
+        $transaksi = new LengthAwarePaginator(
+            $all->forPage($page, $perPage),
+            $all->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $kategoriPemasukan = KategoriPemasukan::all();
+        $kategoriPengeluaran = KategoriPengeluaran::all();
+
+        return view('dashboard.bendahara.catat-transaksi', compact('transaksi', 'kategoriPemasukan', 'kategoriPengeluaran'));
+    }
+
+    public function storeTransaksi(Request $request)
+    {
+        $rules = [
+            'tipe' => 'required|in:pemasukan,pengeluaran',
+            'tanggal' => 'required|date',
+            'jumlah' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:1000',
+            'file_bukti' => 'nullable|file|max:2048',
+        ];
+
+        $rules['kategori_id'] = $request->tipe === 'pemasukan'
+            ? 'required|exists:kategori_pemasukan,id'
+            : 'required|exists:kategori_pengeluaran,id';
+
+        $validated = $request->validate($rules);
+
+        $filePath = null;
+        if ($request->hasFile('file_bukti')) {
+            $filePath = $request->file('file_bukti')->store('bendahara', 'local');
+        }
+
+        if ($validated['tipe'] === 'pemasukan') {
+            $model = Pemasukan::create([
+                'tanggal' => $validated['tanggal'],
+                'kategori_pemasukan_id' => $validated['kategori_id'],
+                'jumlah' => $validated['jumlah'],
+                'keterangan' => $validated['keterangan'],
+                'file_bukti' => $filePath,
+                'created_by' => auth()->id(),
+            ]);
+            $kategori = $model->kategoriPemasukan?->nama ?? '-';
+        } else {
+            $model = Pengeluaran::create([
+                'tanggal' => $validated['tanggal'],
+                'kategori_pengeluaran_id' => $validated['kategori_id'],
+                'jumlah' => $validated['jumlah'],
+                'keterangan' => $validated['keterangan'],
+                'file_bukti' => $filePath,
+                'created_by' => auth()->id(),
+            ]);
+            $kategori = $model->kategoriPengeluaran?->nama ?? '-';
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $model->id,
+                'tipe' => $validated['tipe'] === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran',
+                'tanggal' => $model->created_at->format('d/m/Y'),
+                'jumlah' => $model->jumlah,
+                'kategori' => $kategori,
+                'keterangan' => $model->keterangan ?? '-',
+            ]
+        ]);
     }
 
     public function pemasukan()
@@ -333,5 +431,34 @@ class BendaharaController extends Controller
         $calon->update(['status' => 'sudah_membayar']);
 
         return response()->json(['success' => true]);
+    }
+
+    public function storePermintaanIzin(Request $request)
+    {
+        $validated = $request->validate([
+            'target_table' => 'required|string',
+            'target_id' => 'required|integer',
+            'field_name' => 'required|string',
+            'old_value' => 'nullable|string',
+            'new_value' => 'nullable|string',
+            'alasan' => 'required|string|max:2000',
+        ]);
+
+        $permintaan = PermintaanIzin::create([
+            'user_id' => auth()->id(),
+            'target_table' => $validated['target_table'],
+            'target_id' => $validated['target_id'],
+            'field_name' => $validated['field_name'],
+            'old_value' => $validated['old_value'],
+            'new_value' => $validated['new_value'],
+            'alasan' => $validated['alasan'],
+            'status' => 'menunggu',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan akses edit berhasil dikirim ke ketua.',
+            'data' => $permintaan,
+        ]);
     }
 }

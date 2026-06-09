@@ -30,15 +30,99 @@
     function formatNominal(val) { return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     function showToast(el, msg, duration) {
         el.textContent = msg;
-        el.parentElement.style.display = 'flex';
-        setTimeout(function() { el.parentElement.style.display = 'none'; }, duration || 3500);
+        el.style.display = 'flex';
+        setTimeout(function() { el.style.display = 'none'; }, duration || 3500);
     }
     (function() {
-        if (!document.getElementById('modalEdit')) return;
-        window.openModal = function() { document.getElementById('modalEdit').classList.add('active'); };
-        window.closeModal = function() { document.getElementById('modalEdit').classList.remove('active'); };
-        window.requestAccess = function(msg) { closeModal(); showToast(document.getElementById('toastSuccess'), msg || 'Permintaan akses edit berhasil dikirim ke ketua', 4000); };
-        document.getElementById('modalEdit').addEventListener('click', function(e) {
+        var modal = document.getElementById('modalEdit');
+        if (!modal) return;
+        window.openModal = function(btn) {
+            modal.classList.add('active');
+            var row = btn ? btn.closest('tr') : null;
+            window._editRow = row;
+            if (row) {
+                var tableName = window._targetTable || '';
+                document.getElementById('modalTargetTable').value = tableName;
+                var idEl = row.querySelector('[data-target-id]');
+                document.getElementById('modalTargetId').value = idEl ? idEl.getAttribute('data-target-id') : '';
+                document.getElementById('modalFieldName').value = '';
+                document.getElementById('modalOldValue').value = '';
+                document.getElementById('modalNewValue').value = '';
+                document.getElementById('modalNewValue').style.display = '';
+                document.getElementById('modalNewKategori').style.display = 'none';
+                document.getElementById('modalNewKategori').value = '';
+                document.getElementById('modalAlasan').value = '';
+            }
+        };
+        window.closeModal = function() { modal.classList.remove('active'); window._editRow = null; };
+        window.requestAccess = function() {
+            var table = document.getElementById('modalTargetTable').value;
+            var id = document.getElementById('modalTargetId').value;
+            var field = document.getElementById('modalFieldName').value;
+            var oldVal = document.getElementById('modalOldValue').value;
+            var newVal = field === 'kategori'
+                ? document.getElementById('modalNewKategori').value
+                : document.getElementById('modalNewValue').value;
+            var alasan = document.getElementById('modalAlasan').value;
+            if (!field || !alasan) { alert('Harap isi kolom yang ingin diubah dan alasan.'); return; }
+            if (!newVal) { alert('Harap isi nilai baru.'); return; }
+            if (!table || !id) { alert('Data target tidak ditemukan.'); return; }
+            var formData = new FormData();
+            formData.append('target_table', table);
+            formData.append('target_id', id);
+            formData.append('field_name', field);
+            formData.append('old_value', oldVal);
+            formData.append('new_value', newVal);
+            formData.append('alasan', alasan);
+            fetch('/bendahara/permintaan-izin', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                closeModal();
+                if (res.success) {
+                    showToast(document.getElementById('toastSuccess'), res.message, 4000);
+                    document.getElementById('modalFieldName').value = '';
+                    document.getElementById('modalOldValue').value = '';
+                    document.getElementById('modalNewValue').value = '';
+                    document.getElementById('modalAlasan').value = '';
+                } else {
+                    alert(res.message || 'Gagal mengirim permintaan');
+                }
+            })
+            .catch(function() { alert('Terjadi kesalahan'); });
+        };
+        document.addEventListener('change', function(e) {
+            if (e.target.id !== 'modalFieldName') return;
+            var row = window._editRow;
+            if (!row) { document.getElementById('modalOldValue').value = ''; return; }
+            var val = '';
+            switch (e.target.value) {
+                case 'nominal': val = row.getAttribute('data-jumlah') || ''; break;
+                case 'kategori': val = row.getAttribute('data-kategori') || ''; break;
+                case 'keterangan': val = row.getAttribute('data-keterangan') || ''; break;
+            }
+            document.getElementById('modalOldValue').value = val;
+
+            var newValInput = document.getElementById('modalNewValue');
+            var newKatSelect = document.getElementById('modalNewKategori');
+            if (e.target.value === 'kategori') {
+                newValInput.style.display = 'none';
+                newKatSelect.style.display = '';
+                var opts = window._kategoriOptions || [];
+                newKatSelect.innerHTML = '<option value="">Pilih kategori</option>';
+                for (var i = 0; i < opts.length; i++) {
+                    newKatSelect.innerHTML += '<option value="' + opts[i] + '">' + opts[i] + '</option>';
+                }
+                newKatSelect.value = '';
+            } else {
+                newValInput.style.display = '';
+                newKatSelect.style.display = 'none';
+            }
+        });
+        modal.addEventListener('click', function(e) {
             if (e.target === this || (e.target.classList && e.target.classList.contains('modal-bg'))) closeModal();
         });
     })();

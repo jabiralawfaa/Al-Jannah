@@ -1,8 +1,7 @@
 @extends('layouts.dashboard', [
     'menuItems' => [
         ['label' => 'Dashboard', 'url' => '/bendahara', 'active' => 'bendahara'],
-        ['label' => 'Catat Pemasukan', 'url' => '/bendahara/pemasukan', 'active' => 'bendahara/pemasukan'],
-        ['label' => 'Catat Pengeluaran', 'url' => '/bendahara/pengeluaran', 'active' => 'bendahara/pengeluaran'],
+        ['label' => 'Catat Transaksi', 'url' => '/bendahara/catat-transaksi', 'active' => 'bendahara/catat-transaksi'],
         ['label' => 'Iuran Anggota', 'url' => '/bendahara/iuran', 'active' => 'bendahara/iuran'],
         ['label' => 'Laporan Keuangan', 'url' => '/bendahara/laporan', 'active' => 'bendahara/laporan'],
         ['label' => 'Verifikasi Pendaftaran', 'url' => '/bendahara/verifikasi', 'active' => 'bendahara/verifikasi'],
@@ -13,6 +12,7 @@
 
 @section('content')
 <div class="page-pemasukan">
+<script>window._targetTable = 'pemasukan'; window._kategoriOptions = @json($kategoriList->pluck('nama'));</script>
 <div class="page-header">
     <h1>Catat Pemasukan</h1>
     <p class="subtitle">Form pencatatan pemasukan keuangan RKM Al-Jannah</p>
@@ -94,8 +94,8 @@
             </thead>
             <tbody id="riwayatPemasukanBody">
                 @forelse($pemasukan as $item)
-                <tr>
-                    <td>{{ $item->created_at->format('d/m/Y') }}</td>
+                <tr data-jumlah="{{ $item->jumlah }}" data-kategori="{{ $item->kategoriPemasukan?->nama ?? '-' }}" data-keterangan="{{ $item->keterangan ?? '' }}">
+                    <td data-target-id="{{ $item->id }}">{{ $item->created_at->format('d/m/Y') }}</td>
                     <td class="nominal-value">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
                     <td class="name-cell">{{ $item->kategoriPemasukan?->nama ?? '-' }}</td>
                     <td>{{ $item->keterangan ?? '-' }}</td>
@@ -144,7 +144,7 @@
             if (emptyRow) emptyRow.remove();
             var tbody = document.getElementById('riwayatPemasukanBody');
             var row = document.createElement('tr');
-            row.innerHTML = '<td>' + d.tanggal + '</td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td>';
+            row.innerHTML = '<tr data-jumlah="' + d.jumlah + '" data-kategori="' + (d.kategori || '') + '" data-keterangan="' + (d.keterangan || '') + '"><td data-target-id="' + d.id + '">' + d.tanggal + '</td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td></tr>';
             tbody.appendChild(row);
             document.getElementById('tanggalPemasukan').value = '';
             document.getElementById('jenisPemasukan').value = '';
@@ -167,9 +167,37 @@
         </div>
         <h3>Meminta akses edit ke ketua</h3>
         <p>Anda akan mengirimkan permintaan akses untuk mengedit data pemasukan ini. Ketua akan menyetujui permintaan Anda.</p>
+        <input type="hidden" id="modalTargetTable" value="">
+        <input type="hidden" id="modalTargetId" value="">
+        <div class="form-group" style="margin-bottom:12px;">
+            <label>Kolom yang ingin diubah</label>
+            <select id="modalFieldName" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#fff;appearance:auto;">
+                <option value="">Pilih kolom</option>
+                <option value="nominal">Nominal</option>
+                <option value="kategori">Jenis Pemasukan</option>
+                <option value="keterangan">Keterangan</option>
+            </select>
+        </div>
+        <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px;">
+            <div class="form-group" style="flex:1;">
+                <label>Nilai Lama</label>
+                <input type="text" id="modalOldValue" placeholder="Nilai sebelum diubah" readonly style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#f3f4f6;cursor:not-allowed;">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Nilai Baru</label>
+                <input type="text" id="modalNewValue" placeholder="Nilai setelah diubah" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;">
+                <select id="modalNewKategori" style="display:none;width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#fff;appearance:auto;">
+                    <option value="">Pilih kategori</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+            <label>Alasan perubahan</label>
+            <textarea id="modalAlasan" placeholder="Jelaskan alasan mengapa data ini perlu diubah..." style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+        </div>
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeModal()">Batal</button>
-            <button class="btn-minta" onclick="requestAccess()">Minta</button>
+            <button class="btn-minta" onclick="requestAccess()">Kirim Permintaan</button>
         </div>
     </div>
 </div>

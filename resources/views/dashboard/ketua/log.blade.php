@@ -8,11 +8,6 @@ $menuItems = [
     ['label' => 'Log Aktivitas', 'url' => route('ketua.log'), 'active' => 'ketua/log*'],
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
-$logs = [
-    ['waktu' => '05/12/2026 07:00', 'user' => 'Prayitno', 'aksi' => 'Upload File', 'ip' => '192.168.12.1', 'badge' => 'hijau'],
-    ['waktu' => '06/12/2026 07:00', 'user' => 'AgusNugroho', 'aksi' => 'Hapus File', 'ip' => '192.168.12.1', 'badge' => 'orange'],
-    ['waktu' => '06/12/2026 07:00', 'user' => 'BudiSantoso', 'aksi' => 'Memberi Izin Edit', 'ip' => '192.168.12.1', 'badge' => 'hijau-tua'],
-];
 @endphp
 @section('title', 'Log Aktivitas')
 @push('styles')
@@ -66,7 +61,7 @@ body { background-color: #dbe7e4; }
     <div class="kt-card-header"><h2>Daftar Log</h2></div>
     <div class="kt-card-body">
         <div class="kt-search-box"><span class="material-symbols-outlined">search</span><input type="text" placeholder="Cari log..." id="searchLog"></div>
-        <div class="kt-table-wrap"><table class="kt-table" id="logTable"><thead><tr><th>Waktu</th><th>User</th><th>Aksi</th><th>IP Address</th></tr></thead><tbody id="logTbody">@foreach($logs as $l)<tr><td>{{ $l['waktu'] }}</td><td>{{ $l['user'] }}</td><td><span class="kt-badge {{ $l['badge'] }}">{{ $l['aksi'] }}</span></td><td>{{ $l['ip'] }}</td></tr>@endforeach<tr class="kt-table-empty" id="logEmpty"><td colspan="4">Tidak ada log yang ditemukan</td></tr></tbody></table></div>
+        <div class="kt-table-wrap"><table class="kt-table" id="logTable"><thead><tr><th>Waktu</th><th>User</th><th>Modul</th><th>Aksi</th></tr></thead><tbody id="logTbody">@forelse($logs as $l)<tr><td>{{ $l->created_at->format('d/m/Y H:i') }}</td><td>{{ $l->user?->nama ?? '-' }}</td><td>{{ $l->modul ?? '-' }}</td><td><span class="kt-badge hijau">{{ $l->deskripsi }}</span></td></tr>@empty<tr class="kt-table-empty show" id="logEmpty"><td colspan="4">Tidak ada log yang ditemukan</td></tr>@endforelse</tbody></table></div>
     </div>
 </div>
 @endsection

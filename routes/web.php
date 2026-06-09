@@ -10,6 +10,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LogistikController;
 use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\BendaharaController;
+use App\Http\Controllers\KetuaController;
 use App\Http\Controllers\FileController;
 
 use App\Models\Page;
@@ -120,32 +121,22 @@ Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
     Route::get('/bendahara/verifikasi', [BendaharaController::class, 'verifikasi'])->name('bendahara.verifikasi');
     Route::get('/bendahara/verifikasi/data', [BendaharaController::class, 'getVerifikasiData'])->name('bendahara.verifikasi.data');
     Route::post('/bendahara/verifikasi/{id}', [BendaharaController::class, 'verifikasiPembayaran'])->name('bendahara.verifikasi.store');
+
+    Route::get('/bendahara/catat-transaksi', [BendaharaController::class, 'catatTransaksi'])->name('bendahara.catat-transaksi');
+    Route::post('/bendahara/catat-transaksi', [BendaharaController::class, 'storeTransaksi'])->name('bendahara.catat-transaksi.store');
+
+    Route::post('/bendahara/permintaan-izin', [BendaharaController::class, 'storePermintaanIzin'])->name('bendahara.permintaan-izin.store');
 });
 
 Route::middleware(['auth', 'role:ketua'])->group(function () {
-    Route::get('/ketua', function () {
-        return view('dashboard.ketua.index');
-    })->name('ketua.dashboard');
-
-    Route::get('/ketua/anggota', function () {
-        return view('dashboard.ketua.anggota');
-    })->name('ketua.anggota');
-
-    Route::get('/ketua/keuangan', function () {
-        return view('dashboard.ketua.keuangan');
-    })->name('ketua.keuangan');
-
-    Route::get('/ketua/aset', function () {
-        return view('dashboard.ketua.aset');
-    })->name('ketua.aset');
-
-    Route::get('/ketua/log', function () {
-        return view('dashboard.ketua.log');
-    })->name('ketua.log');
-
-    Route::get('/ketua/izin', function () {
-        return view('dashboard.ketua.izin');
-    })->name('ketua.izin');
+    Route::get('/ketua', [KetuaController::class, 'index'])->name('ketua.dashboard');
+    Route::get('/ketua/anggota', [KetuaController::class, 'anggota'])->name('ketua.anggota');
+    Route::get('/ketua/keuangan', [KetuaController::class, 'keuangan'])->name('ketua.keuangan');
+    Route::get('/ketua/aset', [KetuaController::class, 'aset'])->name('ketua.aset');
+    Route::get('/ketua/log', [KetuaController::class, 'log'])->name('ketua.log');
+    Route::get('/ketua/izin', [KetuaController::class, 'izin'])->name('ketua.izin');
+    Route::post('/ketua/izin/{id}/approve', [KetuaController::class, 'approveIzin'])->name('ketua.izin.approve');
+    Route::post('/ketua/izin/{id}/reject', [KetuaController::class, 'rejectIzin'])->name('ketua.izin.reject');
 });
 
 Route::middleware(['auth', 'role:adminweb'])->group(function () {

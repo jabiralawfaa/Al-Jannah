@@ -9,25 +9,21 @@ $menuItems = [
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
 $stats = [
-    ['icon' => 'groups', 'value' => '198', 'label' => 'Anggota', 'color' => 'green'],
-    ['icon' => 'account_balance', 'value' => 'Rp.29.000.000', 'label' => 'Saldo Kas', 'color' => 'green'],
-    ['icon' => 'inventory_2', 'value' => '5', 'label' => 'Total Aset', 'color' => 'green'],
-    ['icon' => 'edit', 'value' => '3', 'label' => 'Permintaan izin Edit', 'color' => 'orange'],
+    ['icon' => 'groups', 'value' => number_format($totalAnggota, 0, ',', '.'), 'label' => 'Anggota', 'color' => 'green'],
+    ['icon' => 'account_balance', 'value' => 'Rp ' . number_format($saldo, 0, ',', '.'), 'label' => 'Saldo Kas', 'color' => 'green'],
+    ['icon' => 'inventory_2', 'value' => $totalAset, 'label' => 'Total Aset', 'color' => 'green'],
+    ['icon' => 'edit', 'value' => $pendingIzin, 'label' => 'Permintaan Izin Edit', 'color' => 'orange'],
 ];
-$activities = [
-    ['icon' => 'how_to_reg', 'color' => 'green', 'text' => 'Verifikasi Disetujui - Sekretaris', 'time' => '16 Jan 2026 10:30'],
-    ['icon' => 'currency_exchange', 'color' => 'blue', 'text' => 'Permintaan Update data Keuangan - Bendahara', 'time' => '16 Jan 2026 09:45'],
-    ['icon' => 'assignment', 'color' => 'orange-bg', 'text' => 'Pengubahan status Aset - Logistik', 'time' => '15 Jan 2026 14:20'],
-];
-$requests = [
-    ['title' => 'Pengubahan Dana Pemasukan - Bendahara', 'detail' => 'Tabel : Pemasukan - field : infaq jariyah masjid at-taqwa', 'reason' => 'Dana yang masuk tidak sesuai dengan yang asli, seharusnya 750.000 tetapi tercatat 500.000', 'date' => '16 Jan 2026 09:30'],
-    ['title' => 'Perubahan Data Anggota - Sekretaris', 'detail' => 'Tabel : Anggota - field : alamat, no_telepon', 'reason' => 'Data anggota telah diperbarui oleh yang bersangkutan, perlu penyesuaian di sistem', 'date' => '17 Jan 2026 14:15'],
-    ['title' => 'Update Stok Barang - Logistik', 'detail' => 'Tabel : Stok Barang - field : jumlah_stok', 'reason' => 'Terdapat barang masuk dan keluar yang belum tercatat, stok perlu disesuaikan', 'date' => '17 Jan 2026 08:45'],
-];
-$requestData = array_map(function($r) {
-    $user = explode(' - ', $r['title'])[1] ?? $r['title'];
-    return ['date' => $r['date'], 'user' => $user, 'detail' => $r['detail'], 'reason' => $r['reason']];
-}, $requests);
+$requestDataJson = $requests->map(fn($r) => [
+    'id' => $r->id,
+    'date' => $r->created_at->format('d M Y H:i'),
+    'user' => $r->user?->nama ?? '-',
+    'table' => $r->target_table,
+    'field' => $r->field_name,
+    'oldVal' => $r->old_value,
+    'newVal' => $r->new_value,
+    'alasan' => $r->alasan,
+])->values()->toJson();
 @endphp
 @section('title', 'Dashboard Ketua')
 @push('styles')
@@ -127,15 +123,17 @@ body { background-color: #eef6f2; }
 @endforeach</div>
 <div class="ketua-two-col">
     <div class="ketua-card"><div class="ketua-card-title">Arus Keuangan</div><div class="ketua-chart-container"><canvas id="financeChart"></canvas></div><div class="ketua-chart-footer">Data Keuangan Tahun 2026</div></div>
-    <div class="ketua-card"><div class="ketua-card-title">Aktivitas Terbaru</div><div class="ketua-activities-list">@foreach($activities as $a)
-        <div class="ketua-activity-item"><div class="ketua-activity-icon {{ $a['color'] }}"><span class="material-symbols-outlined">{{ $a['icon'] }}</span></div><div class="ketua-activity-text"><div class="ketua-activity-desc">{{ $a['text'] }}</div><div class="ketua-activity-time">{{ $a['time'] }}</div></div></div>
-    @endforeach</div></div>
+    <div class="ketua-card"><div class="ketua-card-title">Aktivitas Terbaru</div><div class="ketua-activities-list">@forelse($activities as $a)
+        <div class="ketua-activity-item"><div class="ketua-activity-icon green"><span class="material-symbols-outlined">assignment</span></div><div class="ketua-activity-text"><div class="ketua-activity-desc">{{ $a->deskripsi }} - {{ $a->user?->nama ?? 'Sistem' }}</div><div class="ketua-activity-time">{{ $a->created_at->format('d M Y H:i') }}</div></div></div>
+    @empty
+        <div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px;">Belum ada aktivitas</div>
+    @endforelse</div></div>
 </div>
 <div class="ketua-card" style="padding:0;">
     <div class="br-card-header"><h2>Permintaan Izin Edit</h2><div class="br-header-right"><button class="br-btn-refresh" id="brRefreshBtn" title="Refresh"><span class="material-symbols-outlined">refresh</span></button><span class="br-last-update" id="brLastUpdate">Terakhir : --:--:--</span></div></div>
     <div class="br-card-body">
         <div class="br-search-box"><span class="material-symbols-outlined">search</span><input type="text" placeholder="Cari permintaan..." id="searchIzin"></div>
-        <div class="br-table-wrap"><table class="br-table" id="izinTable"><thead><tr><th>Waktu</th><th>User</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody>@foreach($requests as $idx => $r)@php $user = explode(' - ', $r['title'])[1] ?? $r['title']; @endphp<tr><td>{{ $r['date'] }}</td><td>{{ $user }}</td><td>{{ $r['reason'] }}</td><td id="ba-action-{{ $idx }}"><button class="br-btn-izinkan" onclick="openModal({{ $idx }})"><span class="material-symbols-outlined">visibility</span> Izinkan</button></td></tr>@endforeach<tr class="br-table-empty" id="izinEmpty"><td colspan="4">Tidak ada permintaan izin yang ditemukan</td></tr></tbody></table></div>
+        <div class="br-table-wrap"><table class="br-table" id="izinTable"><thead><tr><th>Waktu</th><th>User</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody>@forelse($requests as $r)<tr data-id="{{ $r->id }}"><td>{{ $r->created_at->format('d/m/Y H:i') }}</td><td>{{ $r->user?->nama ?? '-' }}</td><td>{{ $r->alasan }}</td><td><button class="br-btn-izinkan" onclick="openModal({{ $r->id }})"><span class="material-symbols-outlined">visibility</span> Izinkan</button></td></tr>@empty<tr class="br-table-empty show" id="izinEmpty"><td colspan="4">Tidak ada permintaan izin yang ditemukan</td></tr>@endforelse</tbody></table></div>
     </div>
 </div>
 <div class="br-modal-overlay" id="izinModal">
@@ -157,13 +155,16 @@ body { background-color: #eef6f2; }
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
 var ctx=document.getElementById('financeChart').getContext('2d');
-new Chart(ctx,{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Pemasukan',data:[4.2,3.8,5.1,4.5,5.8,6.2,5.5,4.9,5.3,6.0,5.7,6.5],backgroundColor:'#8BC4A8',borderRadius:6,borderSkipped:false,barPercentage:0.55,categoryPercentage:0.7},{label:'Pengeluaran',data:[2.8,3.2,3.5,2.9,4.1,3.7,3.3,3.8,3.0,4.2,3.9,4.5],backgroundColor:'#0d4f46',borderRadius:6,borderSkipped:false,barPercentage:0.55,categoryPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Poppins',size:11,weight:'500'},color:'#6b7280',boxWidth:14,boxHeight:8,padding:14,usePointStyle:true,pointStyle:'circle'}},tooltip:{backgroundColor:'#1f2937',titleFont:{family:'Poppins',size:12},bodyFont:{family:'Poppins',size:11},padding:10,cornerRadius:8,callbacks:{label:function(c){return c.dataset.label+': Rp '+c.raw+' JT'}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#9ca3af'}},y:{grid:{color:'#f3f4f6',drawBorder:false},ticks:{font:{family:'Poppins',size:10},color:'#9ca3af',padding:8,callback:function(v){return'Rp'+v+'JT'}},beginAtZero:true}}}});
-var requestData=@json($requestData),pendingIdx=-1;
-function openModal(idx){var d=requestData[idx];if(!d)return;pendingIdx=idx;document.getElementById('modalDate').textContent=d.date;document.getElementById('modalUser').textContent=d.user;document.getElementById('modalDetail').textContent=d.detail;document.getElementById('modalReason').textContent=d.reason;document.getElementById('izinModal').classList.add('active')}
-function closeModal(){document.getElementById('izinModal').classList.remove('active');pendingIdx=-1}
+var labels=@json($chartLabels),pemasukanData=@json($chartPemasukan),pengeluaranData=@json($chartPengeluaran);
+var maxVal=Math.max.apply(null,pemasukanData.concat(pengeluaranData))||1;
+new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{label:'Pemasukan',data:pemasukanData,backgroundColor:'#8BC4A8',borderRadius:6,borderSkipped:false,barPercentage:0.55,categoryPercentage:0.7},{label:'Pengeluaran',data:pengeluaranData,backgroundColor:'#0d4f46',borderRadius:6,borderSkipped:false,barPercentage:0.55,categoryPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Poppins',size:11,weight:'500'},color:'#6b7280',boxWidth:14,boxHeight:8,padding:14,usePointStyle:true,pointStyle:'circle'}},tooltip:{backgroundColor:'#1f2937',titleFont:{font:{family:'Poppins',size:12}},bodyFont:{family:'Poppins',size:11},padding:10,cornerRadius:8,callbacks:{label:function(c){return c.dataset.label+': Rp '+Number(c.raw).toLocaleString('id-ID')}}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Poppins',size:10},color:'#9ca3af'}},y:{grid:{color:'#f3f4f6',drawBorder:false},ticks:{font:{family:'Poppins',size:10},color:'#9ca3af',padding:8,callback:function(v){return'Rp'+Number(v).toLocaleString('id-ID')}},beginAtZero:true}}}});
+var pendingId=-1;
+var requestData={!! $requestDataJson !!};
+function openModal(id){var d=requestData.find(function(x){return x.id==id});if(!d)return;pendingId=id;document.getElementById('modalDate').textContent=d.date;document.getElementById('modalUser').textContent=d.user;document.getElementById('modalDetail').textContent='Tabel: '+d.table+' - Kolom: '+d.field+(d.oldVal||d.newVal?' (Lama: '+(d.oldVal||'-')+' Baru: '+(d.newVal||'-')+')':'');document.getElementById('modalReason').textContent=d.alasan;document.getElementById('izinModal').classList.add('active')}
+function closeModal(){document.getElementById('izinModal').classList.remove('active');pendingId=-1}
 function showToast(msg,type){var t=document.getElementById('toast'),icon=t.querySelector('.material-symbols-outlined'),text=document.getElementById('toastMsg');t.className='br-toast';t.classList.add(type);icon.textContent=type==='success'?'check_circle':'cancel';text.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
-function handleApprove(){if(pendingIdx<0)return;document.getElementById('ba-action-'+pendingIdx).innerHTML='<span class="br-status-badge approved"><span class="material-symbols-outlined">check_circle</span> Disetujui</span>';closeModal();showToast('Permintaan berhasil disetujui','success')}
-function handleReject(){if(pendingIdx<0)return;document.getElementById('ba-action-'+pendingIdx).innerHTML='<span class="br-status-badge rejected"><span class="material-symbols-outlined">cancel</span> Ditolak</span>';closeModal();showToast('Permintaan berhasil ditolak','error')}
+function handleApprove(){if(pendingId<0)return;var btn=document.querySelector('tr[data-id="'+pendingId+'"] .br-btn-izinkan');if(btn)btn.outerHTML='<span class="br-status-badge approved"><span class="material-symbols-outlined">check_circle</span> Disetujui</span>';fetch('/ketua/izin/'+pendingId+'/approve',{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}}).then(function(r){return r.json()}).then(function(res){if(res.success)showToast('Permintaan berhasil disetujui','success');else showToast(res.message||'Gagal','error')}).catch(function(){showToast('Terjadi kesalahan','error')});closeModal()}
+function handleReject(){if(pendingId<0)return;var btn=document.querySelector('tr[data-id="'+pendingId+'"] .br-btn-izinkan');if(btn)btn.outerHTML='<span class="br-status-badge rejected"><span class="material-symbols-outlined">cancel</span> Ditolak</span>';fetch('/ketua/izin/'+pendingId+'/reject',{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}}).then(function(r){return r.json()}).then(function(res){if(res.success)showToast('Permintaan berhasil ditolak','error');else showToast(res.message||'Gagal','error')}).catch(function(){showToast('Terjadi kesalahan','error')});closeModal()}
 document.getElementById('izinModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 (function(){var s=document.getElementById('searchIzin');if(!s)return;var r=document.querySelectorAll('#izinTable tbody tr:not(.br-table-empty)'),e=document.getElementById('izinEmpty'),b=document.getElementById('brRefreshBtn'),l=document.getElementById('brLastUpdate');function f(){var q=s.value.toLowerCase().trim(),v=0;r.forEach(function(x){if(q===''||x.textContent.toLowerCase().indexOf(q)!==-1){x.style.display='';v++}else x.style.display='none'});if(e)e.classList.toggle('show',v===0)}function u(){var n=new Date();if(l)l.textContent='Terakhir : '+String(n.getHours()).padStart(2,'0')+'.'+String(n.getMinutes()).padStart(2,'0')+'.'+String(n.getSeconds()).padStart(2,'0')}if(s)s.addEventListener('input',f);if(b)b.addEventListener('click',function(){b.classList.remove('spinning');void b.offsetWidth;b.classList.add('spinning');u();setTimeout(function(){b.classList.remove('spinning')},600)});u()})();
 </script>

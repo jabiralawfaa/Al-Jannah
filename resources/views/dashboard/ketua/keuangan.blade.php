@@ -8,18 +8,6 @@ $menuItems = [
     ['label' => 'Log Aktivitas', 'url' => route('ketua.log'), 'active' => 'ketua/log*'],
     ['label' => 'Permintaan Izin', 'url' => route('ketua.izin'), 'active' => 'ketua/izin*'],
 ];
-$summaryCards = [
-    ['title' => 'Total Pemasukan', 'nominal' => 'Rp.29.000.000', 'sub' => '6 Bulan Terakhir', 'color' => 'green'],
-    ['title' => 'Total Pengeluaran', 'nominal' => 'Rp.1.000.000', 'sub' => '6 Bulan Terakhir', 'color' => 'red'],
-    ['title' => 'Saldo Saat Ini', 'nominal' => 'Rp.28.000.000', 'sub' => 'Per 28 2026', 'color' => 'green-dark'],
-];
-$transactions = [
-    ['tgl' => '10/05/2026', 'ket' => 'Iuran Bulanan', 'kategori' => 'Pemasukan', 'jumlah' => 1000000],
-    ['tgl' => '10/05/2026', 'ket' => 'Iuran Bulanan', 'kategori' => 'Pemasukan', 'jumlah' => 1000000],
-    ['tgl' => '10/05/2026', 'ket' => 'Iuran Bulanan', 'kategori' => 'Pemasukan', 'jumlah' => 1000000],
-    ['tgl' => '10/05/2026', 'ket' => 'Iuran Bulanan', 'kategori' => 'Pemasukan', 'jumlah' => 1000000],
-    ['tgl' => '10/05/2026', 'ket' => 'Iuran Bulanan', 'kategori' => 'Pemasukan', 'jumlah' => 1000000],
-];
 @endphp
 @section('title', 'Keuangan')
 @push('styles')
@@ -89,9 +77,11 @@ body { background-color: #eef6f2; }
 @endpush
 @section('content')
 <h1 class="ketua-page-title">Keuangan</h1>
-<div class="ketua-summary-cards">@foreach($summaryCards as $card)
-    <div class="ketua-summary-card"><div class="ketua-summary-label">{{ $card['title'] }}</div><div class="ketua-summary-nominal {{ $card['color'] }}">{{ $card['nominal'] }}</div><div class="ketua-summary-sub">{{ $card['sub'] }}</div></div>
-@endforeach</div>
+<div class="ketua-summary-cards">
+    <div class="ketua-summary-card"><div class="ketua-summary-label">Total Pemasukan</div><div class="ketua-summary-nominal green">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</div><div class="ketua-summary-sub">Seluruh periode</div></div>
+    <div class="ketua-summary-card"><div class="ketua-summary-label">Total Pengeluaran</div><div class="ketua-summary-nominal red">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</div><div class="ketua-summary-sub">Seluruh periode</div></div>
+    <div class="ketua-summary-card"><div class="ketua-summary-label">Saldo Saat Ini</div><div class="ketua-summary-nominal green-dark">Rp {{ number_format($saldo, 0, ',', '.') }}</div><div class="ketua-summary-sub">Per {{ now()->format('d M Y') }}</div></div>
+</div>
 <div class="ketua-table-container">
     <div class="ketua-table-header">
         <div class="ketua-table-actions">
@@ -101,7 +91,7 @@ body { background-color: #eef6f2; }
         <button class="ketua-btn-export" id="btnExport"><span class="material-symbols-outlined">download</span> Ekspor</button>
     </div>
     <div class="ketua-table-wrap">
-        <table class="ketua-table" id="transaksiTable"><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jumlah</th></tr></thead><tbody id="transaksiTbody">@foreach($transactions as $t)@php $isPemasukan = $t['kategori'] === 'Pemasukan'; @endphp<tr data-kategori="{{ $t['kategori'] }}"><td>{{ $t['tgl'] }}</td><td>{{ $t['ket'] }}</td><td><span class="ketua-kategori-badge {{ $isPemasukan ? 'masuk' : 'keluar' }}">{{ $t['kategori'] }}</span></td><td class="{{ $isPemasukan ? 'ketua-jumlah-masuk' : 'ketua-jumlah-keluar' }}">{{ $isPemasukan ? '+' : '-' }} Rp {{ number_format($t['jumlah'], 0, ',', '.') }}</td></tr>@endforeach<tr class="ketua-table-empty" id="emptyRow"><td colspan="4">Tidak ada transaksi yang ditemukan</td></tr></tbody></table>
+        <table class="ketua-table" id="transaksiTable"><thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jumlah</th></tr></thead><tbody id="transaksiTbody">@forelse($transactions as $t)@php $isPemasukan = $t['kategori'] === 'Pemasukan'; @endphp<tr data-kategori="{{ $t['kategori'] }}"><td>{{ $t['tanggal'] }}</td><td>{{ $t['keterangan'] ?: $t['kategori_nama'] }}</td><td><span class="ketua-kategori-badge {{ $isPemasukan ? 'masuk' : 'keluar' }}">{{ $t['kategori'] }}</span></td><td class="{{ $isPemasukan ? 'ketua-jumlah-masuk' : 'ketua-jumlah-keluar' }}">{{ $isPemasukan ? '+' : '-' }} Rp {{ number_format($t['jumlah'], 0, ',', '.') }}</td></tr>@empty<tr class="ketua-table-empty show" id="emptyRow"><td colspan="4">Tidak ada transaksi yang ditemukan</td></tr>@endforelse</tbody></table>
     </div>
 </div>
 <div class="kt-export-overlay" id="exportModal">

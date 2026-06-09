@@ -31,4 +31,19 @@ class PermintaanIzin extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function scopeMenunggu($q)
+    {
+        return $q->where('status', 'menunggu');
+    }
+
+    public function scopeDisetujui($q)
+    {
+        return $q->where('status', 'disetujui');
+    }
+
+    public function scopeDitolak($q)
+    {
+        return $q->where('status', 'ditolak');
+    }
 }

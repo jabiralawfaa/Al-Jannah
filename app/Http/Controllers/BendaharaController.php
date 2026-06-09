@@ -56,6 +56,7 @@ class BendaharaController extends Controller
             'kategori' => $p->kategoriPemasukan?->nama ?? '-',
             'keterangan' => $p->keterangan ?? '-',
             'created_at' => $p->created_at,
+            'file_url' => $p->getFirstMediaUrl('bukti') ?: null,
         ]);
 
         $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get()->map(fn($p) => [
@@ -66,6 +67,7 @@ class BendaharaController extends Controller
             'kategori' => $p->kategoriPengeluaran?->nama ?? '-',
             'keterangan' => $p->keterangan ?? '-',
             'created_at' => $p->created_at,
+            'file_url' => $p->getFirstMediaUrl('bukti') ?: null,
         ]);
 
         $all = $pemasukan->concat($pengeluaran)->sortByDesc('created_at')->values();
@@ -93,7 +95,7 @@ class BendaharaController extends Controller
             'tanggal' => 'required|date',
             'jumlah' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'file_bukti' => 'nullable|file|max:2048',
+            'file_bukti' => 'required|file|max:2048',
         ];
 
         $rules['kategori_id'] = $request->tipe === 'pemasukan'
@@ -102,18 +104,12 @@ class BendaharaController extends Controller
 
         $validated = $request->validate($rules);
 
-        $filePath = null;
-        if ($request->hasFile('file_bukti')) {
-            $filePath = $request->file('file_bukti')->store('bendahara', 'local');
-        }
-
         if ($validated['tipe'] === 'pemasukan') {
             $model = Pemasukan::create([
                 'tanggal' => $validated['tanggal'],
                 'kategori_pemasukan_id' => $validated['kategori_id'],
                 'jumlah' => $validated['jumlah'],
                 'keterangan' => $validated['keterangan'],
-                'file_bukti' => $filePath,
                 'created_by' => auth()->id(),
             ]);
             $kategori = $model->kategoriPemasukan?->nama ?? '-';
@@ -123,11 +119,12 @@ class BendaharaController extends Controller
                 'kategori_pengeluaran_id' => $validated['kategori_id'],
                 'jumlah' => $validated['jumlah'],
                 'keterangan' => $validated['keterangan'],
-                'file_bukti' => $filePath,
                 'created_by' => auth()->id(),
             ]);
             $kategori = $model->kategoriPengeluaran?->nama ?? '-';
         }
+
+        $model->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -138,6 +135,7 @@ class BendaharaController extends Controller
                 'jumlah' => $model->jumlah,
                 'kategori' => $kategori,
                 'keterangan' => $model->keterangan ?? '-',
+                'file_url' => $model->getFirstMediaUrl('bukti') ?: null,
             ]
         ]);
     }
@@ -179,22 +177,18 @@ class BendaharaController extends Controller
             'kategori_pemasukan_id' => 'required|exists:kategori_pemasukan,id',
             'jumlah' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'file_bukti' => 'nullable|file|max:2048',
+            'file_bukti' => 'required|file|max:2048',
         ]);
-
-        $filePath = null;
-        if ($request->hasFile('file_bukti')) {
-            $filePath = $request->file('file_bukti')->store('bendahara', 'local');
-        }
 
         $pemasukan = Pemasukan::create([
             'tanggal' => $validated['tanggal'],
             'kategori_pemasukan_id' => $validated['kategori_pemasukan_id'],
             'jumlah' => $validated['jumlah'],
             'keterangan' => $validated['keterangan'],
-            'file_bukti' => $filePath,
             'created_by' => auth()->id(),
         ]);
+
+        $pemasukan->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -215,22 +209,18 @@ class BendaharaController extends Controller
             'kategori_pengeluaran_id' => 'required|exists:kategori_pengeluaran,id',
             'jumlah' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'file_bukti' => 'nullable|file|max:2048',
+            'file_bukti' => 'required|file|max:2048',
         ]);
-
-        $filePath = null;
-        if ($request->hasFile('file_bukti')) {
-            $filePath = $request->file('file_bukti')->store('bendahara', 'local');
-        }
 
         $pengeluaran = Pengeluaran::create([
             'tanggal' => $validated['tanggal'],
             'kategori_pengeluaran_id' => $validated['kategori_pengeluaran_id'],
             'jumlah' => $validated['jumlah'],
             'keterangan' => $validated['keterangan'],
-            'file_bukti' => $filePath,
             'created_by' => auth()->id(),
         ]);
+
+        $pengeluaran->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -287,13 +277,10 @@ class BendaharaController extends Controller
             'jumlah_bulan' => 'required|integer|min:1|max:12',
             'nominal' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'file_bukti' => 'nullable|file|max:2048',
+            'file_bukti' => 'required|file|max:2048',
         ]);
 
-        $filePath = null;
-        if ($request->hasFile('file_bukti')) {
-            $filePath = $request->file('file_bukti')->store('bendahara', 'local');
-        }
+        $filePath = $request->file('file_bukti')->store('bendahara', 'local');
 
         $totalNominal = $validated['nominal'] * $validated['jumlah_bulan'];
         $bulanAkhir = min($validated['bulan_mulai'] + $validated['jumlah_bulan'] - 1, 12);
@@ -303,9 +290,10 @@ class BendaharaController extends Controller
             'kategori_pemasukan_id' => 1,
             'jumlah' => $totalNominal,
             'keterangan' => 'Iuran ' . $validated['jumlah_bulan'] . ' bln - ' . ($validated['keterangan'] ?? ''),
-            'file_bukti' => $filePath,
             'created_by' => auth()->id(),
         ]);
+
+        $pemasukan->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
 
         for ($b = $validated['bulan_mulai']; $b <= $bulanAkhir; $b++) {
             IuranTahunan::create([

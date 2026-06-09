@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Pemasukan extends Model
+class Pemasukan extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     protected $table = 'pemasukan';
 
     protected $fillable = [
@@ -15,7 +19,6 @@ class Pemasukan extends Model
         'kategori_pemasukan_id',
         'jumlah',
         'keterangan',
-        'file_bukti',
         'created_by',
     ];
 

@@ -561,6 +561,12 @@ body {
 .btn-edit-active { background: var(--primary-500); color: #fff; }
 .btn-edit-active:hover { background: var(--primary-500); }
 
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; transition: all .2s; background: transparent; color: #6b7280; }
+.btn-icon:hover { background: #f3f4f6; }
+.btn-icon .material-icons { font-size: 18px; }
+.btn-info { color: var(--primary-500); }
+.btn-info:hover { background: var(--primary-100); }
+
 .modal-overlay { position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; visibility: hidden; background: transparent; transition: opacity .25s ease, visibility .25s ease; }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 .modal-overlay .modal-bg { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
@@ -629,7 +635,6 @@ tbody td.name-cell { font-weight: 600; color: #1f2937; }
    PAGE: IURAN
    ============================== */
 .page-iuran *:not(.material-icons):not(.material-symbols-outlined) { font-family: 'Poppins', sans-serif; }
-.page-iuran { max-width: 1200px; }
 
 .page-iuran .iuran-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
 .page-iuran .iuran-header h1 { font-size: 24px; font-weight: 700; color: var(--primary-600); margin: 0; }
@@ -709,12 +714,32 @@ tbody td.name-cell { font-weight: 600; color: #1f2937; }
 
 @media (max-width: 1024px) { .page-iuran .iuran-header { flex-direction: column; align-items: start; gap: 12px; } }
 
+#modalCariIuran.active { opacity: 1; visibility: visible; }
+#modalCariIuran .modal-box { max-width: 500px; width: 100%; padding: 36px 40px 32px; background: #fff; border-radius: 28px; box-shadow: 0 25px 60px rgba(0,0,0,.2); text-align: left; }
+#modalCariIuran .modal-box h3 { text-align: center; }
+#modalCariIuran .form-group { margin-bottom: 20px; text-align: left; }
+#modalCariIuran .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--primary-400); margin-bottom: 6px; }
+#modalCariIuran .form-group textarea { width: 100%; padding: 12px 16px; border: 2px solid var(--primary-200); border-radius: 12px; font: 14px 'Poppins', sans-serif; color: #1f2937; outline: none; transition: border-color .2s; resize: none; height: 80px; background: #fff; box-sizing:border-box; }
+#modalCariIuran .form-group textarea:focus { border-color: var(--primary-600); box-shadow: 0 0 0 3px rgba(17, 50, 45, 0.1); }
+#modalCariIuran .form-group textarea::placeholder { color: #9ca3af; }
+#modalCariIuran .nominal-row { display: flex; gap: 12px; align-items: stretch; }
+#modalCariIuran .nominal-input-wrap { display: flex; align-items: center; border: 2px solid var(--primary-200); border-radius: 100px; overflow: hidden; flex: 1; background: #fff; }
+#modalCariIuran .nominal-input-wrap .nominal-prefix { padding: 0 0 0 16px; font-weight: 700; font-size: 14px; color: var(--primary-400); background: #fff; }
+#modalCariIuran .nominal-input-wrap input { flex: 1; border: none; padding: 11px 12px; font: 14px 'Poppins', sans-serif; color: #1f2937; outline: none; background: transparent; }
+#modalCariIuran .month-control { display: flex; align-items: center; gap: 2px; background: var(--primary-100); border-radius: 100px; padding: 2px; border: 2px solid var(--primary-200); flex-shrink: 0; }
+#modalCariIuran .month-control .month-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: #fff; color: var(--primary-600); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; font-family: 'Poppins', sans-serif; }
+#modalCariIuran .month-control .month-btn:hover { background: var(--primary-600); color: #fff; }
+#modalCariIuran .month-control .month-qty { padding: 0 10px; font-size: 13px; font-weight: 700; color: var(--primary-600); white-space: nowrap; min-width: 60px; text-align: center; }
+#modalCariIuran .file-upload-custom { display: flex; align-items: center; border: 2px dashed var(--primary-200); border-radius: 100px; padding: 0 16px; background: #f8faf9; cursor: pointer; height: 48px; box-sizing:border-box; }
+#modalCariIuran .file-upload-custom input[type="file"] { display: none; }
+#modalCariIuran .file-upload-custom .upload-placeholder { flex: 1; font-size: 13px; color: var(--primary-300); font-weight: 500; }
+#modalCariIuran .file-upload-custom .upload-icon-box { width: 36px; height: 36px; border-radius: 10px; background: var(--primary-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#modalCariIuran .file-upload-custom .upload-icon-box .material-icons { font-size: 18px; color: var(--primary-500); }
+
 /* ==============================
    PAGE: LAPORAN
    ============================== */
 .page-laporan *:not(.material-icons):not(.material-symbols-outlined) { font-family: 'Poppins', sans-serif; }
-.page-laporan { max-width: 1100px; }
-
 .page-laporan .laporan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
 .page-laporan .laporan-header h1 { font-size: 24px; font-weight: 700; color: var(--primary-600); margin: 0; }
 
@@ -783,7 +808,6 @@ tbody td.name-cell { font-weight: 600; color: #1f2937; }
     .page-laporan .search-wrap { width: 100%; }
     .page-laporan .table-footer { flex-direction: column; gap: 10px; }
     .page-laporan .btn-generate { width: 100%; padding: 14px 24px; }
-    .page-laporan { max-width: 100%; }
 }
 
 /* ==============================
@@ -812,8 +836,6 @@ tbody td.name-cell { font-weight: 600; color: #1f2937; }
    PAGE: VERIFIKASI
    ============================== */
 .page-vp *:not(.material-icons):not(.material-symbols-outlined) { font-family: 'Poppins', sans-serif; }
-.page-vp { max-width: 1100px; }
-
 .page-vp .vp-header { margin-bottom: 28px; }
 .page-vp .vp-header h1 { font-size: 24px; font-weight: 700; color: var(--primary-600); margin: 0; }
 

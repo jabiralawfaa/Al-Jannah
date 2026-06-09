@@ -111,6 +111,18 @@ class FileController extends Controller
             return $this->serve($diskDriver->path($path), basename($path));
         }
 
+        // Serve Spatie media files: /storage/{mediaId}/{fileName}
+        if (preg_match('#^(\d+)/(.+)$#', $path, $m)) {
+            $media = SpatieMedia::find($m[1]);
+            if ($media) {
+                $fullPath = $media->getPath();
+                if (file_exists($fullPath)) {
+                    return $this->serve($fullPath, $media->file_name);
+                }
+            }
+            abort(404);
+        }
+
         abort(404);
     }
 

@@ -13,7 +13,7 @@
 @section('content')
 <div class="page-transaksi">
 <script>
-    window._targetTable = 'pemasukan';
+    window._targetTable = 'transaksi';
 @php
     $kPemasukanJson = $kategoriPemasukan->map(fn($k) => ['id' => $k->id, 'nama' => $k->nama])->toJson();
     $kPengeluaranJson = $kategoriPengeluaran->map(fn($k) => ['id' => $k->id, 'nama' => $k->nama])->toJson();
@@ -47,20 +47,30 @@
                     <th>Nominal</th>
                     <th>Kategori</th>
                     <th>Keterangan</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody id="riwayatTransaksiBody">
                 @forelse($transaksi as $item)
-                <tr>
-                    <td>{{ $item['tanggal'] }}</td>
+                <tr data-target-table="{{ strtolower($item['tipe']) }}" data-jumlah="{{ $item['jumlah'] }}" data-kategori="{{ $item['kategori'] }}" data-keterangan="{{ $item['keterangan'] ?? '' }}" data-tanggal="{{ $item['tanggal'] }}" data-tipe="{{ $item['tipe'] }}" data-file-url="{{ $item['file_url'] ?? '' }}">
+                    <td data-target-id="{{ $item['id'] }}">{{ $item['tanggal'] }}</td>
                     <td><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;{{ $item['tipe'] === 'Pemasukan' ? 'background:#d1fae5;color:#065f46;' : 'background:#fee2e2;color:#991b1b;' }}">{{ $item['tipe'] }}</span></td>
                     <td class="nominal-value">Rp {{ number_format($item['jumlah'], 0, ',', '.') }}</td>
                     <td class="name-cell">{{ $item['kategori'] }}</td>
                     <td>{{ $item['keterangan'] ?? '-' }}</td>
+                    <td>
+                        <button class="btn-icon btn-info" onclick="openInfoModal(this)" title="Detail Transaksi">
+                            <span class="material-icons">info</span>
+                        </button>
+                        <button class="btn-edit-disabled" onclick="openModal(this)">
+                            <span class="material-icons">lock</span>
+                            Edit
+                        </button>
+                    </td>
                 </tr>
                 @empty
                 <tr id="emptyRowTransaksi">
-                    <td colspan="5" style="padding:60px 32px;text-align:center;color:#9ca3af;">
+                    <td colspan="6" style="padding:60px 32px;text-align:center;color:#9ca3af;">
                         <span class="material-icons" style="font-size:40px;display:block;margin-bottom:8px;color:#d1d5db;">receipt_long</span>
                         Belum ada transaksi
                     </td>
@@ -114,6 +124,7 @@
         var file = document.querySelector('#modalTransaksi .file-upload input[type=file]');
 
         if (!tanggal || !kategori || !nominal) { alert('Harap isi tanggal, kategori, dan nominal.'); return; }
+        if (!file || !file.files[0]) { alert('Harap upload bukti transaksi.'); return; }
 
         var formData = new FormData();
         formData.append('tipe', tipe);
@@ -121,7 +132,7 @@
         formData.append('kategori_id', kategori);
         formData.append('jumlah', nominal.replace(/[^0-9]/g, ''));
         formData.append('keterangan', keterangan);
-        if (file && file.files[0]) formData.append('file_bukti', file.files[0]);
+        formData.append('file_bukti', file.files[0]);
 
         fetch('/bendahara/catat-transaksi', {
             method: 'POST',
@@ -137,13 +148,49 @@
             if (emptyRow) emptyRow.remove();
             var tbody = document.getElementById('riwayatTransaksiBody');
             var row = document.createElement('tr');
+            var tipeLower = d.tipe === 'Pemasukan' ? 'pemasukan' : 'pengeluaran';
             var tipeClass = d.tipe === 'Pemasukan' ? 'background:#d1fae5;color:#065f46;' : 'background:#fee2e2;color:#991b1b;';
-            row.innerHTML = '<td>' + d.tanggal + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;' + tipeClass + '">' + d.tipe + '</span></td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td>';
+            var fileUrl = d.file_url || '';
+            row.innerHTML = '<tr data-target-table="' + tipeLower + '" data-jumlah="' + d.jumlah + '" data-kategori="' + (d.kategori || '') + '" data-keterangan="' + (d.keterangan || '') + '" data-tanggal="' + d.tanggal + '" data-tipe="' + d.tipe + '" data-file-url="' + fileUrl + '"><td data-target-id="' + d.id + '">' + d.tanggal + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;' + tipeClass + '">' + d.tipe + '</span></td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-icon btn-info" onclick="openInfoModal(this)" title="Detail Transaksi"><span class="material-icons">info</span></button><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td></tr>';
             tbody.insertBefore(row, tbody.firstChild);
             document.getElementById('toastSuccess').style.display = 'flex';
             setTimeout(function() { document.getElementById('toastSuccess').style.display = 'none'; }, 3500);
         })
         .catch(function() { alert('Terjadi kesalahan'); });
+    }
+
+    function openInfoModal(btn) {
+        var row = btn.closest('tr');
+        var tipe = row.getAttribute('data-tipe') || '';
+        var tanggal = row.getAttribute('data-tanggal') || '';
+        var kategori = row.getAttribute('data-kategori') || '';
+        var jumlah = row.getAttribute('data-jumlah') || '';
+        var keterangan = row.getAttribute('data-keterangan') || '';
+        var fileUrl = row.getAttribute('data-file-url') || '';
+
+        document.getElementById('infoTipe').textContent = tipe;
+        document.getElementById('infoTanggal').textContent = tanggal;
+        document.getElementById('infoKategori').textContent = kategori;
+        document.getElementById('infoNominal').textContent = 'Rp ' + Number(jumlah).toLocaleString('id-ID');
+        document.getElementById('infoKeterangan').textContent = keterangan || '-';
+
+        var container = document.getElementById('infoFileContainer');
+        if (fileUrl) {
+            var ext = fileUrl.split('.').pop().toLowerCase();
+            if (['jpg','jpeg','png','gif','webp','svg'].indexOf(ext) !== -1) {
+                container.innerHTML = '<img src="' + fileUrl + '" alt="Bukti Transaksi" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e5e7eb;object-fit:contain;">';
+            } else {
+                container.innerHTML = '<a href="' + fileUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f3f4f6;border-radius:8px;color:var(--primary-500);text-decoration:none;font-size:13px;font-weight:500;"><span class="material-icons" style="font-size:16px;">download</span> Download File</a>';
+            }
+        } else {
+            container.innerHTML = '<span style="color:#9ca3af;font-size:13px;">Tidak ada bukti transaksi</span>';
+        }
+
+        document.getElementById('modalInfo').classList.add('active');
+    }
+
+    function closeInfoModal() {
+        document.getElementById('modalInfo').classList.remove('active');
     }
 </script>
 @endsection
@@ -191,7 +238,7 @@
         <div class="form-group" style="margin-bottom:18px;">
             <label>Upload Bukti Transaksi</label>
             <div class="file-upload" onclick="this.querySelector('input').click();" style="width:100%;padding:12px 16px;border:1px dashed #d1d5db;border-radius:8px;text-align:center;cursor:pointer;box-sizing:border-box;">
-                <input type="file" onchange="this.parentElement.querySelector('.upload-placeholder').textContent = this.files[0].name;" style="display:none;">
+                <input type="file" required onchange="this.parentElement.querySelector('.upload-placeholder').textContent = this.files[0].name;" style="display:none;">
                 <span class="upload-placeholder" style="font-size:13px;color:#9ca3af;">Upload here...</span>
                 <div class="upload-icon">
                     <span class="material-icons" style="font-size:18px;vertical-align:middle;color:#6b7280;">cloud_upload</span>
@@ -201,6 +248,92 @@
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeModalTransaksi()">Batal</button>
             <button class="btn-minta" onclick="simpanTransaksi()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalInfo" class="modal-overlay">
+    <div class="modal-bg"></div>
+    <div class="modal-box" style="max-width:520px;text-align:left;">
+        <div class="modal-icon">
+            <span class="material-icons">receipt_long</span>
+        </div>
+        <h3 style="text-align:center;margin-bottom:20px;">Detail Transaksi</h3>
+        <div id="infoContent" style="display:flex;flex-direction:column;gap:14px;">
+            <div class="info-row" style="display:flex;gap:12px;">
+                <div class="info-field" style="flex:1;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Tipe</label>
+                    <span id="infoTipe" style="font-size:14px;font-weight:500;"></span>
+                </div>
+                <div class="info-field" style="flex:1;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Tanggal</label>
+                    <span id="infoTanggal" style="font-size:14px;font-weight:500;"></span>
+                </div>
+            </div>
+            <div class="info-row" style="display:flex;gap:12px;">
+                <div class="info-field" style="flex:1;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Kategori</label>
+                    <span id="infoKategori" style="font-size:14px;font-weight:500;"></span>
+                </div>
+                <div class="info-field" style="flex:1;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Nominal</label>
+                    <span id="infoNominal" style="font-size:14px;font-weight:500;"></span>
+                </div>
+            </div>
+            <div class="info-field">
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Keterangan</label>
+                <span id="infoKeterangan" style="font-size:14px;font-weight:500;"></span>
+            </div>
+            <div class="info-field">
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Bukti Transaksi</label>
+                <div id="infoFileContainer" style="margin-top:4px;"></div>
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top:24px;">
+            <button class="btn-batal" onclick="closeInfoModal()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalEdit" class="modal-overlay">
+    <div class="modal-bg"></div>
+    <div class="modal-box">
+        <div class="modal-icon">
+            <span class="material-icons">lock_outline</span>
+        </div>
+        <h3>Meminta akses edit ke ketua</h3>
+        <p>Anda akan mengirimkan permintaan akses untuk mengedit data transaksi ini. Ketua akan menyetujui permintaan Anda.</p>
+        <input type="hidden" id="modalTargetTable" value="">
+        <input type="hidden" id="modalTargetId" value="">
+        <div class="form-group" style="margin-bottom:12px;">
+            <label>Kolom yang ingin diubah</label>
+            <select id="modalFieldName" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#fff;appearance:auto;">
+                <option value="">Pilih kolom</option>
+                <option value="nominal">Nominal</option>
+                <option value="kategori">Kategori</option>
+                <option value="keterangan">Keterangan</option>
+            </select>
+        </div>
+        <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px;">
+            <div class="form-group" style="flex:1;">
+                <label>Nilai Lama</label>
+                <input type="text" id="modalOldValue" placeholder="Nilai sebelum diubah" readonly style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#f3f4f6;cursor:not-allowed;">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Nilai Baru</label>
+                <input type="text" id="modalNewValue" placeholder="Nilai setelah diubah" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;">
+                <select id="modalNewKategori" style="display:none;width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;box-sizing:border-box;background:#fff;appearance:auto;">
+                    <option value="">Pilih kategori</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+            <label>Alasan perubahan</label>
+            <textarea id="modalAlasan" placeholder="Jelaskan alasan mengapa data ini perlu diubah..." style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-batal" onclick="closeModal()">Batal</button>
+            <button class="btn-minta" onclick="requestAccess()">Kirim Permintaan</button>
         </div>
     </div>
 </div>

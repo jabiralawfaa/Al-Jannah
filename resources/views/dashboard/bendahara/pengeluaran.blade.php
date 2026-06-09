@@ -60,7 +60,7 @@
             <div class="form-group">
                 <label>Upload Bukti Transaksi</label>
                 <div class="file-upload" onclick="this.querySelector('input').click();">
-                    <input type="file" onchange="this.parentElement.querySelector('.upload-placeholder').textContent = this.files[0].name;">
+                    <input type="file" required onchange="this.parentElement.querySelector('.upload-placeholder').textContent = this.files[0].name;">
                     <span class="upload-placeholder">Upload here...</span>
                     <div class="upload-icon">
                         <span class="material-icons">cloud_upload</span>
@@ -129,7 +129,8 @@
         formData.append('jumlah', document.getElementById('nominalPengeluaran').value.replace(/[^0-9]/g, ''));
         formData.append('keterangan', document.getElementById('keteranganPengeluaran').value);
         var fileInput = document.querySelector('#keteranganPengeluaran').closest('.form-row-2').querySelector('.file-upload input[type=file]');
-        if (fileInput && fileInput.files[0]) formData.append('file_bukti', fileInput.files[0]);
+        if (!fileInput || !fileInput.files[0]) { alert('Harap upload bukti transaksi.'); return; }
+        formData.append('file_bukti', fileInput.files[0]);
 
         fetch('/bendahara/pengeluaran', {
             method: 'POST',

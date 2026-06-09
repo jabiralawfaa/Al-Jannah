@@ -41,7 +41,7 @@
             var row = btn ? btn.closest('tr') : null;
             window._editRow = row;
             if (row) {
-                var tableName = window._targetTable || '';
+                var tableName = row.getAttribute('data-target-table') || window._targetTable || '';
                 document.getElementById('modalTargetTable').value = tableName;
                 var idEl = row.querySelector('[data-target-id]');
                 document.getElementById('modalTargetId').value = idEl ? idEl.getAttribute('data-target-id') : '';
@@ -111,10 +111,14 @@
             if (e.target.value === 'kategori') {
                 newValInput.style.display = 'none';
                 newKatSelect.style.display = '';
+                var rowTable = row.getAttribute('data-target-table') || window._targetTable || '';
                 var opts = window._kategoriOptions || [];
+                if (!opts.length && rowTable === 'pemasukan' && window._kategoriPemasukan) opts = window._kategoriPemasukan;
+                if (!opts.length && (rowTable === 'pengeluaran' || rowTable === 'transaksi') && window._kategoriPengeluaran) opts = window._kategoriPengeluaran;
                 newKatSelect.innerHTML = '<option value="">Pilih kategori</option>';
                 for (var i = 0; i < opts.length; i++) {
-                    newKatSelect.innerHTML += '<option value="' + opts[i] + '">' + opts[i] + '</option>';
+                    var v = typeof opts[i] === 'object' ? opts[i].nama : opts[i];
+                    newKatSelect.innerHTML += '<option value="' + v + '">' + v + '</option>';
                 }
                 newKatSelect.value = '';
             } else {

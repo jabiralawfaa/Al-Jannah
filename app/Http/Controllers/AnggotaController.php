@@ -26,12 +26,19 @@ class AnggotaController extends Controller
             return back()->withErrors(['access_code' => 'Kode akses tidak valid.'])->withInput();
         }
 
+        if (!$anggota->access_code_generated_at || \Carbon\Carbon::parse($anggota->access_code_generated_at)->addDay()->isPast()) {
+            $anggota->access_code = null;
+            $anggota->access_code_generated_at = null;
+            $anggota->save();
+            return back()->withErrors(['access_code' => 'Kode akses sudah kedaluwarsa (1 x 24 jam). Silakan hubungi bendahara untuk generate ulang.'])->withInput();
+        }
+
         session(['anggota_id' => $anggota->id]);
 
         return redirect()->route('anggota.dashboard');
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $anggotaId = session('anggota_id');
         if (!$anggotaId) {
@@ -39,7 +46,15 @@ class AnggotaController extends Controller
         }
 
         $anggota = Anggota::with('iuranTahunan')->findOrFail($anggotaId);
-        $tahun = date('Y');
+
+        $tahunMulai = $anggota->tanggal_aktif_kembali
+            ? (int) \Carbon\Carbon::parse($anggota->tanggal_aktif_kembali)->format('Y')
+            : (int) $anggota->created_at->format('Y');
+        $tahunMulai = max(2025, $tahunMulai);
+
+        $tahunDipilih = (int) $request->input('tahun', date('Y'));
+        $tahunDipilih = max($tahunMulai, min($tahunDipilih, date('Y')));
+
         $nominalPerBulan = 10000;
 
         $iuranBulanan = [];
@@ -48,7 +63,7 @@ class AnggotaController extends Controller
 
         for ($b = 1; $b <= 12; $b++) {
             $iuran = $anggota->iuranTahunan
-                ->where('tahun', $tahun)
+                ->where('tahun', $tahunDipilih)
                 ->where('bulan', $b)
                 ->first();
 
@@ -74,9 +89,11 @@ class AnggotaController extends Controller
         $totalSudahDibayar = $totalLunas * $nominalPerBulan;
         $progressPersen = $totalLunas / 12 * 100;
 
+        $daftarTahun = range($tahunMulai, date('Y'));
+
         return view('anggota.dashboard', compact(
-            'anggota', 'tahun', 'iuranBulanan',
-            'totalLunas', 'totalBelum',
+            'anggota', 'tahunDipilih', 'tahunMulai', 'daftarTahun',
+            'iuranBulanan', 'totalLunas', 'totalBelum',
             'totalHarusDibayar', 'totalSudahDibayar',
             'nominalPerBulan', 'progressPersen'
         ));

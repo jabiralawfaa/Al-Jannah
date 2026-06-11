@@ -222,7 +222,14 @@
 
       <div class="animate-fade-in-up delay-3 bg-white rounded-2xl card-shadow-md border border-slate-100 p-5">
         <div class="flex items-center justify-between mb-3">
-          <p class="text-sm font-medium text-slate-600">Progress Pembayaran {{ $tahun }}</p>
+          <div class="flex items-center gap-4">
+            <p class="text-sm font-medium text-slate-600">Progress Pembayaran</p>
+            <select onchange="var y=this.value;window.location.href='{{ route('anggota.dashboard') }}?tahun='+y" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;font-family:inherit;outline:none;background:#fff;">
+              @foreach ($daftarTahun as $t)
+              <option value="{{ $t }}" {{ $t == $tahunDipilih ? 'selected' : '' }}>{{ $t }}</option>
+              @endforeach
+            </select>
+          </div>
           <p class="text-sm font-semibold text-green-600">{{ $totalLunas }} / 12 bulan</p>
         </div>
         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -242,7 +249,7 @@
             </div>
             <div>
               <h3 class="text-base font-semibold text-slate-900">Rincian Pembayaran Bulanan</h3>
-              <p class="text-xs text-slate-400">Periode Januari - Desember {{ $tahun }}</p>
+              <p class="text-xs text-slate-400">Periode Januari - Desember {{ $tahunDipilih }}</p>
             </div>
           </div>
           <div class="hidden sm:flex items-center gap-4 text-xs">

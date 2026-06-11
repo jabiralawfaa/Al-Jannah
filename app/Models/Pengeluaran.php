@@ -21,6 +21,11 @@ class Pengeluaran extends Model implements HasMedia
         'created_by',
     ];
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('bukti')->singleFile();
+    }
+
     public function kategoriPengeluaran(): BelongsTo
     {
         return $this->belongsTo(KategoriPengeluaran::class);

@@ -21,6 +21,7 @@ class Anggota extends Model
         'status',
         'tanggal_aktif_kembali',
         'access_code',
+        'access_code_generated_at',
         'created_by',
     ];
 

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             KategoriAsetSeeder::class,
             StokBarangSeeder::class,
             AsetKendaraanSeeder::class,
+            DemoIuranSeeder::class,
             CmsSeeder::class,
             PageSeeder::class,
         ]);

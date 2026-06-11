@@ -7,7 +7,9 @@ use App\Models\FileOrganisasi;
 use App\Models\LogSuperadmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
 class SuperAdminController extends Controller
 {
@@ -33,7 +35,7 @@ class SuperAdminController extends Controller
         $search = $request->get('search');
         $kategori = $request->get('kategori');
 
-        $files = FileOrganisasi::with('uploadedBy')
+        $files = FileOrganisasi::with(['uploadedBy', 'media'])
             ->when($search, function ($query, $search) {
                 return $query->where('nama_file', 'like', "%{$search}%");
             })
@@ -77,37 +79,45 @@ class SuperAdminController extends Controller
             'file' => 'required|file|max:20480',
         ]);
 
-        $uploadedFile = $request->file('file');
-        $originalName = $uploadedFile->getClientOriginalName();
-        $extension = strtolower($uploadedFile->getClientOriginalExtension());
+        try {
+            $uploadedFile = $request->file('file');
+            $originalName = $uploadedFile->getClientOriginalName();
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
 
-        $kategori = $this->klasifikasikanEkstensi($extension);
+            $kategori = $this->klasifikasikanEkstensi($extension);
 
-        $fileRecord = FileOrganisasi::create([
-            'nama_file' => $originalName,
-            'file_path' => '',
-            'kategori' => $kategori,
-            'status' => 'aktif',
-            'uploaded_by' => auth()->id(),
-        ]);
+            $fileRecord = FileOrganisasi::create([
+                'nama_file' => $originalName,
+                'file_path' => '',
+                'kategori' => $kategori,
+                'status' => 'aktif',
+                'uploaded_by' => auth()->id(),
+            ]);
 
-        $fileRecord
-            ->addMedia($uploadedFile->getRealPath())
-            ->usingFileName(\App\Services\FileRenamer::rename($originalName))
-            ->toMediaCollection('uploads');
+            $fileRecord
+                ->addMedia($uploadedFile->getRealPath())
+                ->usingFileName(\App\Services\FileRenamer::rename($originalName))
+                ->toMediaCollection('uploads');
 
-        LogSuperadmin::create([
-            'user_id' => auth()->id(),
-            'aksi' => 'upload',
-            'deskripsi' => 'Mengunggah file: ' . $originalName . ' (kategori: ' . config("file-pemilah.labels.{$kategori}") . ')',
-            'modul' => 'File',
-            'referensi_id' => $fileRecord->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+            LogSuperadmin::create([
+                'user_id' => auth()->id(),
+                'aksi' => 'upload',
+                'deskripsi' => 'Mengunggah file: ' . $originalName . ' (kategori: ' . config("file-pemilah.labels.{$kategori}") . ')',
+                'modul' => 'File',
+                'referensi_id' => $fileRecord->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
-        $label = config("file-pemilah.labels.{$kategori}");
-        return redirect('/superadmin/file')->with('success', "File \"{$originalName}\" berhasil diunggah sebagai kategori: {$label}.");
+            $label = config("file-pemilah.labels.{$kategori}");
+            return redirect('/superadmin/file')->with('success', "File \"{$originalName}\" berhasil diunggah sebagai kategori: {$label}.");
+        } catch (FileIsTooBig $e) {
+            Log::error('Upload gagal: file terlalu besar', ['error' => $e->getMessage()]);
+            return redirect('/superadmin/file')->with('error', 'File terlalu besar. Maksimal 20MB.');
+        } catch (\Exception $e) {
+            Log::error('Upload gagal: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect('/superadmin/file')->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
+        }
     }
 
     public function downloadFile(Request $request, $id)

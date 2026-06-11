@@ -9,6 +9,9 @@
 @section('title', 'File Management')
 
 @section('content')
+@php
+    function escapeJs($s) { return str_replace(["'", "\n", "\r"], ["\\'", "\\n", ""], $s); }
+@endphp
     @if(session('success'))
         <div style="background-color: #d8efdd; border: 1px solid #35ab50; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; color: #154420;">
             <span class="material-icons" style="color: #35ab50; font-size: 20px;">check_circle</span>
@@ -46,11 +49,23 @@
 
     <x-dashboard.data-table
         title="Daftar File"
-        :headers="['Nomor', 'Nama File', 'Kategori', 'Status', 'Diupload Oleh', 'Tanggal Upload', 'Aksi']"
+        :headers="['Nomor', 'Nama File', 'Kategori', 'Ukuran', 'Tipe', 'Status', 'Diupload Oleh', 'Aksi']"
         :paginator="$files"
         search-placeholder="Cari file..."
     >
         @forelse($files as $index => $file)
+            @php
+                $spatieMedia = $file->getFirstMedia('uploads');
+                $fileSize = $spatieMedia?->size ?? 0;
+                $mimeType = $spatieMedia?->mime_type ?? '-';
+                $extension = pathinfo($file->nama_file, PATHINFO_EXTENSION);
+                $mediaId = $spatieMedia?->id;
+                $fileId = $file->id;
+
+                $sizeFormatted = $fileSize >= 1048576
+                    ? number_format($fileSize / 1048576, 2) . ' MB'
+                    : ($fileSize >= 1024 ? number_format($fileSize / 1024, 1) . ' KB' : $fileSize . ' B');
+            @endphp
             <tr>
                 <td>{{ $files->firstItem() + $index }}</td>
                 <td>{{ $file->nama_file }}</td>
@@ -61,6 +76,8 @@
                     @endphp
                     <span class="badge {{ $kategoriClass }}">{{ $kategoriLabel }}</span>
                 </td>
+                <td style="white-space:nowrap;">{{ $sizeFormatted }}</td>
+                <td style="font-size:12px;color:#6b7280;max-width:180px;word-break:break-all;">{{ $mimeType }}</td>
                 <td>
                     @php
                         $statusClass = match($file->status) {
@@ -81,23 +98,44 @@
                     <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
                 </td>
                 <td>{{ $file->uploadedBy->nama ?? 'Tidak diketahui' }}</td>
-                <td>{{ $file->created_at->format('d/m/Y') }}</td>
                 <td>
-                    <div style="display: flex; gap: 8px;">
-                        <a href="{{ route('superadmin.file.download', $file->id) }}" class="btn btn-sm btn-outline-primary">
+                    <div style="display: flex; gap: 6px;">
+                        <a href="{{ route('superadmin.file.download', $file->id) }}" class="btn btn-sm btn-outline-primary" title="Download">
                             <span class="material-icons" style="font-size: 16px;">download</span>
                         </a>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openFileInfoModal({{ $fileId }}, '{{ escapeJs($file->nama_file) }}', '{{ escapeJs($kategoriLabel) }}', '{{ escapeJs($file->status) }}', '{{ escapeJs($file->uploadedBy->nama ?? 'Tidak diketahui') }}', '{{ $file->created_at->format('d/m/Y H:i') }}', '{{ $sizeFormatted }}', '{{ escapeJs($mimeType) }}', '{{ escapeJs($extension) }}', '{{ $mediaId ?? '' }}')" title="Info File" style="background:transparent;border:1.5px solid #6b7280;color:#6b7280;">
+                            <span class="material-icons" style="font-size: 16px;">info</span>
+                        </button>
                     </div>
                 </td>
             </tr>
         @empty
             <tr>
-                <td colspan="7" style="text-align: center; color: var(--secondary-600); padding: 40px 16px;">
+                <td colspan="8" style="text-align: center; color: var(--secondary-600); padding: 40px 16px;">
                     Tidak ada file ditemukan.
                 </td>
             </tr>
         @endforelse
     </x-dashboard.data-table>
+
+    <!-- Modal Detail File -->
+    <div class="modal-overlay" id="fileInfoModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Detail File</h3>
+                <button class="modal-close" onclick="closeFileInfoModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:0;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <tbody id="fileInfoBody"></tbody>
+                </table>
+                <div id="filePreviewContainer" style="padding:16px;text-align:center;border-top:1px solid #e5e7eb;display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="closeFileInfoModal()" style="font-weight:600;">Tutup</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Upload File -->
     <div class="modal-overlay" id="uploadFileModal">
@@ -151,6 +189,50 @@
 
         document.getElementById('uploadFileModal').addEventListener('click', function(e) {
             if (e.target === this) closeUploadModal();
+        });
+
+        function openFileInfoModal(id, nama, kategori, status, uploader, tanggal, ukuran, mime, ext, mediaId) {
+            var rows = [
+                { label: 'ID', value: id },
+                { label: 'Nama File', value: nama },
+                { label: 'Ekstensi', value: ext || '-' },
+                { label: 'Ukuran', value: ukuran },
+                { label: 'Tipe MIME', value: mime },
+                { label: 'Kategori', value: kategori },
+                { label: 'Status', value: status },
+                { label: 'Diupload Oleh', value: uploader },
+                { label: 'Tanggal Upload', value: tanggal },
+                { label: 'Media ID', value: mediaId || '-' },
+            ];
+
+            var html = '';
+            for (var i = 0; i < rows.length; i++) {
+                var bg = i % 2 === 0 ? '#f9fafb' : '#ffffff';
+                html += '<tr style="background:' + bg + ';">';
+                html += '<td style="padding:10px 16px;font-size:12px;font-weight:600;color:#374151;white-space:nowrap;border-bottom:1px solid #e5e7eb;width:140px;">' + rows[i].label + '</td>';
+                html += '<td style="padding:10px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb;word-break:break-all;">' + rows[i].value + '</td>';
+                html += '</tr>';
+            }
+
+            document.getElementById('fileInfoBody').innerHTML = html;
+
+            var preview = document.getElementById('filePreviewContainer');
+            if (mime.startsWith('image/') && mediaId) {
+                preview.innerHTML = '<img src="/spatie-media/' + mediaId + '" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e5e7eb;">';
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+
+            document.getElementById('fileInfoModal').classList.add('active');
+        }
+
+        function closeFileInfoModal() {
+            document.getElementById('fileInfoModal').classList.remove('active');
+        }
+
+        document.getElementById('fileInfoModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFileInfoModal();
         });
     </script>
 @endsection

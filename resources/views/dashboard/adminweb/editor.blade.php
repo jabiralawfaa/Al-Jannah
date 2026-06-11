@@ -11,6 +11,21 @@
 @push('styles')
     @filamentStyles
     <link rel="stylesheet" href="{{ asset('css/filament/filament/app.css') }}">
+    <style>
+        :root {
+            --primary-50: #f0f5f4;
+            --primary-100: #E8ECEC;
+            --primary-200: #B9C6C5;
+            --primary-300: #8BA19E;
+            --primary-400: #5C7B77;
+            --primary-500: #16423C;
+            --primary-600: #11322D;
+            --primary-700: #0B211E;
+            --primary-800: #071412;
+            --primary-900: #020706;
+            --primary-950: #010403;
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -23,18 +38,6 @@
 
 @section('content')
 <style>
-    :root {
-        --primary-100: #e4e7ef;
-        --primary-200: #c9d0df;
-        --primary-300: #adb8cf;
-        --primary-400: #92a0bf;
-        --primary-500: #7788af;
-        --primary-600: #5f6d8c;
-        --primary-700: #475269;
-        --primary-800: #303646;
-        --primary-900: #16423c;
-    }
-
     .editor-header {
         display: flex;
         align-items: center;

@@ -265,7 +265,7 @@ class BendaharaController extends Controller
                 'telepon' => $a->telepon,
                 'access_code' => $a->access_code,
                 'tahun_mulai' => max(2025, $a->tanggal_aktif_kembali
-                    ? (int) $a->tanggal_aktif_kembali->format('Y')
+                    ? (int) \Carbon\Carbon::parse($a->tanggal_aktif_kembali)->format('Y')
                     : (int) $a->created_at->format('Y')),
                 'bulan' => $bulan,
             ];
@@ -286,6 +286,7 @@ class BendaharaController extends Controller
         $anggota = Anggota::findOrFail($request->anggota_id);
         $code = strtoupper(substr(md5(uniqid($anggota->id . microtime(), true)), 0, 8));
         $anggota->access_code = $code;
+        $anggota->access_code_generated_at = now();
         $anggota->save();
 
         return response()->json([
@@ -308,7 +309,7 @@ class BendaharaController extends Controller
 
         $anggota = Anggota::findOrFail($validated['anggota_id']);
         $tahunMulai = max(2025, $anggota->tanggal_aktif_kembali
-            ? (int) $anggota->tanggal_aktif_kembali->format('Y')
+            ? (int) \Carbon\Carbon::parse($anggota->tanggal_aktif_kembali)->format('Y')
             : (int) $anggota->created_at->format('Y'));
 
         if ($validated['tahun'] < $tahunMulai) {
@@ -331,8 +332,6 @@ class BendaharaController extends Controller
             }
         }
 
-        $filePath = $request->file('file_bukti')->store('bendahara', 'local');
-
         $totalNominal = $validated['nominal'] * $validated['jumlah_bulan'];
         $bulanAkhir = min($validated['bulan_mulai'] + $validated['jumlah_bulan'] - 1, 12);
 
@@ -354,7 +353,6 @@ class BendaharaController extends Controller
                 'nominal' => $validated['nominal'],
                 'status' => 'lunas',
                 'tanggal_bayar' => now()->toDateString(),
-                'file_bukti' => $filePath,
                 'verified_by' => auth()->id(),
                 'pemasukan_id' => $pemasukan->id,
             ]);

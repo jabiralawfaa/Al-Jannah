@@ -166,7 +166,11 @@
             <div id="infoIuranAccessCode" style="margin-top:12px;display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;text-align:center;">
                 <div style="font-size:11px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Kode Akses Anggota</div>
                 <div id="infoIuranAccessCodeValue" style="font-size:22px;font-weight:700;color:#15803d;font-family:monospace;letter-spacing:2px;"></div>
-                <div style="font-size:11px;color:#6b7280;margin-top:4px;">Gunakan kode ini untuk login di halaman anggota</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+                    <button onclick="copyAccessCode()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#15803d;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;">Salin Kode</button>
+                    <span id="copyAccessCodeMsg" style="font-size:11px;color:#6b7280;display:none;">Tersalin!</span>
+                </div>
+                <div style="font-size:11px;color:#6b7280;margin-top:2px;">Gunakan kode ini untuk login di halaman anggota</div>
             </div>
         </div>
         <div class="modal-actions" style="gap:8px;flex-wrap:wrap;">
@@ -588,7 +592,18 @@
     window.incrCariBulan = incrCariBulan;
     window.submitCariIuran = submitCariIuran;
     window.generateAccessCode = generateAccessCode;
+    window.generateAccessCode = generateAccessCode;
     window.openInfoIuranModal = openInfoIuranModal;
     window.closeInfoIuranModal = closeInfoIuranModal;
+
+    function copyAccessCode() {
+        var code = document.getElementById('infoIuranAccessCodeValue').textContent;
+        if (!code) return;
+        navigator.clipboard.writeText(code).then(function() {
+            var msg = document.getElementById('copyAccessCodeMsg');
+            msg.style.display = 'inline';
+            setTimeout(function() { msg.style.display = 'none'; }, 2000);
+        });
+    }
 </script>
 @endsection

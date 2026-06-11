@@ -51,9 +51,15 @@ Route::get('/page/{slug}', function ($slug) {
 Route::get('/daftar', [PendaftaranController::class, 'create'])->name('register');
 Route::post('/register-member', [PendaftaranController::class, 'store'])->name('register-member.store');
 
-Route::get('/anggota', function () {
-    return view('public.anggota');
-})->name('anggota');
+Route::prefix('anggota')->group(function () {
+    Route::get('/', [App\Http\Controllers\AnggotaController::class, 'showAccessCode'])->name('anggota');
+    Route::post('/', [App\Http\Controllers\AnggotaController::class, 'verifyAccessCode']);
+    Route::get('/dashboard', [App\Http\Controllers\AnggotaController::class, 'dashboard'])->name('anggota.dashboard');
+    Route::post('/logout', function () {
+        session()->forget('anggota_id');
+        return redirect()->route('anggota');
+    })->name('anggota.logout');
+});
 
 Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
     Route::get('/sekretaris', [SekretarisController::class, 'index'])->name('sekretaris.dashboard');
@@ -117,6 +123,7 @@ Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
 
     Route::get('/bendahara/laporan', [BendaharaController::class, 'laporan'])->name('bendahara.laporan');
     Route::get('/bendahara/laporan/data', [BendaharaController::class, 'getLaporanData'])->name('bendahara.laporan.data');
+    Route::get('/bendahara/laporan/export', [BendaharaController::class, 'exportLaporan'])->name('bendahara.laporan.export');
 
     Route::get('/bendahara/verifikasi', [BendaharaController::class, 'verifikasi'])->name('bendahara.verifikasi');
     Route::get('/bendahara/verifikasi/data', [BendaharaController::class, 'getVerifikasiData'])->name('bendahara.verifikasi.data');
@@ -125,7 +132,7 @@ Route::middleware(['auth', 'role:bendahara,superadmin'])->group(function () {
     Route::get('/bendahara/catat-transaksi', [BendaharaController::class, 'catatTransaksi'])->name('bendahara.catat-transaksi');
     Route::post('/bendahara/catat-transaksi', [BendaharaController::class, 'storeTransaksi'])->name('bendahara.catat-transaksi.store');
 
-    Route::post('/bendahara/permintaan-izin', [BendaharaController::class, 'storePermintaanIzin'])->name('bendahara.permintaan-izin.store');
+    Route::post('/bendahara/iuran/generate-access-code', [BendaharaController::class, 'generateAccessCode'])->name('bendahara.iuran.generate-access-code');
 });
 
 Route::middleware(['auth', 'role:ketua'])->group(function () {

@@ -13,6 +13,8 @@ use App\Models\KategoriPengeluaran;
 use App\Models\PermintaanIzin;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class BendaharaController extends Controller
 {
@@ -237,8 +239,11 @@ class BendaharaController extends Controller
     public function getIuranData(Request $request)
     {
         $tahun = $request->input('tahun', date('Y'));
+        $memberId = $request->input('member_id');
 
-        $daftarAnggota = Anggota::where('status', 'aktif')->get();
+        $daftarAnggota = Anggota::where('status', 'aktif')
+            ->when($memberId, fn($q) => $q->where('id', $memberId))
+            ->get();
 
         $data = $daftarAnggota->map(function ($a) use ($tahun) {
             $iuran = $a->iuranTahunan()->where('tahun', $tahun)->get()->keyBy('bulan');
@@ -258,6 +263,10 @@ class BendaharaController extends Controller
                 'nomor_anggota' => $a->nomor_anggota,
                 'nama' => $a->nama,
                 'telepon' => $a->telepon,
+                'access_code' => $a->access_code,
+                'tahun_mulai' => max(2025, $a->tanggal_aktif_kembali
+                    ? (int) $a->tanggal_aktif_kembali->format('Y')
+                    : (int) $a->created_at->format('Y')),
                 'bulan' => $bulan,
             ];
         });
@@ -265,6 +274,23 @@ class BendaharaController extends Controller
         return response()->json([
             'tahun' => $tahun,
             'anggota' => $data,
+        ]);
+    }
+
+    public function generateAccessCode(Request $request)
+    {
+        $request->validate([
+            'anggota_id' => 'required|exists:anggota,id',
+        ]);
+
+        $anggota = Anggota::findOrFail($request->anggota_id);
+        $code = strtoupper(substr(md5(uniqid($anggota->id . microtime(), true)), 0, 8));
+        $anggota->access_code = $code;
+        $anggota->save();
+
+        return response()->json([
+            'success' => true,
+            'access_code' => $code,
         ]);
     }
 
@@ -279,6 +305,31 @@ class BendaharaController extends Controller
             'keterangan' => 'nullable|string|max:1000',
             'file_bukti' => 'required|file|max:2048',
         ]);
+
+        $anggota = Anggota::findOrFail($validated['anggota_id']);
+        $tahunMulai = max(2025, $anggota->tanggal_aktif_kembali
+            ? (int) $anggota->tanggal_aktif_kembali->format('Y')
+            : (int) $anggota->created_at->format('Y'));
+
+        if ($validated['tahun'] < $tahunMulai) {
+            return response()->json([
+                'success' => false,
+                'message' => "Anggota ini mulai aktif tahun $tahunMulai, tidak bisa membayar iuran tahun sebelumnya."
+            ], 422);
+        }
+
+        for ($tahun = $tahunMulai; $tahun < $validated['tahun']; $tahun++) {
+            $bulanLunas = IuranTahunan::where('anggota_id', $validated['anggota_id'])
+                ->where('tahun', $tahun)
+                ->where('status', 'lunas')
+                ->count();
+            if ($bulanLunas < 12) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Anggota masih memiliki tanggungan iuran tahun $tahun. Selesaikan semua tanggungan tahun sebelumnya terlebih dahulu."
+                ], 422);
+            }
+        }
 
         $filePath = $request->file('file_bukti')->store('bendahara', 'local');
 
@@ -309,8 +360,6 @@ class BendaharaController extends Controller
             ]);
         }
 
-        $anggota = Anggota::find($validated['anggota_id']);
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -326,9 +375,26 @@ class BendaharaController extends Controller
     public function getLaporanData(Request $request)
     {
         $search = $request->input('search', '');
+        $period = $request->input('period', 'semua');
 
-        $pemasukan = Pemasukan::with('kategoriPemasukan')->get();
-        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get();
+        $pemasukanQuery = Pemasukan::with('kategoriPemasukan');
+        $pengeluaranQuery = Pengeluaran::with('kategoriPengeluaran');
+
+        if ($period === 'hari') {
+            $pemasukanQuery->whereDate('created_at', today());
+            $pengeluaranQuery->whereDate('created_at', today());
+        } elseif ($period === 'minggu') {
+            $pemasukanQuery->whereDate('created_at', '>=', today()->subDays(7));
+            $pengeluaranQuery->whereDate('created_at', '>=', today()->subDays(7));
+        } elseif ($period === 'bulan') {
+            $pemasukanQuery->whereRaw("strftime('%m', created_at) = ?", [today()->format('m')])
+                ->whereRaw("strftime('%Y', created_at) = ?", [today()->format('Y')]);
+            $pengeluaranQuery->whereRaw("strftime('%m', created_at) = ?", [today()->format('m')])
+                ->whereRaw("strftime('%Y', created_at) = ?", [today()->format('Y')]);
+        }
+
+        $pemasukan = $pemasukanQuery->get();
+        $pengeluaran = $pengeluaranQuery->get();
 
         $transaksi = collect()
             ->merge($pemasukan->map(fn($p) => [
@@ -448,5 +514,51 @@ class BendaharaController extends Controller
             'message' => 'Permintaan akses edit berhasil dikirim ke ketua.',
             'data' => $permintaan,
         ]);
+    }
+
+    public function exportLaporan()
+    {
+        $pemasukan = Pemasukan::with('kategoriPemasukan')->get();
+        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get();
+
+        $transaksi = collect()
+            ->merge($pemasukan->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d-m-Y'),
+                'kategori' => $p->kategoriPemasukan?->nama ?? 'Pemasukan',
+                'nominal' => $p->jumlah,
+                'type' => 'masuk',
+            ]))
+            ->merge($pengeluaran->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d-m-Y'),
+                'kategori' => $p->kategoriPengeluaran?->nama ?? 'Pengeluaran',
+                'nominal' => $p->jumlah,
+                'type' => 'keluar',
+            ]))
+            ->sortByDesc('tanggal')
+            ->values();
+
+        $totalPemasukan = $transaksi->where('type', 'masuk')->sum('nominal');
+        $totalPengeluaran = $transaksi->where('type', 'keluar')->sum('nominal');
+
+        $writer = new Writer();
+        $writer->openToBrowser('Laporan-Keuangan.xlsx');
+
+        $writer->addRow(Row::fromValues(['Tanggal', 'Kategori', 'Nominal', 'Status']));
+
+        foreach ($transaksi as $t) {
+            $nominal = $t['type'] === 'masuk'
+                ? '+ ' . number_format($t['nominal'], 0, ',', '.')
+                : '- ' . number_format($t['nominal'], 0, ',', '.');
+            $status = $t['type'] === 'masuk' ? 'Pemasukan' : 'Pengeluaran';
+            $writer->addRow(Row::fromValues([$t['tanggal'], $t['kategori'], $nominal, $status]));
+        }
+
+        $writer->addRow(Row::fromValues(['', '', '', '']));
+        $writer->addRow(Row::fromValues(['Total Pemasukan', '', 'Rp ' . number_format($totalPemasukan, 0, ',', '.'), '']));
+        $writer->addRow(Row::fromValues(['Total Pengeluaran', '', 'Rp ' . number_format($totalPengeluaran, 0, ',', '.'), '']));
+        $writer->addRow(Row::fromValues(['Saldo Akhir', '', 'Rp ' . number_format($totalPemasukan - $totalPengeluaran, 0, ',', '.'), '']));
+
+        $writer->close();
+        exit;
     }
 }

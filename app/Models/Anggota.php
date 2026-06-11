@@ -19,6 +19,8 @@ class Anggota extends Model
         'telepon',
         'alamat',
         'status',
+        'tanggal_aktif_kembali',
+        'access_code',
         'created_by',
     ];
 

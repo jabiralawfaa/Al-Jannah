@@ -566,6 +566,10 @@ body {
 .btn-icon .material-icons { font-size: 18px; }
 .btn-info { color: var(--primary-500); }
 .btn-info:hover { background: var(--primary-100); }
+.btn-wa { color: #25D366; }
+.btn-wa:hover { background: #e0f5e9; }
+.btn-info-iuran { color: var(--primary-500); }
+.btn-info-iuran:hover { background: var(--primary-100); }
 
 .modal-overlay { position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; visibility: hidden; background: transparent; transition: opacity .25s ease, visibility .25s ease; }
 .modal-overlay.active { opacity: 1; visibility: visible; }

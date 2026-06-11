@@ -350,7 +350,14 @@
             <h1 class="anggota-title">Akses Anggota</h1>
             <p class="anggota-subtitle">Masukkan kode akses untuk masuk ke halaman anggota</p>
 
-            <form class="anggota-form" method="POST">
+            @if ($errors->any())
+            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;">
+                <svg style="width:20px;height:20px;color:#dc2626;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span style="font-size:0.85rem;color:#991b1b;">{{ $errors->first('access_code') }}</span>
+            </div>
+            @endif
+
+            <form class="anggota-form" method="POST" action="{{ route('anggota') }}">
                 @csrf
                 <div class="form-group">
                     <label for="access_code" class="form-label">Kode Akses</label>

@@ -34,18 +34,25 @@
         </div>
     </div>
 
-    <div class="filter-bar">
-        <button class="filter-btn" data-period="hari">Harian</button>
-        <button class="filter-btn" data-period="minggu">Mingguan</button>
-        <button class="filter-btn active" data-period="bulan">Bulanan</button>
-    </div>
-
     <div class="table-container">
-        <div class="table-search">
-            <div class="search-wrap">
+        <div class="table-search" style="display:flex;align-items:center;gap:12px;">
+            <div class="search-wrap" style="flex:1;">
                 <span class="material-icons search-icon">search</span>
                 <input type="text" id="searchInput" placeholder="Cari transaksi...">
             </div>
+            <div class="filter-select-wrap" style="position:relative;">
+                <select id="periodSelect" style="padding:8px 36px 8px 14px;border:1px solid #d1d5db;border-radius:100px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;background:#fff;appearance:none;cursor:pointer;min-width:140px;">
+                    <option value="semua">Semua Waktu</option>
+                    <option value="hari">Harian</option>
+                    <option value="minggu">Mingguan</option>
+                    <option value="bulan">Bulanan</option>
+                </select>
+                <span class="material-icons" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;color:#6b7280;pointer-events:none;">expand_more</span>
+            </div>
+            <a href="/bendahara/laporan/export" class="btn-export" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--primary-500);color:#fff;border:none;border-radius:100px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;transition:background .2s;flex-shrink:0;text-decoration:none;">
+                <span class="material-icons" style="font-size:16px;">file_download</span>
+                Export
+            </a>
         </div>
         <div class="table-scroll">
             <table>
@@ -74,9 +81,7 @@
         </div>
     </div>
 
-    <div class="btn-generate-wrap">
-        <button class="btn-generate" onclick="openSaveModal()">Generate Laporan</button>
-    </div>
+
 </div>
 
 <script>
@@ -85,13 +90,16 @@
 
         var tableBody = document.getElementById('tableBody');
         var searchInput = document.getElementById('searchInput');
+        var periodSelect = document.getElementById('periodSelect');
         var dataCount = document.getElementById('dataCount');
         var statValueEls = document.querySelectorAll('.stat-value');
         var allData = [];
 
-        function fetchLaporanData(search) {
-            var url = '/bendahara/laporan/data';
-            if (search) url += '?search=' + encodeURIComponent(search);
+        function fetchLaporanData(search, period) {
+            var params = [];
+            if (search) params.push('search=' + encodeURIComponent(search));
+            if (period && period !== 'semua') params.push('period=' + encodeURIComponent(period));
+            var url = '/bendahara/laporan/data' + (params.length ? '?' + params.join('&') : '');
             fetch(url)
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
@@ -114,48 +122,20 @@
         }
 
         searchInput.addEventListener('input', function() {
-            fetchLaporanData(this.value);
+            fetchLaporanData(this.value, periodSelect.value);
+        });
+
+        periodSelect.addEventListener('change', function() {
+            fetchLaporanData(searchInput.value, this.value);
         });
 
         document.querySelectorAll('.page-dot').forEach(function(dot) { dot.addEventListener('click', function() { document.querySelectorAll('.page-dot').forEach(function(d) { d.classList.remove('active'); }); this.classList.add('active'); }); });
 
-        fetchLaporanData('');
+        fetchLaporanData('', 'semua');
 
-        document.getElementById('saveModal').addEventListener('click', function(e) { if (e.target === this) closeSaveModal(); });
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSaveModal(); });
-
-        window.openSaveModal = function() { document.getElementById('saveModal').classList.add('active'); };
-        window.closeSaveModal = function() { document.getElementById('saveModal').classList.remove('active'); };
-        window.downloadLaporan = function() {
-            var namaFile = document.getElementById('fileNameInput').value || 'Data-laporan-keuangan-2026';
-            var format = document.getElementById('fileFormat').value;
-            alert('Laporan "' + namaFile + '.' + format.toLowerCase() + '" berhasil di-generate (simulasi).');
-            closeSaveModal();
-        };
     })();
 </script>
 @endsection
 
 @push('modals')
-<div id="saveModal" class="modal-overlay">
-    <div class="modal-box">
-        <div class="modal-title">Save Laporan</div>
-        <div class="form-group">
-            <label>Nama file yang akan disimpan</label>
-            <input type="text" id="fileNameInput" value="Data-laporan-keuangan-2026">
-        </div>
-        <div class="form-group">
-            <label>Format File</label>
-            <select id="fileFormat">
-                <option value="PDF">PDF</option>
-                <option value="Excel">Excel</option>
-                <option value="CSV">CSV</option>
-            </select>
-        </div>
-        <div class="modal-actions">
-            <button class="btn-batal" onclick="closeSaveModal()">Batal</button>
-            <button class="btn-download" onclick="downloadLaporan()">Download</button>
-        </div>
-    </div>
-</div>
 @endpush

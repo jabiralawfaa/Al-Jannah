@@ -58,7 +58,7 @@
                         @foreach(['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'] as $bln)
                         <th class="month-cell">{{ $bln }}</th>
                         @endforeach
-                        <th>No Telpon</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="iuranBody"></tbody>
@@ -88,24 +88,6 @@
         </div>
 
         <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;">
-
-        <div class="form-group">
-            <label>Bulan Mulai</label>
-            <select id="cariBulanMulai" class="form-select">
-                <option value="0">Januari</option>
-                <option value="1">Februari</option>
-                <option value="2">Maret</option>
-                <option value="3">April</option>
-                <option value="4">Mei</option>
-                <option value="5">Juni</option>
-                <option value="6">Juli</option>
-                <option value="7">Agustus</option>
-                <option value="8">September</option>
-                <option value="9">Oktober</option>
-                <option value="10">November</option>
-                <option value="11">Desember</option>
-            </select>
-        </div>
 
         <div class="form-group">
             <label>Nominal Pembayaran</label>
@@ -141,6 +123,56 @@
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeCariIuranModal()">Batal</button>
             <button class="btn-minta" onclick="submitCariIuran()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalInfoIuran" class="modal-overlay">
+    <div class="modal-bg" onclick="closeInfoIuranModal()"></div>
+    <div class="modal-box" style="max-width:540px;text-align:left;">
+        <div class="modal-icon">
+            <span class="material-icons">account_balance</span>
+        </div>
+        <h3 style="text-align:center;margin-bottom:12px;">Detail Iuran Anggota</h3>
+        <div id="infoIuranContent" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="info-row" style="display:flex;gap:12px;">
+                <div class="info-field" style="flex:1;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">ID Anggota</label>
+                    <span id="infoIuranId" style="font-size:15px;font-weight:600;"></span>
+                </div>
+                <div class="info-field" style="flex:2;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Nama</label>
+                    <span id="infoIuranNama" style="font-size:15px;font-weight:600;"></span>
+                </div>
+                <div class="info-field" style="flex-shrink:0;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Tahun</label>
+                    <select id="infoIuranTahun" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;background:#fff;">
+                    </select>
+                </div>
+            </div>
+            <div style="background:#f9fafb;border-radius:12px;padding:20px;display:flex;gap:24px;">
+                <div style="flex:1;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tanggungan</div>
+                    <div id="infoIuranTanggunganCount" style="font-size:22px;font-weight:700;color:#dc2626;"></div>
+                    <div id="infoIuranTanggunganNominal" style="font-size:13px;color:#6b7280;margin-top:2px;"></div>
+                </div>
+                <div style="width:1px;background:#e5e7eb;"></div>
+                <div style="flex:1;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Sudah Dibayar</div>
+                    <div id="infoIuranPaidCount" style="font-size:22px;font-weight:700;color:#065f46;"></div>
+                    <div id="infoIuranPaidNominal" style="font-size:13px;color:#6b7280;margin-top:2px;"></div>
+                </div>
+            </div>
+            <div id="infoIuranAccessCode" style="margin-top:12px;display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;text-align:center;">
+                <div style="font-size:11px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Kode Akses Anggota</div>
+                <div id="infoIuranAccessCodeValue" style="font-size:22px;font-weight:700;color:#15803d;font-family:monospace;letter-spacing:2px;"></div>
+                <div style="font-size:11px;color:#6b7280;margin-top:4px;">Gunakan kode ini untuk login di halaman anggota</div>
+            </div>
+        </div>
+        <div class="modal-actions" style="gap:8px;flex-wrap:wrap;">
+            <button class="btn-batal" onclick="closeInfoIuranModal()" style="flex:1;">Batal</button>
+            <button class="btn-batal" id="btnGenerateAccessCode" onclick="generateAccessCode()" style="flex:1;background:#f3f4f6;color:#374151;border:2px solid #d1d5db;">Generate Access Code</button>
+            <button id="btnInfoTambahTransaksi" class="btn-minta" style="flex:1;">Tambah Transaksi</button>
         </div>
     </div>
 </div>
@@ -215,6 +247,7 @@
                         noAnggota: a.nomor_anggota,
                         nama: a.nama,
                         telpon: a.telepon,
+                        accessCode: a.access_code || '',
                         bulan: a.bulan.map(function(b) {
                             return { status: b.status === 'lunas' ? 'paid' : 'unpaid', date: b.tanggal_bayar || '' };
                         })
@@ -233,18 +266,12 @@
                 var bln = m.bulan[b], isPaid = bln.status === 'paid';
                 html += '<td class="month-cell"><span class="status-dot" data-mi="' + i + '" data-bi="' + b + '" data-paid="' + (isPaid ? '1' : '0') + '"><span class="dot ' + (isPaid ? 'paid' : 'unpaid') + '"></span>' + (bln.date ? '<span class="date-label">' + bln.date + '</span>' : '') + '</span></td>';
             }
-            html += '<td><a href="tel:' + m.telpon + '" class="phone-link"><span class="material-icons" style="font-size:14px;">phone</span>' + m.telpon + '</a></td></tr>';
+            html += '<td><div style="display:flex;gap:6px;align-items:center;justify-content:center;"><a href="https://wa.me/' + m.telpon.replace(/[^0-9]/g, '') + '" target="_blank" class="btn-icon btn-wa" title="Telepon WA"><span class="material-icons" style="font-size:16px;">phone</span></a><button class="btn-icon btn-info-iuran" onclick="openInfoIuranModal(' + i + ')" title="Info Iuran"><span class="material-icons" style="font-size:16px;">info</span></button></div></td></tr>';
         }
         if (!members.length) {
             html = '<tr><td colspan="15" style="padding:60px 32px;text-align:center;color:#9ca3af;">Belum ada data anggota</td></tr>';
         }
         tbody.innerHTML = html;
-        document.querySelectorAll('.status-dot').forEach(function(el) {
-            el.addEventListener('click', function() {
-                if (this.getAttribute('data-paid') === '1') return;
-                openIuranModal(parseInt(this.getAttribute('data-mi')), parseInt(this.getAttribute('data-bi')));
-            });
-        });
     }
 
     function openIuranModal(mi, bi) {
@@ -299,6 +326,7 @@
     /* Modal Cari Anggota + Tambah Iuran */
     var cariMemberIdx = -1;
     var cariMonthQty = 1;
+    var cariMaxQty = 12;
     var cariNominalPerMonth = 10000;
 
     function buildDaftarAnggota() {
@@ -314,11 +342,11 @@
     function openCariIuranModal() {
         cariMemberIdx = -1;
         cariMonthQty = 1;
+        cariMaxQty = 12;
         buildDaftarAnggota();
         document.getElementById('cariNoAnggota').value = '';
         document.getElementById('hasilCariAnggota').style.display = 'none';
         document.getElementById('cariNamaAnggota').textContent = '';
-        document.getElementById('cariBulanMulai').value = '0';
         document.getElementById('cariNominal').value = '10.000';
         document.getElementById('cariMonthCount').textContent = '1 Bulan';
         document.getElementById('cariKeterangan').value = '';
@@ -338,6 +366,13 @@
         }
         if (idx >= 0) {
             cariMemberIdx = idx;
+            cariMaxQty = 0;
+            for (var b = 0; b < 12; b++) {
+                if (members[idx].bulan[b].status !== 'paid') { cariMaxQty = 12 - b; break; }
+            }
+            if (cariMaxQty < 1) cariMaxQty = 1;
+            cariMonthQty = 1;
+            updateCariNominal();
             document.getElementById('cariNamaAnggota').textContent = members[idx].nama;
             document.getElementById('hasilCariAnggota').style.display = 'block';
         } else {
@@ -347,7 +382,7 @@
     });
 
     function decrCariBulan() { if (cariMonthQty > 1) { cariMonthQty--; updateCariNominal(); } }
-    function incrCariBulan() { if (cariMonthQty < 12) { cariMonthQty++; updateCariNominal(); } }
+    function incrCariBulan() { if (cariMonthQty < cariMaxQty) { cariMonthQty++; updateCariNominal(); } }
     function updateCariNominal() {
         document.getElementById('cariNominal').value = formatNominal(cariNominalPerMonth * cariMonthQty);
         document.getElementById('cariMonthCount').textContent = cariMonthQty + ' Bulan';
@@ -356,7 +391,11 @@
     function submitCariIuran() {
         if (cariMemberIdx < 0) { alert('Cari anggota terlebih dahulu.'); return; }
         var member = members[cariMemberIdx];
-        var bulanMulai = parseInt(document.getElementById('cariBulanMulai').value);
+        var bulanMulai = -1;
+        for (var b = 0; b < 12; b++) {
+            if (member.bulan[b].status !== 'paid') { bulanMulai = b; break; }
+        }
+        if (bulanMulai < 0) { alert('Semua bulan sudah lunas.'); return; }
         var bulanAkhir = Math.min(bulanMulai + cariMonthQty - 1, 11);
         var rangeLabel = bulanListIuran[bulanMulai] + (cariMonthQty > 1 ? '-' + bulanListIuran[bulanAkhir] : '');
 
@@ -390,6 +429,121 @@
         .catch(function() { alert('Terjadi kesalahan'); });
     }
 
+    function buildInfoTahunDropdown() {
+        var sel = document.getElementById('infoIuranTahun');
+        sel.innerHTML = '';
+        var thisYear = {{ date('Y') }};
+        for (var y = thisYear; y >= 2020; y--) {
+            var opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            sel.appendChild(opt);
+        }
+    }
+    buildInfoTahunDropdown();
+
+    var _infoMemberId = null;
+    var _infoMemberIdx = -1;
+
+    function openInfoIuranModal(mi) {
+        var m = members[mi];
+        if (!m) return;
+        _infoMemberId = m.id;
+        _infoMemberIdx = mi;
+        document.getElementById('infoIuranId').textContent = m.noAnggota;
+        document.getElementById('infoIuranNama').textContent = m.nama;
+        document.getElementById('infoIuranTahun').value = currentYear;
+
+        var el = document.getElementById('infoIuranAccessCode');
+        var valEl = document.getElementById('infoIuranAccessCodeValue');
+        var btnGen = document.getElementById('btnGenerateAccessCode');
+        if (m.accessCode) {
+            valEl.textContent = m.accessCode;
+            el.style.display = 'block';
+            btnGen.textContent = 'Regenerate Access Code';
+        } else {
+            el.style.display = 'none';
+            btnGen.textContent = 'Generate Access Code';
+        }
+
+        updateInfoIuranData(currentYear, m.id, mi);
+        document.getElementById('modalInfoIuran').classList.add('active');
+    }
+
+    function closeInfoIuranModal() {
+        document.getElementById('modalInfoIuran').classList.remove('active');
+    }
+
+    function updateInfoIuranData(tahun, memberId, mi) {
+        var m = mi >= 0 ? members[mi] : null;
+        if (m && tahun === currentYear) {
+            renderInfoIuranFromMember(m, mi);
+        } else {
+            fetch('/bendahara/iuran/data?tahun=' + tahun + '&member_id=' + memberId)
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.anggota && res.anggota.length) {
+                        var a = res.anggota[0];
+                        var paid = 0, unpaid = 0;
+                        for (var b = 0; b < a.bulan.length; b++) {
+                            if (a.bulan[b].status === 'lunas') paid++; else unpaid++;
+                        }
+                        document.getElementById('infoIuranTanggunganCount').textContent = unpaid + ' Bulan';
+                        document.getElementById('infoIuranTanggunganNominal').textContent = 'Rp ' + (unpaid * nominalPerMonth).toLocaleString('id-ID');
+                        document.getElementById('infoIuranPaidCount').textContent = paid + ' Bulan';
+                        document.getElementById('infoIuranPaidNominal').textContent = 'Rp ' + (paid * nominalPerMonth).toLocaleString('id-ID');
+                    }
+                    var cur = mi >= 0 ? members[mi] : null;
+                    if (cur) {
+                        var firstUnpaid = -1;
+                        for (var b = 0; b < 12; b++) {
+                            if (cur.bulan[b].status !== 'paid') { firstUnpaid = b; break; }
+                        }
+                        var btnTambah = document.getElementById('btnInfoTambahTransaksi');
+                        if (firstUnpaid >= 0) {
+                            btnTambah.onclick = (function(idx, bln) {
+                                return function() { closeInfoIuranModal(); openIuranModal(idx, bln); };
+                            })(mi, firstUnpaid);
+                        } else {
+                            btnTambah.onclick = function() { alert('Semua bulan sudah lunas.'); };
+                        }
+                    }
+                });
+        }
+    }
+
+    function renderInfoIuranFromMember(m, mi) {
+        var paid = 0, unpaid = 0;
+        for (var b = 0; b < 12; b++) {
+            if (m.bulan[b].status === 'paid') paid++; else unpaid++;
+        }
+        document.getElementById('infoIuranTanggunganCount').textContent = unpaid + ' Bulan';
+        document.getElementById('infoIuranTanggunganNominal').textContent = 'Rp ' + (unpaid * nominalPerMonth).toLocaleString('id-ID');
+        document.getElementById('infoIuranPaidCount').textContent = paid + ' Bulan';
+        document.getElementById('infoIuranPaidNominal').textContent = 'Rp ' + (paid * nominalPerMonth).toLocaleString('id-ID');
+
+        var btnTambah = document.getElementById('btnInfoTambahTransaksi');
+        var firstUnpaid = -1;
+        for (var b = 0; b < 12; b++) {
+            if (m.bulan[b].status !== 'paid') { firstUnpaid = b; break; }
+        }
+        if (firstUnpaid >= 0) {
+            btnTambah.onclick = (function(idx, bln) {
+                return function() { closeInfoIuranModal(); openIuranModal(idx, bln); };
+            })(mi, firstUnpaid);
+        } else {
+            btnTambah.onclick = function() { alert('Semua bulan sudah lunas.'); };
+        }
+    }
+
+    document.getElementById('infoIuranTahun').addEventListener('change', function() {
+        var tahun = parseInt(this.value);
+        if (tahun === currentYear && _infoMemberIdx >= 0) {
+            renderInfoIuranFromMember(members[_infoMemberIdx], _infoMemberIdx);
+        } else {
+            updateInfoIuranData(tahun, _infoMemberId, -1);
+        }
+    });
+
     document.querySelector('.year-selector select').addEventListener('change', function() {
         currentYear = parseInt(this.value);
         document.querySelector('.table-header-card h3').textContent = 'Tabel Iuran Tahunan RKM Al-Jannah - Tahun ' + currentYear;
@@ -398,6 +552,33 @@
 
     document.querySelector('.modal-bg-iuran').addEventListener('click', function() { closeIuranModal(); });
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeIuranModal(); closeCariIuranModal(); } });
+
+    function generateAccessCode() {
+        var member = members[_infoMemberIdx];
+        if (!member) return;
+        var btn = document.getElementById('btnGenerateAccessCode');
+        btn.disabled = true;
+        btn.textContent = 'Memproses...';
+        fetch('/bendahara/iuran/generate-access-code', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ anggota_id: member.id })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success) { alert('Gagal generate access code'); return; }
+            member.accessCode = res.access_code;
+            document.getElementById('infoIuranAccessCodeValue').textContent = res.access_code;
+            document.getElementById('infoIuranAccessCode').style.display = 'block';
+            btn.textContent = 'Regenerate Access Code';
+        })
+        .catch(function() { alert('Terjadi kesalahan'); })
+        .finally(function() { btn.disabled = false; });
+    }
+
     fetchIuranData(currentYear);
 
     window.decrMonth = decrMonth;
@@ -406,5 +587,8 @@
     window.decrCariBulan = decrCariBulan;
     window.incrCariBulan = incrCariBulan;
     window.submitCariIuran = submitCariIuran;
+    window.generateAccessCode = generateAccessCode;
+    window.openInfoIuranModal = openInfoIuranModal;
+    window.closeInfoIuranModal = closeInfoIuranModal;
 </script>
 @endsection

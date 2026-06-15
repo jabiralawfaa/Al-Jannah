@@ -79,6 +79,27 @@ class LogistikController extends Controller
         return redirect()->route('logistik.stok')->with('success', 'Barang berhasil ditambahkan.');
     }
 
+    public function updateBarang(Request $request, $id)
+    {
+        $barang = StokBarang::findOrFail($id);
+
+        $validated = $request->validate([
+            'kode_barang' => 'required|unique:stok_barang,kode_barang,' . $id,
+            'nama_barang' => 'required',
+            'kategori_barang_id' => 'required|exists:kategori_barang,id',
+            'stok' => 'required|integer|min:0',
+            'satuan' => 'required',
+            'stok_minimum' => 'nullable|integer|min:0',
+        ]);
+
+        $validated['status'] = (int) $validated['stok'] > 0 ? 'tersedia' : 'habis';
+        $validated['stok_minimum'] = $validated['stok_minimum'] ?? 0;
+
+        $barang->update($validated);
+
+        return redirect()->route('logistik.stok')->with('success', 'Barang berhasil diperbarui.');
+    }
+
     public function destroyBarang($id)
     {
         $barang = StokBarang::findOrFail($id);

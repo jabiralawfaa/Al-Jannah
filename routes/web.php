@@ -70,6 +70,7 @@ Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
     Route::get('/sekretaris/log', [SekretarisController::class, 'log'])->name('sekretaris.log');
 
     Route::get('/sekretaris/anggota/{id}/edit', [SekretarisController::class, 'editAnggota'])->name('sekretaris.anggota.edit');
+    Route::post('/sekretaris/anggota/{id}/edit', [SekretarisController::class, 'prosesEditAnggota'])->name('sekretaris.anggota.proses-edit');
 
     Route::get('/sekretaris/anggota/{id}/nonaktif', [SekretarisController::class, 'nonaktifAnggota'])->name('sekretaris.anggota.nonaktif');
     Route::post('/sekretaris/anggota/{id}/nonaktif', [SekretarisController::class, 'prosesNonaktifAnggota'])->name('sekretaris.anggota.proses-nonaktif');

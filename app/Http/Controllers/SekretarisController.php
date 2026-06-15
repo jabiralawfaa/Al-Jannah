@@ -21,13 +21,23 @@ class SekretarisController extends Controller
         $anggotaAktif = Anggota::where('status', 'aktif')->count();
         $anggotaNonAktif = Anggota::where('status', 'non_aktif')->count();
         $menungguVerifikasi = CalonAnggota::whereIn('status', ['menunggu_verifikasi', 'sudah_membayar'])->count();
+        
+        // Additional stats
+        $sudahMembayar = CalonAnggota::where('status', 'sudah_membayar')->count();
+        $belumBayar = CalonAnggota::where('status', 'menunggu_verifikasi')->count();
+        $diverifikasiBulanIni = Anggota::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count();
+        $activities = LogAktivitas::where('modul', 'Sekretaris')->latest()->take(8)->get();
 
         return view('dashboard.sekretaris.index', compact(
             'calonAnggota',
             'totalAnggota',
             'anggotaAktif',
             'anggotaNonAktif',
-            'menungguVerifikasi'
+            'menungguVerifikasi',
+            'sudahMembayar',
+            'belumBayar',
+            'diverifikasiBulanIni',
+            'activities'
         ));
     }
 

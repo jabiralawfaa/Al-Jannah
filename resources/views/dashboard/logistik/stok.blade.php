@@ -93,7 +93,7 @@
                             <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->satuan }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <button onclick="openModal('editBarangModal')" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <button onclick="editBarang({{ $item->id }}, '{{ $item->kode_barang }}', '{{ $item->nama_barang }}', {{ $item->kategori_barang_id }}, {{ $item->stok }}, '{{ $item->satuan }}', {{ $item->stok_minimum ?? 0 }})" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
                                     </button>
                                     <button onclick="confirmDelete({{ $item->id }})" style="background-color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -224,31 +224,38 @@
 <div id="editBarangModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
     <div style="background: white; width: 520px; max-width: 90%; border-radius: 12px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--primary-900);">
         <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Ubah Data Barang</h3>
-        <form>
+        <form id="editForm" method="POST">
+            @csrf
+            @method('PUT')
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kode Barang</label>
-                    <input type="text" value="TP-H" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    <input type="text" name="kode_barang" id="edit_kode_barang" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nama Barang</label>
-                    <input type="text" value="Tinta Printer Hitam" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    <input type="text" name="nama_barang" id="edit_nama_barang" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kategori</label>
-                    <select style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
-                        <option selected>ATK</option>
-                        <option>Bahan</option>
-                        <option>Alat Kebersihan</option>
+                    <select name="kategori_barang_id" id="edit_kategori_barang_id" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                        <option value="">Pilih Kategori</option>
+                        @foreach($kategoris as $kat)
+                            <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Stok</label>
-                    <input type="text" value="5" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    <input type="number" name="stok" id="edit_stok" min="0" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                 </div>
-                <div style="grid-column: span 2;">
+                <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Satuan</label>
-                    <input type="text" value="Botol" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    <input type="text" name="satuan" id="edit_satuan" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Stok Minimum</label>
+                    <input type="number" name="stok_minimum" id="edit_stok_minimum" min="0" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
@@ -285,6 +292,16 @@ function confirmDelete(id) {
     document.getElementById('deleteForm').action = deleteUrl.replace('REPLACE_ME', id);
     openModal('hapusBarangModal');
 }
+function editBarang(id, kode, nama, kategoriId, stok, satuan, stokMinimum) {
+    document.getElementById('editForm').action = updateUrl.replace('REPLACE_ME', id);
+    document.getElementById('edit_kode_barang').value = kode;
+    document.getElementById('edit_nama_barang').value = nama;
+    document.getElementById('edit_kategori_barang_id').value = kategoriId;
+    document.getElementById('edit_stok').value = stok;
+    document.getElementById('edit_satuan').value = satuan;
+    document.getElementById('edit_stok_minimum').value = stokMinimum || 0;
+    openModal('editBarangModal');
+}
 
 function filterTable(input, tableId, emptyId) {
     var search = input.value.toLowerCase().trim();
@@ -307,6 +324,7 @@ function filterTable(input, tableId, emptyId) {
 }
 
 var deleteUrl = '{{ route('logistik.stok.destroy', 'REPLACE_ME') }}';
+var updateUrl = '{{ route('logistik.stok.update', 'REPLACE_ME') }}';
 document.addEventListener('DOMContentLoaded', function() {
     var modals = ['tambahBarangModal', 'tambahStokModal', 'kurangiStokModal', 'editBarangModal', 'hapusBarangModal'];
     modals.forEach(function(id) {

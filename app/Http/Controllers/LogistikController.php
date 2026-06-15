@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\StokBarang;
 use App\Models\KategoriBarang;
 use App\Models\RiwayatBarang;
+use App\Models\AsetKendaraan;
+use App\Models\KategoriAset;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -38,9 +40,23 @@ class LogistikController extends Controller
         ));
     }
 
-    public function stok()
+    public function stok(Request $request)
     {
-        $barang = StokBarang::with('kategoriBarang')->get();
+        $query = StokBarang::with('kategoriBarang');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_barang', 'like', "%{$search}%")
+                  ->orWhere('nama_barang', 'like', "%{$search}%")
+                  ->orWhere('satuan', 'like', "%{$search}%")
+                  ->orWhereHas('kategoriBarang', function ($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $barang = $query->get();
         $kategoris = KategoriBarang::all();
         return view('dashboard.logistik.stok', compact('barang', 'kategoris'));
     }
@@ -142,7 +158,9 @@ class LogistikController extends Controller
 
     public function aset()
     {
-        return view('dashboard.logistik.aset');
+        $aset = AsetKendaraan::with('kategoriAset')->get();
+        $kategoris = KategoriAset::all();
+        return view('dashboard.logistik.aset', compact('aset', 'kategoris'));
     }
 
     public function riwayat()

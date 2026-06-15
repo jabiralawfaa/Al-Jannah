@@ -53,7 +53,7 @@
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2; text-align: center;">
                                 <span style="background-color: {{ $tipeColors[$item->tipe] ?? '#6b7280' }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ ucfirst($item->tipe) }}</span>
                             </td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->nama_barang ?? $item->kode_barang ?? '-' }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->nama_barang ?? $item->nama_aset ?? $item->kode_barang ?? $item->kode_aset ?? '-' }}</td>
                             <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->jumlah }}</td>
                             <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->keterangan ?? '-' }}</td>
                         </tr>

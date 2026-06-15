@@ -16,6 +16,7 @@ class AsetKendaraan extends Model
         'nomor_plat_seri',
         'kategori_aset_id',
         'status',
+        'kondisi',
     ];
 
     public function kategoriAset(): BelongsTo

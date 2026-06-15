@@ -184,6 +184,63 @@ class LogistikController extends Controller
         return view('dashboard.logistik.aset', compact('aset', 'kategoris'));
     }
 
+    public function storeAset(Request $request)
+    {
+        $validated = $request->validate([
+            'kode_aset' => 'required|unique:aset_kendaraan,kode_aset',
+            'nama_aset' => 'required',
+            'nomor_plat_seri' => 'nullable',
+            'kategori_aset_id' => 'required|exists:kategori_aset,id',
+            'kondisi' => 'nullable|string|max:255',
+        ]);
+
+        $validated['status'] = 'tersedia';
+
+        AsetKendaraan::create($validated);
+
+        return redirect()->route('logistik.aset')->with('success', 'Aset berhasil ditambahkan.');
+    }
+
+    public function updateStatusAset(Request $request, $id)
+    {
+        $aset = AsetKendaraan::findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:tersedia,dipinjam,rusak,dihapus',
+            'kondisi' => 'nullable|string|max:255',
+        ]);
+
+        $oldStatus = $aset->status;
+        $newStatus = $validated['status'];
+
+        $aset->update($validated);
+
+        $tipeRiwayat = match ($newStatus) {
+            'dipinjam' => 'dipinjam',
+            'tersedia' => $oldStatus === 'dipinjam' ? 'dikembalikan' : 'masuk',
+            'rusak', 'dihapus' => 'keluar',
+        };
+
+        $labelStatus = [
+            'tersedia' => 'Tersedia',
+            'dipinjam' => 'Dipinjam',
+            'rusak' => 'Rusak',
+            'dihapus' => 'Dihapus',
+        ];
+
+        RiwayatBarang::create([
+            'waktu' => now(),
+            'tipe' => $tipeRiwayat,
+            'tipe_referensi' => 'aset_kendaraan',
+            'referensi_id' => $aset->id,
+            'jumlah' => 1,
+            'keterangan' => $labelStatus[$oldStatus] . ' → ' . $labelStatus[$newStatus],
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()->route('logistik.aset')->with('success', 'Status aset berhasil diperbarui.');
+    }
+
     public function riwayat()
     {
         $riwayat = DB::table('riwayat_barang')
@@ -191,10 +248,16 @@ class LogistikController extends Controller
                 $join->on('riwayat_barang.referensi_id', '=', 'stok_barang.id')
                     ->where('riwayat_barang.tipe_referensi', '=', 'stok_barang');
             })
+            ->leftJoin('aset_kendaraan', function ($join) {
+                $join->on('riwayat_barang.referensi_id', '=', 'aset_kendaraan.id')
+                    ->where('riwayat_barang.tipe_referensi', '=', 'aset_kendaraan');
+            })
             ->select(
                 'riwayat_barang.*',
                 'stok_barang.nama_barang',
-                'stok_barang.kode_barang'
+                'stok_barang.kode_barang',
+                'aset_kendaraan.nama_aset',
+                'aset_kendaraan.kode_aset'
             )
             ->orderBy('riwayat_barang.waktu', 'desc')
             ->get();

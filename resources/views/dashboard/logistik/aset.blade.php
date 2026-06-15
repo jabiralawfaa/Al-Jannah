@@ -68,10 +68,10 @@
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2; text-align: center;">
                                 <span style="background-color: {{ $statusBg[$item->status] ?? '#6b7280' }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $statusLabel[$item->status] ?? ucfirst($item->status) }}</span>
                             </td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">-</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->kondisi ?? '-' }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <button onclick="openModal('statusModal')" style="background-color: var(--primary-900); border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <button onclick="ubahStatus({{ $item->id }}, '{{ $item->status }}', '{{ $item->kondisi ?? '' }}')" style="background-color: var(--primary-900); border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                                         <span class="material-icons" style="font-size: 16px; color: white;">edit</span>
                                     </button>
                                     <button onclick="openModal('hapusAsetModal')" style="background-color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -101,37 +101,39 @@
 
 <div id="tambahAsetModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
     <div style="background: white; width: 520px; max-width: 90%; border-radius: 12px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--primary-900);">
-        <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Tambah Barang baru</h3>
-        <form>
+        <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Tambah Aset Baru</h3>
+        <form action="{{ route('logistik.aset.store') }}" method="POST">
+            @csrf
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
                     <div style="margin-bottom: 14px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nama Aset / Kendaraan</label>
-                        <input type="text" placeholder="Contoh : Toyota Hiace" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kode Aset</label>
+                        <input type="text" name="kode_aset" placeholder="Contoh : ASET-001" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                     </div>
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Tipe</label>
-                        <select style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
-                            <option>Mobil</option>
-                            <option>Motor</option>
-                            <option>Barang</option>
-                        </select>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nama Aset / Kendaraan</label>
+                        <input type="text" name="nama_aset" placeholder="Contoh : Toyota Hiace" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                     </div>
                 </div>
                 <div>
                     <div style="margin-bottom: 14px;">
                         <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nomor Plat/Seri</label>
-                        <input type="text" placeholder="Contoh : B 1234 XYZ" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                        <input type="text" name="nomor_plat_seri" placeholder="Contoh : B 1234 XYZ" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
                     </div>
                     <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kondisi Awal</label>
-                        <select style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
-                            <option>Baik</option>
-                            <option>Rusak Ringan</option>
-                            <option>Rusak Berat</option>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kategori</label>
+                        <select name="kategori_aset_id" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                            <option value="">Pilih Kategori</option>
+                            @foreach($kategoris as $kat)
+                                <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kondisi Awal</label>
+                <textarea name="kondisi" placeholder="Tulis kondisi awal aset..." style="width: 100%; height: 60px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 8px 10px; font-size: 12px; resize: none; outline: none; color: black; background: white; font-family: 'Inter', 'Poppins', sans-serif;"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                 <button type="button" onclick="closeModal('tambahAsetModal')" style="background: #374151; color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Batal</button>
@@ -143,19 +145,22 @@
 
 <div id="statusModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
     <div style="background: white; width: 440px; max-width: 90%; border-radius: 12px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--primary-900);">
-        <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Pengubahan Status</h3>
-        <form>
+        <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Ubah Status Aset</h3>
+        <form id="statusForm" method="POST">
+            @csrf
+            @method('PUT')
             <div style="margin-bottom: 14px;">
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Status</label>
-                <select style="width: 100%; height: 32px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 0 10px; font-size: 12px; outline: none; color: black; background: white;">
-                    <option>Dipakai</option>
-                    <option>Tersedia</option>
-                    <option>Maintenance</option>
+                <select name="status" id="statusSelect" style="width: 100%; height: 32px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 0 10px; font-size: 12px; outline: none; color: black; background: white;">
+                    <option value="tersedia">Tersedia</option>
+                    <option value="dipinjam">Dipinjam</option>
+                    <option value="rusak">Rusak</option>
+                    <option value="dihapus">Dihapus</option>
                 </select>
             </div>
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kondisi</label>
-                <textarea placeholder="Tulis kondisi kendaraan disini." style="width: 100%; height: 70px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 8px 10px; font-size: 12px; resize: none; outline: none; color: black; background: white; font-family: 'Inter', 'Poppins', sans-serif;"></textarea>
+                <textarea name="kondisi" id="kondisiText" placeholder="Tulis kondisi aset/kendaraan..." style="width: 100%; height: 70px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 8px 10px; font-size: 12px; resize: none; outline: none; color: black; background: white; font-family: 'Inter', 'Poppins', sans-serif;"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" onclick="closeModal('statusModal')" style="background: white; color: #374151; border: 1px solid #d1d5db; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Batal</button>
@@ -184,6 +189,13 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
+function ubahStatus(id, statusSekarang, kondisiSekarang) {
+    document.getElementById('statusForm').action = statusUrl.replace('REPLACE_ME', id);
+    document.getElementById('statusSelect').value = statusSekarang;
+    document.getElementById('kondisiText').value = kondisiSekarang || '';
+    openModal('statusModal');
+}
+
 function filterTable(input, tableId, emptyId) {
     var search = input.value.toLowerCase().trim();
     var rows = document.querySelectorAll('#' + tableId + ' tbody tr');
@@ -203,6 +215,8 @@ function filterTable(input, tableId, emptyId) {
         emptyRow.style.display = (visible === 0 && search !== '') ? '' : 'none';
     }
 }
+
+var statusUrl = '{{ route('logistik.aset.status', 'REPLACE_ME') }}';
 
 document.addEventListener('DOMContentLoaded', function() {
     var modals = ['tambahAsetModal', 'statusModal', 'hapusAsetModal'];

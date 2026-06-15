@@ -92,6 +92,8 @@ Route::middleware(['auth', 'role:logistik,superadmin'])->group(function () {
     Route::post('/logistik/stok/keluar', [LogistikController::class, 'storeBarangKeluar'])->name('logistik.stok.keluar');
 
     Route::get('/logistik/aset', [LogistikController::class, 'aset'])->name('logistik.aset');
+    Route::post('/logistik/aset', [LogistikController::class, 'storeAset'])->name('logistik.aset.store');
+    Route::put('/logistik/aset/status/{id}', [LogistikController::class, 'updateStatusAset'])->name('logistik.aset.status');
 
     Route::get('/logistik/riwayat', [LogistikController::class, 'riwayat'])->name('logistik.riwayat');
 });

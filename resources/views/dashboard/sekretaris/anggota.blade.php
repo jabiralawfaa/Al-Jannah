@@ -42,7 +42,7 @@
         </div>
 
         <!-- Table Header -->
-        <div style="background-color: var(--primary-900); padding: 10px 20px;">
+        <div style="background-color: var(--primary-500); padding: 10px 20px;">
             <h2 style="color: white; font-size: 14px; font-weight: 700; margin: 0;">Anggota</h2>
         </div>
 
@@ -93,8 +93,12 @@
                                         <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
                                     </a>
                                     @if($statusLower === 'aktif')
-                                    <a href="{{ route('sekretaris.anggota.nonaktif', $item->id) }}" style="background-color: #fca5a5; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                    <a href="javascript:void(0)" data-id="{{ $item->id }}" data-nama="{{ $item->nama }}" data-no="{{ $item->nomor_anggota }}" onclick="openNonaktifModal(this)" style="background-color: #fca5a5; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                                         <span class="material-icons" style="font-size: 16px; color: black;">person_off</span>
+                                    </a>
+                                    @else
+                                    <a href="javascript:void(0)" data-id="{{ $item->id }}" data-nama="{{ $item->nama }}" data-no="{{ $item->nomor_anggota }}" onclick="openAktifkanModal(this)" style="background-color: #86efac; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                                        <span class="material-icons" style="font-size: 16px; color: black;">person_add</span>
                                     </a>
                                     @endif
                                 </div>
@@ -114,4 +118,134 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Konfirmasi Nonaktif -->
+<div id="modalNonaktif" class="modal-bg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;width:420px;max-width:90%;padding:28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1f2937;">Konfirmasi Nonaktifkan</h3>
+        <p style="font-size:14px;color:#4b5563;margin:0 0 16px;">Apakah Anda yakin ingin menonaktifkan anggota berikut?</p>
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:20px;">
+            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">ID: <strong id="nonaktifId" style="color:#111827;"></strong></p>
+            <p style="margin:0;font-size:13px;color:#6b7280;">Nama: <strong id="nonaktifNama" style="color:#111827;"></strong></p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="closeNonaktifModal()" style="padding:8px 20px;background:#374151;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Batal</button>
+            <button id="btnKonfirmasiNonaktif" onclick="konfirmasiNonaktif()" style="padding:8px 20px;background:#dc2626;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Ya, Nonaktifkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Aktifkan -->
+<div id="modalAktifkan" class="modal-bg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;width:420px;max-width:90%;padding:28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#1f2937;">Konfirmasi Aktifkan</h3>
+        <p style="font-size:14px;color:#4b5563;margin:0 0 16px;">Apakah Anda yakin ingin mengaktifkan kembali anggota berikut?</p>
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:20px;">
+            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">ID: <strong id="aktifkanId" style="color:#111827;"></strong></p>
+            <p style="margin:0;font-size:13px;color:#6b7280;">Nama: <strong id="aktifkanNama" style="color:#111827;"></strong></p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="closeAktifkanModal()" style="padding:8px 20px;background:#374151;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Batal</button>
+            <button id="btnKonfirmasiAktifkan" onclick="konfirmasiAktifkan()" style="padding:8px 20px;background:#16a34a;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">Ya, Aktifkan</button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    var _nonaktifId = null;
+
+    function openNonaktifModal(el) {
+        _nonaktifId = el.getAttribute('data-id');
+        document.getElementById('nonaktifId').textContent = el.getAttribute('data-no');
+        document.getElementById('nonaktifNama').textContent = el.getAttribute('data-nama');
+        document.getElementById('modalNonaktif').style.display = 'flex';
+    }
+
+    function closeNonaktifModal() {
+        document.getElementById('modalNonaktif').style.display = 'none';
+        _nonaktifId = null;
+    }
+
+    function konfirmasiNonaktif() {
+        if (!_nonaktifId) return;
+        var btn = document.getElementById('btnKonfirmasiNonaktif');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Memproses...';
+
+        fetchAPI('/sekretaris/anggota/' + _nonaktifId + '/nonaktif', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(function(res) {
+            if (!res.success) { alert(res.message); btn.disabled = false; btn.innerHTML = 'Ya, Nonaktifkan'; return; }
+            closeNonaktifModal();
+            alert(res.message);
+            location.reload();
+        })
+        .catch(function(e) {
+            console.error(e);
+            alert('Gagal: ' + e.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Ya, Nonaktifkan';
+        });
+    }
+
+    document.getElementById('modalNonaktif').addEventListener('click', function(e) {
+        if (e.target === this) closeNonaktifModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeNonaktifModal(); closeAktifkanModal(); }
+    });
+
+    /* ── Reactivate Modal ── */
+    var _aktifkanId = null;
+
+    function openAktifkanModal(el) {
+        _aktifkanId = el.getAttribute('data-id');
+        document.getElementById('aktifkanId').textContent = el.getAttribute('data-no');
+        document.getElementById('aktifkanNama').textContent = el.getAttribute('data-nama');
+        document.getElementById('modalAktifkan').style.display = 'flex';
+    }
+
+    function closeAktifkanModal() {
+        document.getElementById('modalAktifkan').style.display = 'none';
+        _aktifkanId = null;
+    }
+
+    function konfirmasiAktifkan() {
+        if (!_aktifkanId) return;
+        var btn = document.getElementById('btnKonfirmasiAktifkan');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Memproses...';
+
+        fetchAPI('/sekretaris/anggota/' + _aktifkanId + '/aktifkan', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(function(res) {
+            if (!res.success) { alert(res.message); btn.disabled = false; btn.innerHTML = 'Ya, Aktifkan'; return; }
+            closeAktifkanModal();
+            alert(res.message);
+            location.reload();
+        })
+        .catch(function(e) {
+            console.error(e);
+            alert('Gagal: ' + e.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Ya, Aktifkan';
+        });
+    }
+
+    document.getElementById('modalAktifkan').addEventListener('click', function(e) {
+        if (e.target === this) closeAktifkanModal();
+    });
+</script>
+@endpush
 @endsection

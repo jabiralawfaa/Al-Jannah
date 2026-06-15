@@ -8,6 +8,7 @@ use App\Models\KeluargaAnggota;
 use App\Models\LogAktivitas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class SekretarisController extends Controller
 {
@@ -121,16 +122,56 @@ class SekretarisController extends Controller
 
     public function nonaktifAnggota($id)
     {
-        $anggota = Anggota::with('calonAnggota')->find($id);
+        return redirect()->route('sekretaris.anggota');
+    }
+
+    public function prosesNonaktifAnggota(Request $request, $id)
+    {
+        $anggota = Anggota::find($id);
 
         if (!$anggota) {
-            $anggota = (object) [
-                'id' => $id,
-                'nomor_anggota' => 'RKM-' . str_pad($id, 5, '0', STR_PAD_LEFT),
-                'nama' => 'Anggota',
-            ];
+            return response()->json(['success' => false, 'message' => 'Anggota tidak ditemukan.'], 404);
         }
 
-        return view('dashboard.sekretaris.anggota-nonaktif', compact('anggota'));
+        if ($anggota->status !== 'aktif') {
+            return response()->json(['success' => false, 'message' => 'Anggota ini sudah nonaktif.'], 422);
+        }
+
+        $anggota->update(['status' => 'non_aktif']);
+
+        LogAktivitas::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'nonaktif',
+            'deskripsi' => "Menonaktifkan anggota {$anggota->nama} - {$anggota->nomor_anggota}",
+            'modul' => 'Sekretaris',
+            'referensi_id' => $anggota->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => "Anggota {$anggota->nama} berhasil dinonaktifkan."]);
+    }
+
+    public function prosesAktifkanAnggota(Request $request, $id)
+    {
+        $anggota = Anggota::find($id);
+
+        if (!$anggota) {
+            return response()->json(['success' => false, 'message' => 'Anggota tidak ditemukan.'], 404);
+        }
+
+        if ($anggota->status !== 'non_aktif') {
+            return response()->json(['success' => false, 'message' => 'Anggota ini sudah aktif.'], 422);
+        }
+
+        $anggota->update(['status' => 'aktif']);
+
+        LogAktivitas::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'aktif',
+            'deskripsi' => "Mengaktifkan kembali anggota {$anggota->nama} - {$anggota->nomor_anggota}",
+            'modul' => 'Sekretaris',
+            'referensi_id' => $anggota->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => "Anggota {$anggota->nama} berhasil diaktifkan kembali."]);
     }
 }

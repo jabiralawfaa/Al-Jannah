@@ -36,7 +36,7 @@
         </div>
 
         <!-- Activity Header -->
-        <div style="background-color: var(--primary-900); padding: 10px 20px;">
+        <div style="background-color: var(--primary-500); padding: 10px 20px;">
             <h2 style="color: white; font-size: 14px; font-weight: 700; margin: 0;">Activity</h2>
         </div>
 
@@ -48,6 +48,7 @@
                     'verifikasi' => ['name' => 'verified', 'color' => '#16423c'],
                     'update' => ['name' => 'info', 'color' => '#2563eb'],
                     'nonaktif' => ['name' => 'error', 'color' => '#b91c1c'],
+                    'aktif' => ['name' => 'check_circle', 'color' => '#16a34a'],
                     default => ['name' => 'info', 'color' => '#6b7280'],
                 };
             @endphp

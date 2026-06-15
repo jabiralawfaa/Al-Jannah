@@ -72,6 +72,8 @@ Route::middleware(['auth', 'role:sekretaris,superadmin'])->group(function () {
     Route::get('/sekretaris/anggota/{id}/edit', [SekretarisController::class, 'editAnggota'])->name('sekretaris.anggota.edit');
 
     Route::get('/sekretaris/anggota/{id}/nonaktif', [SekretarisController::class, 'nonaktifAnggota'])->name('sekretaris.anggota.nonaktif');
+    Route::post('/sekretaris/anggota/{id}/nonaktif', [SekretarisController::class, 'prosesNonaktifAnggota'])->name('sekretaris.anggota.proses-nonaktif');
+    Route::post('/sekretaris/anggota/{id}/aktifkan', [SekretarisController::class, 'prosesAktifkanAnggota'])->name('sekretaris.anggota.proses-aktifkan');
 });
 
 Route::middleware('guest')->group(function () {

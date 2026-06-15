@@ -28,17 +28,18 @@
 
     <div class="card" style="border: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; border-radius: 12px; background-color: white;">
         <!-- Filter & Search Area -->
-        <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
-            <div style="display: flex; gap: 8px; background-color: white; padding: 4px; border-radius: 10px; border: 1px solid #d1d5db;">
-                <div style="background-color: #e5e7eb; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; color: black; border: 1px solid #9ca3af;">Semua ({{ $totalAnggota }})</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Aktif ({{ $anggotaAktif }})</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Non-Aktif ({{ $anggotaNonAktif }})</div>
-                <div style="padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563;">Verifikasi (0)</div>
-            </div>
-            <div style="position: relative; width: 280px;">
+        <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f3f4f6; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; gap: 10px;">
+            <form id="filterForm" method="GET" action="{{ route('sekretaris.anggota') }}" style="display: flex; gap: 8px; background-color: white; padding: 4px; border-radius: 10px; border: 1px solid #d1d5db;">
+                <button type="submit" name="status" value="all" style="background-color: {{ $statusFilter === 'all' ? '#e5e7eb' : 'transparent' }}; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; color: black; border: 1px solid {{ $statusFilter === 'all' ? '#9ca3af' : 'transparent' }};">Semua ({{ $totalAnggota }})</button>
+                <button type="submit" name="status" value="aktif" style="background-color: {{ $statusFilter === 'aktif' ? '#e5e7eb' : 'transparent' }}; padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563; border: 1px solid {{ $statusFilter === 'aktif' ? '#9ca3af' : 'transparent' }};">Aktif ({{ $anggotaAktif }})</button>
+                <button type="submit" name="status" value="non_aktif" style="background-color: {{ $statusFilter === 'non_aktif' ? '#e5e7eb' : 'transparent' }}; padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563; border: 1px solid {{ $statusFilter === 'non_aktif' ? '#9ca3af' : 'transparent' }};">Non-Aktif ({{ $anggotaNonAktif }})</button>
+                <input type="hidden" name="search" value="{{ $search }}">
+            </form>
+            <form id="searchForm" method="GET" action="{{ route('sekretaris.anggota') }}" style="position: relative; width: 280px;">
                 <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #4b5563; font-size: 20px;">search</span>
-                <input type="text" placeholder="Cari Nama Anggota..." style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #9ca3af; border-radius: 10px; font-size: 13px; outline: none; color: black;">
-            </div>
+                <input type="text" name="search" id="searchInput" placeholder="Cari Nama Anggota..." value="{{ $search }}" style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #9ca3af; border-radius: 10px; font-size: 13px; outline: none; color: black;">
+                <input type="hidden" name="status" value="{{ $statusFilter }}">
+            </form>
         </div>
 
         <!-- Table Header -->
@@ -61,7 +62,7 @@
                             <th style="background-color: transparent; color: black; font-weight: 800; font-size: 12px; padding: 12px 20px; border: 1px solid #94a3b8;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="anggotaTableBody">
                         @forelse($anggota as $item)
                         @php
                             $keluarga = optional($item->calonAnggota)->keluargaAnggota ?? collect();
@@ -248,4 +249,17 @@
     });
 </script>
 @endpush
+@endsection
+
+@section('scripts')
+<script>
+    // Auto submit search form with debounce
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            document.getElementById('searchForm').submit();
+        }, 500);
+    });
+</script>
 @endsection

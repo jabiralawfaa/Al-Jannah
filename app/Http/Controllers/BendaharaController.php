@@ -18,35 +18,399 @@ use OpenSpout\Writer\XLSX\Writer;
 
 class BendaharaController extends Controller
 {
+    // ---------------------------------------------------------------
+    //  Dashboard
+    // ---------------------------------------------------------------
+
     public function index()
     {
+        $now = now();
+        $bulanIni = $now->month;
+        $tahunIni = $now->year;
+        $bulanLalu = $bulanIni === 1 ? 12 : $bulanIni - 1;
+        $tahunLalu = $bulanIni === 1 ? $tahunIni - 1 : $tahunIni;
+
         $totalPemasukan = Pemasukan::sum('jumlah');
         $totalPengeluaran = Pengeluaran::sum('jumlah');
         $saldo = $totalPemasukan - $totalPengeluaran;
 
-        $pemasukan = Pemasukan::with('kategoriPemasukan')->latest()->take(5)->get();
-        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->latest()->take(5)->get();
+        $pemasukanBulanIni = Pemasukan::whereYear('created_at', $tahunIni)
+            ->whereMonth('created_at', $bulanIni)->sum('jumlah');
+        $pengeluaranBulanIni = Pengeluaran::whereYear('created_at', $tahunIni)
+            ->whereMonth('created_at', $bulanIni)->sum('jumlah');
 
-        $transaksi = collect()
-            ->merge($pemasukan->map(fn($p) => (object)[
-                'created_at' => $p->created_at,
-                'nama'       => $p->kategoriPemasukan?->nama ?? 'Pemasukan',
-                'jenis'      => 'pemasukan',
-                'nominal'    => $p->jumlah,
-                'keterangan' => $p->keterangan,
-            ]))
-            ->merge($pengeluaran->map(fn($p) => (object)[
-                'created_at' => $p->created_at,
-                'nama'       => $p->kategoriPengeluaran?->nama ?? 'Pengeluaran',
-                'jenis'      => 'pengeluaran',
-                'nominal'    => $p->jumlah,
-                'keterangan' => $p->keterangan,
-            ]))
-            ->sortByDesc('created_at')
-            ->take(5);
+        $pemasukanBulanLalu = Pemasukan::whereYear('created_at', $tahunLalu)
+            ->whereMonth('created_at', $bulanLalu)->sum('jumlah');
+        $pengeluaranBulanLalu = Pengeluaran::whereYear('created_at', $tahunLalu)
+            ->whereMonth('created_at', $bulanLalu)->sum('jumlah');
 
-        return view('dashboard.bendahara.index', compact('totalPemasukan', 'totalPengeluaran', 'saldo', 'transaksi'));
+        $persenPemasukan = $pemasukanBulanLalu > 0
+            ? round(($pemasukanBulanIni - $pemasukanBulanLalu) / $pemasukanBulanLalu * 100, 1) : 0;
+        $persenPengeluaran = $pengeluaranBulanLalu > 0
+            ? round(($pengeluaranBulanIni - $pengeluaranBulanLalu) / $pengeluaranBulanLalu * 100, 1) : 0;
+
+        $selisih = $pemasukanBulanIni - $pengeluaranBulanIni;
+        $menunggu = PermintaanIzin::menunggu()->count();
+        $disetujui = PermintaanIzin::disetujui()->count();
+        $ditolak = PermintaanIzin::ditolak()->count();
+        $totalTransaksi = Pemasukan::count() + Pengeluaran::count();
+
+        // Grafik Arus Kas Bulanan
+        $pemasukanBulanan = Pemasukan::selectRaw("CAST(strftime('%m', created_at) AS INTEGER) as bulan, SUM(jumlah) as total")
+            ->whereYear('created_at', $tahunIni)
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+        $pengeluaranBulanan = Pengeluaran::selectRaw("CAST(strftime('%m', created_at) AS INTEGER) as bulan, SUM(jumlah) as total")
+            ->whereYear('created_at', $tahunIni)
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+        $chartLabels = [];
+        $chartPemasukan = [];
+        $chartPengeluaran = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $chartLabels[] = \Carbon\Carbon::create()->month($m)->format('M');
+            $chartPemasukan[] = (float) ($pemasukanBulanan[$m] ?? 0);
+            $chartPengeluaran[] = (float) ($pengeluaranBulanan[$m] ?? 0);
+        }
+
+        // Grafik Pengeluaran per Kategori
+        $pengeluaranPerKategori = \DB::table('pengeluaran')
+            ->selectRaw('kategori_pengeluaran_id, SUM(jumlah) as total')
+            ->whereYear('created_at', $tahunIni)
+            ->groupBy('kategori_pengeluaran_id')
+            ->get();
+        $kategoriPengeluaranMap = KategoriPengeluaran::pluck('nama', 'id');
+        $kategoriLabels = [];
+        $kategoriData = [];
+        $totalPengeluaranKategori = $pengeluaranPerKategori->sum('total') ?: 1;
+        foreach ($pengeluaranPerKategori as $item) {
+            $nama = $kategoriPengeluaranMap[$item->kategori_pengeluaran_id] ?? 'Lainnya';
+            $kategoriLabels[] = $nama;
+            $kategoriData[] = [
+                'nominal' => (float) $item->total,
+                'persen' => round($item->total / $totalPengeluaranKategori * 100, 1),
+            ];
+        }
+
+        // Top 3 Kategori Pemasukan Bulan Ini
+        $topPemasukanRaw = \DB::table('pemasukan')
+            ->selectRaw('kategori_pemasukan_id, SUM(jumlah) as total')
+            ->whereYear('created_at', $tahunIni)
+            ->whereMonth('created_at', $bulanIni)
+            ->groupBy('kategori_pemasukan_id')
+            ->orderByDesc('total')
+            ->take(3)
+            ->get();
+        $kategoriPemasukanMap = KategoriPemasukan::pluck('nama', 'id');
+        $topPemasukanKategori = $topPemasukanRaw->map(fn($item) => (object)[
+            'nama' => $kategoriPemasukanMap[$item->kategori_pemasukan_id] ?? 'Lainnya',
+            'total' => (float) $item->total,
+        ]);
+
+        // Top 3 Kategori Pengeluaran Bulan Ini
+        $topPengeluaranRaw = \DB::table('pengeluaran')
+            ->selectRaw('kategori_pengeluaran_id, SUM(jumlah) as total')
+            ->whereYear('created_at', $tahunIni)
+            ->whereMonth('created_at', $bulanIni)
+            ->groupBy('kategori_pengeluaran_id')
+            ->orderByDesc('total')
+            ->take(3)
+            ->get();
+        $topPengeluaranKategori = $topPengeluaranRaw->map(fn($item) => (object)[
+            'nama' => $kategoriPengeluaranMap[$item->kategori_pengeluaran_id] ?? 'Lainnya',
+            'total' => (float) $item->total,
+        ]);
+
+        // Tabel Transaksi Terbaru
+        $transaksiMasuk = Pemasukan::with('kategoriPemasukan')
+            ->latest()->take(5)->get()->map(fn($p) => (object)[
+                'tanggal' => $p->created_at->format('d/m/Y'),
+                'keterangan' => $p->keterangan ?? $p->kategoriPemasukan?->nama ?? 'Pemasukan',
+                'jumlah' => (float) $p->jumlah,
+                'jumlah_fmt' => 'Rp ' . number_format($p->jumlah, 0, ',', '.'),
+                'jenis' => 'pemasukan',
+            ]);
+        $transaksiKeluar = Pengeluaran::with('kategoriPengeluaran')
+            ->latest()->take(5)->get()->map(fn($p) => (object)[
+                'tanggal' => $p->created_at->format('d/m/Y'),
+                'keterangan' => $p->keterangan ?? $p->kategoriPengeluaran?->nama ?? 'Pengeluaran',
+                'jumlah' => (float) $p->jumlah,
+                'jumlah_fmt' => 'Rp ' . number_format($p->jumlah, 0, ',', '.'),
+                'jenis' => 'pengeluaran',
+            ]);
+
+        // Ringkasan Iuran Anggota
+        $totalAnggotaAktif = Anggota::where('status', 'aktif')->count();
+        $anggotaSudahBayarTahunIni = Anggota::whereHas('iuranTahunan', function ($q) use ($tahunIni) {
+            $q->where('tahun', $tahunIni)->where('status', 'lunas');
+        })->count();
+        $anggotaBelumBayarTahunIni = $totalAnggotaAktif - $anggotaSudahBayarTahunIni;
+        $kepatuhanIuran = $totalAnggotaAktif > 0
+            ? round($anggotaSudahBayarTahunIni / $totalAnggotaAktif * 100, 1) : 0;
+
+        // Top Anggota Pembayar Iuran (sepanjang masa)
+        $topAnggotaIuranRaw = \DB::table('iuran_tahunan')
+            ->selectRaw('anggota_id, COUNT(*) as jumlah_bayar, SUM(nominal) as total_nominal')
+            ->where('status', 'lunas')
+            ->groupBy('anggota_id')
+            ->orderByDesc('jumlah_bayar')
+            ->orderByDesc('total_nominal')
+            ->take(5)
+            ->get();
+        $allAnggotaIds = $topAnggotaIuranRaw->pluck('anggota_id');
+        $allAnggotaMap = $allAnggotaIds->isNotEmpty()
+            ? Anggota::whereIn('id', $allAnggotaIds)->pluck('nama', 'id')
+            : collect();
+        $topAnggotaIuran = $topAnggotaIuranRaw->map(fn($item) => (object)[
+            'nama' => $allAnggotaMap[$item->anggota_id] ?? 'Unknown',
+            'jumlah_bayar' => (int) $item->jumlah_bayar,
+            'total_nominal' => (float) $item->total_nominal,
+        ]);
+
+        // Top Kontributor Pemasukan (5 kategori pemasukan terbesar sepanjang masa)
+        $topKontributorRaw = \DB::table('pemasukan')
+            ->selectRaw('kategori_pemasukan_id, SUM(jumlah) as total')
+            ->groupBy('kategori_pemasukan_id')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
+        $totalSemuaPemasukan = $totalPemasukan ?: 1;
+        $topKontributor = $topKontributorRaw->map(fn($item) => [
+            'nama' => $kategoriPemasukanMap[$item->kategori_pemasukan_id] ?? 'Lainnya',
+            'total' => (float) $item->total,
+            'total_fmt' => 'Rp ' . number_format($item->total, 0, ',', '.'),
+            'persen' => round($item->total / $totalSemuaPemasukan * 100, 1),
+        ]);
+
+        // Insight Keuangan Otomatis
+        $insightKategoriMasuk = $topPemasukanKategori->isNotEmpty()
+            ? $topPemasukanKategori->first()->nama : '-';
+        $insightPersenMasuk = $topPemasukanKategori->isNotEmpty()
+            ? round($topPemasukanKategori->first()->total / max($pemasukanBulanIni, 1) * 100, 1) : 0;
+        $insightKategoriKeluar = $topPengeluaranKategori->isNotEmpty()
+            ? $topPengeluaranKategori->first()->nama : '-';
+        $insightPersenKeluar = $topPengeluaranKategori->isNotEmpty()
+            ? round($topPengeluaranKategori->first()->total / max($pengeluaranBulanIni, 1) * 100, 1) : 0;
+        $insightAnggotaAktif = $topAnggotaIuran->isNotEmpty()
+            ? $topAnggotaIuran->first()->nama : '-';
+        $rasio = $totalPengeluaran > 0
+            ? round($totalPemasukan / $totalPengeluaran, 1) : ($totalPemasukan > 0 ? '∞' : '0');
+        $insightSaldo = $persenPemasukan;
+
+        return view('dashboard.bendahara.index', [
+            // --- Display-ready arrays (controller-built, view just loops) ---
+            'statCards' => $this->buildStatCards($saldo, $totalPemasukan, $pemasukanBulanIni, $pengeluaranBulanIni,
+                $totalTransaksi, $selisih, $menunggu, $persenPemasukan, $persenPengeluaran, $disetujui, $ditolak),
+            'iuranCards' => $this->buildIuranCards($totalAnggotaAktif, $anggotaSudahBayarTahunIni,
+                $anggotaBelumBayarTahunIni, $kepatuhanIuran),
+            'kategoriList' => $this->buildKategoriList($totalPemasukan, $totalPengeluaran,
+                $topPemasukanKategori, $topPengeluaranKategori),
+            'rankingList' => $this->buildRankingList($topAnggotaIuran, $topKontributor),
+            'insightList' => $this->buildInsightList($insightKategoriMasuk, $insightPersenMasuk,
+                $insightKategoriKeluar, $insightPersenKeluar, $insightAnggotaAktif, $rasio, $insightSaldo),
+
+            // --- Chart raw data (for JS) ---
+            'chartLabels' => $chartLabels,
+            'chartPemasukan' => $chartPemasukan,
+            'chartPengeluaran' => $chartPengeluaran,
+            'kategoriLabels' => $kategoriLabels,
+            'kategoriData' => $kategoriData,
+            'pemasukanBulanIni' => $pemasukanBulanIni,
+            'pengeluaranBulanIni' => $pengeluaranBulanIni,
+
+            // --- Data used directly in template ---
+            'transaksiMasuk' => $transaksiMasuk,
+            'transaksiKeluar' => $transaksiKeluar,
+            'kepatuhanIuran' => $kepatuhanIuran,
+        ]);
     }
+
+    // ---------------------------------------------------------------
+    //  Display-array builders
+    // ---------------------------------------------------------------
+
+    private function buildStatCards($saldo, $totalPemasukan, $pemasukanBulanIni, $pengeluaranBulanIni,
+        $totalTransaksi, $selisih, $menunggu, $persenPemasukan, $persenPengeluaran, $disetujui, $ditolak): array
+    {
+        $fmt = fn($n) => 'Rp ' . number_format($n, 0, ',', '.');
+
+        return [
+            [
+                'icon' => 'account_balance',         'color' => '#16423C,#1f5c53',
+                'label' => 'Total Saldo',             'value' => $fmt($saldo),                     'delay' => 1,
+            ],
+            [
+                'icon' => 'payments',                'color' => '#0369a1,#0284c7',
+                'label' => 'Saldo Kas',               'value' => $fmt($totalPemasukan),            'delay' => 2,
+            ],
+            [
+                'icon' => 'account_balance_wallet',  'color' => '#7c3aed,#8b5cf6',
+                'label' => 'Saldo Bank',              'value' => $fmt($pemasukanBulanIni),         'delay' => 3,
+            ],
+            [
+                'icon' => 'receipt_long',            'color' => '#0891b2,#06b6d4',
+                'label' => 'Total Transaksi',         'value' => $totalTransaksi,                  'delay' => 4,
+            ],
+            [
+                'icon' => 'trending_up',             'color' => '#059669,#10b981',
+                'label' => 'Pemasukan Bulan Ini',    'value' => $fmt($pemasukanBulanIni),         'delay' => 5,
+                'sub' => [
+                    'text' => abs($persenPemasukan) . '% dari bulan lalu',
+                    'class' => $persenPemasukan >= 0 ? 'up' : 'down',
+                    'icon' => $persenPemasukan >= 0 ? 'arrow_upward' : 'arrow_downward',
+                ],
+            ],
+            [
+                'icon' => 'trending_down',           'color' => '#dc2626,#ef4444',
+                'label' => 'Pengeluaran Bulan Ini',  'value' => $fmt($pengeluaranBulanIni),       'delay' => 6,
+                'sub' => [
+                    'text' => abs($persenPengeluaran) . '% dari bulan lalu',
+                    'class' => $persenPengeluaran <= 0 ? 'up' : 'down',
+                    'icon' => $persenPengeluaran <= 0 ? 'arrow_downward' : 'arrow_upward',
+                ],
+            ],
+            [
+                'icon' => 'swap_horiz',              'color' => '#d97706,#f59e0b',
+                'label' => 'Selisih Keuangan',       'value' => $fmt($selisih),                   'delay' => 7,
+                'value_class' => $selisih >= 0 ? 'text-green-600' : 'text-red-600',
+            ],
+            [
+                'icon' => 'pending_actions',         'color' => '#6366f1,#818cf8',
+                'label' => 'Menunggu Persetujuan',   'value' => $menunggu,                        'delay' => 8,
+                'sub' => [
+                    'text' => "Disetujui: {$disetujui} · Ditolak: {$ditolak}",
+                    'class' => 'neutral',
+                ],
+            ],
+        ];
+    }
+
+    private function buildIuranCards($totalAnggotaAktif, $anggotaSudahBayarTahunIni,
+        $anggotaBelumBayarTahunIni, $kepatuhanIuran): array
+    {
+        return [
+            [
+                'icon' => 'groups',           'color' => '#0d4f46,#1a6b5c',
+                'label' => 'Total Anggota Aktif',    'value' => $totalAnggotaAktif,               'delay' => 1,
+            ],
+            [
+                'icon' => 'check_circle',     'color' => '#059669,#10b981',
+                'label' => 'Sudah Bayar Iuran Tahun Ini', 'value' => $anggotaSudahBayarTahunIni,  'delay' => 2,
+            ],
+            [
+                'icon' => 'cancel',           'color' => '#dc2626,#ef4444',
+                'label' => 'Belum Bayar Iuran Tahun Ini', 'value' => $anggotaBelumBayarTahunIni,  'delay' => 3,
+            ],
+            [
+                'icon' => 'percent',          'color' => '#6366f1,#818cf8',
+                'label' => 'Kepatuhan Iuran',          'value' => $kepatuhanIuran . '%',           'delay' => 4,
+                'sub' => ['type' => 'progress', 'value' => $kepatuhanIuran],
+            ],
+        ];
+    }
+
+    private function buildKategoriList($totalPemasukan, $totalPengeluaran,
+        $topPemasukanKategori, $topPengeluaranKategori): array
+    {
+        $fmt = fn($n) => 'Rp ' . number_format($n, 0, ',', '.');
+        $buildItems = function ($items, $total) use ($fmt) {
+            return $items->map(fn($item) => [
+                'nama' => $item->nama,
+                'total' => $item->total,
+                'total_fmt' => $fmt($item->total),
+                'persen' => round($item->total / max($total, 1) * 100, 1),
+            ]);
+        };
+
+        $totalP = max($totalPemasukan, 1);
+        $totalR = max($totalPengeluaran, 1);
+
+        return [
+            [
+                'total' => $totalP,
+                'items' => $buildItems($topPemasukanKategori, $totalP),
+                'title' => 'Pemasukan',
+                'color' => '#059669',
+                'gradient' => '#059669,#10b981',
+            ],
+            [
+                'total' => $totalR,
+                'items' => $buildItems($topPengeluaranKategori, $totalR),
+                'title' => 'Pengeluaran',
+                'color' => '#dc2626',
+                'gradient' => '#dc2626,#ef4444',
+            ],
+        ];
+    }
+
+    private function buildRankingList($topAnggotaIuran, $topKontributor): array
+    {
+        $rank = fn($items, $detailFn) => $items->map(fn($e, $i) => [
+            'rank' => $i + 1,
+            'rank_class' => match ($i) { 0 => 'gold', 1 => 'silver', 2 => 'bronze', default => 'normal' },
+            'name' => is_object($e) ? $e->nama : $e['nama'],
+            'detail' => $detailFn($e),
+            'amount' => is_object($e)
+                ? 'Rp ' . number_format($e->total_nominal, 0, ',', '.')
+                : ($e['total_fmt'] ?? 'Rp ' . number_format($e['total'], 0, ',', '.')),
+        ])->values();
+
+        return [
+            [
+                'title' => 'Top Anggota Pembayar Iuran',
+                'items' => $rank($topAnggotaIuran, fn($e) => $e->jumlah_bayar . ' pembayaran'),
+                'empty' => 'Belum ada data iuran',
+            ],
+            [
+                'title' => 'Top Kontributor Pemasukan',
+                'items' => $rank($topKontributor, fn($e) => 'Kontribusi ' . $e['persen'] . '%'),
+                'empty' => 'Belum ada data pemasukan',
+            ],
+        ];
+    }
+
+    private function buildInsightList($insightKategoriMasuk, $insightPersenMasuk,
+        $insightKategoriKeluar, $insightPersenKeluar, $insightAnggotaAktif, $rasio, $insightSaldo): array
+    {
+        $rasioLabel = is_numeric($rasio) ? ($rasio > 1 ? 'lebih besar' : 'lebih kecil') : 'tidak terhingga';
+
+        return [
+            [
+                'type' => 'pemasukan',   'cls' => 'green',
+                'label' => 'Pemasukan Terbesar',
+                'value' => $insightKategoriMasuk,
+                'sub' => $insightPersenMasuk . '% dari total',
+            ],
+            [
+                'type' => 'pengeluaran', 'cls' => 'red',
+                'label' => 'Pengeluaran Terbesar',
+                'value' => $insightKategoriKeluar,
+                'sub' => $insightPersenKeluar . '% dari total',
+            ],
+            [
+                'type' => 'anggota',     'cls' => 'blue',
+                'label' => 'Anggota Iuran Teraktif',
+                'value' => $insightAnggotaAktif,
+                'sub' => 'Paling sering membayar iuran',
+            ],
+            [
+                'type' => 'rasio',       'cls' => 'amber',
+                'label' => 'Rasio Pemasukan/Pengeluaran',
+                'value' => $rasio . 'x',
+                'sub' => 'Total pemasukan ' . $rasioLabel . ' dari pengeluaran',
+            ],
+            [
+                'type' => 'saldo',       'cls' => 'purple',
+                'label' => 'Perubahan Saldo',
+                'value' => ($insightSaldo >= 0 ? '+' : '') . $insightSaldo . '%',
+                'sub' => 'Dibanding bulan lalu',
+            ],
+        ];
+    }
+
+    // ---------------------------------------------------------------
+    //  Catat Transaksi
+    // ---------------------------------------------------------------
 
     public function catatTransaksi()
     {
@@ -142,6 +506,10 @@ class BendaharaController extends Controller
         ]);
     }
 
+    // ---------------------------------------------------------------
+    //  Pemasukan / Pengeluaran
+    // ---------------------------------------------------------------
+
     public function pemasukan()
     {
         $pemasukan = Pemasukan::with('kategoriPemasukan')->latest()->paginate(20);
@@ -154,22 +522,6 @@ class BendaharaController extends Controller
         $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->latest()->paginate(20);
         $kategoriList = KategoriPengeluaran::all();
         return view('dashboard.bendahara.pengeluaran', compact('pengeluaran', 'kategoriList'));
-    }
-
-    public function iuran()
-    {
-        return view('dashboard.bendahara.iuran');
-    }
-
-    public function laporan()
-    {
-        return view('dashboard.bendahara.laporan');
-    }
-
-    public function verifikasi()
-    {
-        $calonAnggota = CalonAnggota::where('status', 'menunggu_verifikasi')->latest()->paginate(20);
-        return view('dashboard.bendahara.verifikasi', compact('calonAnggota'));
     }
 
     public function storePemasukan(Request $request)
@@ -234,6 +586,15 @@ class BendaharaController extends Controller
                 'keterangan' => $pengeluaran->keterangan ?? '-',
             ]
         ]);
+    }
+
+    // ---------------------------------------------------------------
+    //  Iuran
+    // ---------------------------------------------------------------
+
+    public function iuran()
+    {
+        return view('dashboard.bendahara.iuran');
     }
 
     public function getIuranData(Request $request)
@@ -370,6 +731,15 @@ class BendaharaController extends Controller
         ]);
     }
 
+    // ---------------------------------------------------------------
+    //  Laporan
+    // ---------------------------------------------------------------
+
+    public function laporan()
+    {
+        return view('dashboard.bendahara.laporan');
+    }
+
     public function getLaporanData(Request $request)
     {
         $search = $request->input('search', '');
@@ -434,6 +804,62 @@ class BendaharaController extends Controller
         ]);
     }
 
+    public function exportLaporan()
+    {
+        $pemasukan = Pemasukan::with('kategoriPemasukan')->get();
+        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get();
+
+        $transaksi = collect()
+            ->merge($pemasukan->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d-m-Y'),
+                'kategori' => $p->kategoriPemasukan?->nama ?? 'Pemasukan',
+                'nominal' => $p->jumlah,
+                'type' => 'masuk',
+            ]))
+            ->merge($pengeluaran->map(fn($p) => [
+                'tanggal' => $p->created_at->format('d-m-Y'),
+                'kategori' => $p->kategoriPengeluaran?->nama ?? 'Pengeluaran',
+                'nominal' => $p->jumlah,
+                'type' => 'keluar',
+            ]))
+            ->sortByDesc('tanggal')
+            ->values();
+
+        $totalPemasukan = $transaksi->where('type', 'masuk')->sum('nominal');
+        $totalPengeluaran = $transaksi->where('type', 'keluar')->sum('nominal');
+
+        $writer = new Writer();
+        $writer->openToBrowser('Laporan-Keuangan.xlsx');
+
+        $writer->addRow(Row::fromValues(['Tanggal', 'Kategori', 'Nominal', 'Status']));
+
+        foreach ($transaksi as $t) {
+            $nominal = $t['type'] === 'masuk'
+                ? '+ ' . number_format($t['nominal'], 0, ',', '.')
+                : '- ' . number_format($t['nominal'], 0, ',', '.');
+            $status = $t['type'] === 'masuk' ? 'Pemasukan' : 'Pengeluaran';
+            $writer->addRow(Row::fromValues([$t['tanggal'], $t['kategori'], $nominal, $status]));
+        }
+
+        $writer->addRow(Row::fromValues(['', '', '', '']));
+        $writer->addRow(Row::fromValues(['Total Pemasukan', '', 'Rp ' . number_format($totalPemasukan, 0, ',', '.'), '']));
+        $writer->addRow(Row::fromValues(['Total Pengeluaran', '', 'Rp ' . number_format($totalPengeluaran, 0, ',', '.'), '']));
+        $writer->addRow(Row::fromValues(['Saldo Akhir', '', 'Rp ' . number_format($totalPemasukan - $totalPengeluaran, 0, ',', '.'), '']));
+
+        $writer->close();
+        exit;
+    }
+
+    // ---------------------------------------------------------------
+    //  Verifikasi
+    // ---------------------------------------------------------------
+
+    public function verifikasi()
+    {
+        $calonAnggota = CalonAnggota::where('status', 'menunggu_verifikasi')->latest()->paginate(20);
+        return view('dashboard.bendahara.verifikasi', compact('calonAnggota'));
+    }
+
     public function getVerifikasiData()
     {
         $calon = CalonAnggota::where('status', 'menunggu_verifikasi')
@@ -485,6 +911,10 @@ class BendaharaController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // ---------------------------------------------------------------
+    //  Permintaan Izin
+    // ---------------------------------------------------------------
+
     public function storePermintaanIzin(Request $request)
     {
         $validated = $request->validate([
@@ -512,51 +942,5 @@ class BendaharaController extends Controller
             'message' => 'Permintaan akses edit berhasil dikirim ke ketua.',
             'data' => $permintaan,
         ]);
-    }
-
-    public function exportLaporan()
-    {
-        $pemasukan = Pemasukan::with('kategoriPemasukan')->get();
-        $pengeluaran = Pengeluaran::with('kategoriPengeluaran')->get();
-
-        $transaksi = collect()
-            ->merge($pemasukan->map(fn($p) => [
-                'tanggal' => $p->created_at->format('d-m-Y'),
-                'kategori' => $p->kategoriPemasukan?->nama ?? 'Pemasukan',
-                'nominal' => $p->jumlah,
-                'type' => 'masuk',
-            ]))
-            ->merge($pengeluaran->map(fn($p) => [
-                'tanggal' => $p->created_at->format('d-m-Y'),
-                'kategori' => $p->kategoriPengeluaran?->nama ?? 'Pengeluaran',
-                'nominal' => $p->jumlah,
-                'type' => 'keluar',
-            ]))
-            ->sortByDesc('tanggal')
-            ->values();
-
-        $totalPemasukan = $transaksi->where('type', 'masuk')->sum('nominal');
-        $totalPengeluaran = $transaksi->where('type', 'keluar')->sum('nominal');
-
-        $writer = new Writer();
-        $writer->openToBrowser('Laporan-Keuangan.xlsx');
-
-        $writer->addRow(Row::fromValues(['Tanggal', 'Kategori', 'Nominal', 'Status']));
-
-        foreach ($transaksi as $t) {
-            $nominal = $t['type'] === 'masuk'
-                ? '+ ' . number_format($t['nominal'], 0, ',', '.')
-                : '- ' . number_format($t['nominal'], 0, ',', '.');
-            $status = $t['type'] === 'masuk' ? 'Pemasukan' : 'Pengeluaran';
-            $writer->addRow(Row::fromValues([$t['tanggal'], $t['kategori'], $nominal, $status]));
-        }
-
-        $writer->addRow(Row::fromValues(['', '', '', '']));
-        $writer->addRow(Row::fromValues(['Total Pemasukan', '', 'Rp ' . number_format($totalPemasukan, 0, ',', '.'), '']));
-        $writer->addRow(Row::fromValues(['Total Pengeluaran', '', 'Rp ' . number_format($totalPengeluaran, 0, ',', '.'), '']));
-        $writer->addRow(Row::fromValues(['Saldo Akhir', '', 'Rp ' . number_format($totalPemasukan - $totalPengeluaran, 0, ',', '.'), '']));
-
-        $writer->close();
-        exit;
     }
 }

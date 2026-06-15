@@ -26,7 +26,7 @@
         <h1>Catat Transaksi</h1>
         <p class="subtitle">Pencatatan transaksi keuangan RKM Al-Jannah</p>
     </div>
-    <button class="btn-primary" onclick="openModalTransaksi()" style="display:inline-flex;align-items:center;gap:6px;">
+    <button class="btn-primary" onclick="openModalTransaksi()" data-loading data-loading-text="Membuka..." style="display:inline-flex;align-items:center;gap:6px;">
         <span class="material-icons" style="font-size:18px;">add</span>
         Tambah Transaksi
     </button>
@@ -88,6 +88,7 @@
 
 <script>
     function openModalTransaksi() {
+        enableBtn();
         document.getElementById('modalTransaksi').classList.add('active');
         document.getElementById('formTipe').value = 'pemasukan';
         document.getElementById('formTanggal').value = '';
@@ -116,6 +117,7 @@
     });
 
     function simpanTransaksi() {
+        var btn = window._loadingBtn;
         var tipe = document.getElementById('formTipe').value;
         var tanggal = document.getElementById('formTanggal').value;
         var kategori = document.getElementById('formKategori').value;
@@ -123,8 +125,8 @@
         var keterangan = document.getElementById('formKeterangan').value;
         var file = document.querySelector('#modalTransaksi .file-upload input[type=file]');
 
-        if (!tanggal || !kategori || !nominal) { alert('Harap isi tanggal, kategori, dan nominal.'); return; }
-        if (!file || !file.files[0]) { alert('Harap upload bukti transaksi.'); return; }
+        if (!tanggal || !kategori || !nominal) { enableBtn(btn); alert('Harap isi tanggal, kategori, dan nominal.'); return; }
+        if (!file || !file.files[0]) { enableBtn(btn); alert('Harap upload bukti transaksi.'); return; }
 
         var formData = new FormData();
         formData.append('tipe', tipe);
@@ -134,29 +136,26 @@
         formData.append('keterangan', keterangan);
         formData.append('file_bukti', file.files[0]);
 
-        fetch('/bendahara/catat-transaksi', {
+        fetchAPI('/bendahara/catat-transaksi', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: formData
         })
-        .then(function(r) { return r.json(); })
         .then(function(res) {
             closeModalTransaksi();
-            if (!res.success) return alert(res.message || 'Gagal menyimpan');
+            if (!res.success) { enableBtn(btn); return alert(res.message || 'Gagal menyimpan'); }
             var d = res.data;
             var emptyRow = document.getElementById('emptyRowTransaksi');
             if (emptyRow) emptyRow.remove();
             var tbody = document.getElementById('riwayatTransaksiBody');
             var row = document.createElement('tr');
-            var tipeLower = d.tipe === 'Pemasukan' ? 'pemasukan' : 'pengeluaran';
-            var tipeClass = d.tipe === 'Pemasukan' ? 'background:#d1fae5;color:#065f46;' : 'background:#fee2e2;color:#991b1b;';
-            var fileUrl = d.file_url || '';
-            row.innerHTML = '<tr data-target-table="' + tipeLower + '" data-jumlah="' + d.jumlah + '" data-kategori="' + (d.kategori || '') + '" data-keterangan="' + (d.keterangan || '') + '" data-tanggal="' + d.tanggal + '" data-tipe="' + d.tipe + '" data-file-url="' + fileUrl + '"><td data-target-id="' + d.id + '">' + d.tanggal + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;' + tipeClass + '">' + d.tipe + '</span></td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-icon btn-info" onclick="openInfoModal(this)" title="Detail Transaksi"><span class="material-icons">info</span></button><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td></tr>';
             tbody.insertBefore(row, tbody.firstChild);
+            row.outerHTML = '<tr data-target-table="' + (d.tipe === 'Pemasukan' ? 'pemasukan' : 'pengeluaran') + '" data-jumlah="' + d.jumlah + '" data-kategori="' + (d.kategori || '') + '" data-keterangan="' + (d.keterangan || '') + '" data-tanggal="' + d.tanggal + '" data-tipe="' + d.tipe + '" data-file-url="' + (d.file_url || '') + '"><td data-target-id="' + d.id + '">' + d.tanggal + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;' + (d.tipe === 'Pemasukan' ? 'background:#d1fae5;color:#065f46;' : 'background:#fee2e2;color:#991b1b;') + '">' + d.tipe + '</span></td><td class="nominal-value">Rp ' + Number(d.jumlah).toLocaleString('id-ID') + '</td><td class="name-cell">' + d.kategori + '</td><td>' + (d.keterangan || '-') + '</td><td><button class="btn-icon btn-info" onclick="openInfoModal(this)" title="Detail Transaksi"><span class="material-icons">info</span></button><button class="btn-edit-disabled" onclick="openModal(this)"><span class="material-icons">lock</span> Edit</button></td></tr>';
             document.getElementById('toastSuccess').style.display = 'flex';
             setTimeout(function() { document.getElementById('toastSuccess').style.display = 'none'; }, 3500);
+            enableBtn(btn);
         })
-        .catch(function() { alert('Terjadi kesalahan'); });
+        .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
     }
 
     function openInfoModal(btn) {
@@ -247,7 +246,7 @@
         </div>
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeModalTransaksi()">Batal</button>
-            <button class="btn-minta" onclick="simpanTransaksi()">Simpan</button>
+            <button class="btn-minta" data-loading onclick="simpanTransaksi()">Simpan</button>
         </div>
     </div>
 </div>
@@ -333,7 +332,7 @@
         </div>
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeModal()">Batal</button>
-            <button class="btn-minta" onclick="requestAccess()">Kirim Permintaan</button>
+            <button class="btn-minta" data-loading onclick="requestAccess()">Kirim Permintaan</button>
         </div>
     </div>
 </div>

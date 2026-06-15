@@ -70,7 +70,7 @@
         </div>
 
         <div class="btn-row">
-            <button type="button" class="btn-primary" onclick="catatPengeluaran()">
+            <button type="button" class="btn-primary" onclick="catatPengeluaran()" data-loading>
                 <span class="material-icons">print</span>
                 Catat dan Cetak Kwitansi
             </button>
@@ -123,23 +123,23 @@
 
 <script>
     function catatPengeluaran() {
+        var btn = window._loadingBtn;
         var formData = new FormData();
         formData.append('tanggal', document.getElementById('tanggalPengeluaran').value);
         formData.append('kategori_pengeluaran_id', document.getElementById('jenisPengeluaran').value);
         formData.append('jumlah', document.getElementById('nominalPengeluaran').value.replace(/[^0-9]/g, ''));
         formData.append('keterangan', document.getElementById('keteranganPengeluaran').value);
         var fileInput = document.querySelector('#keteranganPengeluaran').closest('.form-row-2').querySelector('.file-upload input[type=file]');
-        if (!fileInput || !fileInput.files[0]) { alert('Harap upload bukti transaksi.'); return; }
+        if (!fileInput || !fileInput.files[0]) { enableBtn(btn); alert('Harap upload bukti transaksi.'); return; }
         formData.append('file_bukti', fileInput.files[0]);
 
-        fetch('/bendahara/pengeluaran', {
+        fetchAPI('/bendahara/pengeluaran', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: formData
         })
-        .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (!res.success) return alert('Gagal menyimpan data');
+            if (!res.success) { enableBtn(btn); return alert(res.message || 'Gagal menyimpan data'); }
             var d = res.data;
             var emptyRow = document.getElementById('emptyRowPengeluaran');
             if (emptyRow) emptyRow.remove();
@@ -153,8 +153,9 @@
             document.getElementById('keteranganPengeluaran').value = '';
             var upl = document.querySelector('.file-upload .upload-placeholder');
             if (upl) upl.textContent = 'Upload here...';
+            enableBtn(btn);
         })
-        .catch(function() { alert('Terjadi kesalahan'); });
+        .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
     }
 </script>
 @endsection
@@ -198,7 +199,7 @@
         </div>
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeModal()">Batal</button>
-            <button class="btn-minta" onclick="requestAccess()">Kirim Permintaan</button>
+            <button class="btn-minta" onclick="requestAccess()" data-loading>Kirim Permintaan</button>
         </div>
     </div>
 </div>

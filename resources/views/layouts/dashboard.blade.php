@@ -10,10 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- <link rel="stylesheet" href="{{ asset('css/bendahara.css') }}"> -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        [data-loading].btn-is-loading { pointer-events: none; position: relative; }
+        .btn-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: btnSpin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
+    </style>
     @livewireStyles
     @stack('styles')
+    <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js')}</script>
 </head>
 <body>
+    @include('components.preloader')
     @include('components.dashboard.navbar')
     <div class="dashboard-container">
         @include('components.dashboard.sidebar', ['menuItems' => $menuItems ?? []])
@@ -56,6 +63,7 @@
         };
         window.closeModal = function() { modal.classList.remove('active'); window._editRow = null; };
         window.requestAccess = function() {
+            var btn = window._loadingBtn;
             var table = document.getElementById('modalTargetTable').value;
             var id = document.getElementById('modalTargetId').value;
             var field = document.getElementById('modalFieldName').value;
@@ -64,9 +72,9 @@
                 ? document.getElementById('modalNewKategori').value
                 : document.getElementById('modalNewValue').value;
             var alasan = document.getElementById('modalAlasan').value;
-            if (!field || !alasan) { alert('Harap isi kolom yang ingin diubah dan alasan.'); return; }
-            if (!newVal) { alert('Harap isi nilai baru.'); return; }
-            if (!table || !id) { alert('Data target tidak ditemukan.'); return; }
+            if (!field || !alasan) { enableBtn(btn); alert('Harap isi kolom yang ingin diubah dan alasan.'); return; }
+            if (!newVal) { enableBtn(btn); alert('Harap isi nilai baru.'); return; }
+            if (!table || !id) { enableBtn(btn); alert('Data target tidak ditemukan.'); return; }
             var formData = new FormData();
             formData.append('target_table', table);
             formData.append('target_id', id);
@@ -74,12 +82,11 @@
             formData.append('old_value', oldVal);
             formData.append('new_value', newVal);
             formData.append('alasan', alasan);
-            fetch('/bendahara/permintaan-izin', {
+            fetchAPI('/bendahara/permintaan-izin', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: formData
             })
-            .then(function(r) { return r.json(); })
             .then(function(res) {
                 closeModal();
                 if (res.success) {
@@ -91,8 +98,9 @@
                 } else {
                     alert(res.message || 'Gagal mengirim permintaan');
                 }
+                enableBtn(btn);
             })
-            .catch(function() { alert('Terjadi kesalahan'); });
+            .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
         };
         document.addEventListener('change', function(e) {
             if (e.target.id !== 'modalFieldName') return;
@@ -151,6 +159,57 @@
         document.getElementById('keterangan' + prefix).value = '';
         document.querySelector('.file-upload .upload-placeholder').textContent = 'Upload here...';
     }
+    // ── Loading button handler ──
+    window._loadingBtn = null;
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-loading]');
+        if (!btn || btn.disabled) return;
+        window._loadingBtn = btn;
+        var orig = btn.getAttribute('data-orig-html');
+        if (!orig) btn.setAttribute('data-orig-html', btn.innerHTML);
+        btn.disabled = true;
+        btn.classList.add('btn-is-loading');
+        btn.innerHTML = '<span class="btn-spinner"></span> ' + (btn.getAttribute('data-loading-text') || 'Memproses...');
+        btn._loadingTimer = setTimeout(function() { window.enableBtn(); }, 30000);
+    }, true);
+    window.enableBtn = function(btn) {
+        btn = btn || window._loadingBtn;
+        if (!btn) return;
+        clearTimeout(btn._loadingTimer);
+        btn.disabled = false;
+        btn.classList.remove('btn-is-loading');
+        var orig = btn.getAttribute('data-orig-html');
+        if (orig) btn.innerHTML = orig;
+        window._loadingBtn = null;
+    };
+    window.fetchAPI = function(url, opts) {
+        return fetch(url, opts).then(function(r) {
+            if (!r.ok) {
+                return r.text().then(function(text) {
+                    try {
+                        var body = JSON.parse(text);
+                        throw new Error(body.message || 'Error server: ' + r.status);
+                    } catch(e) {
+                        if (e instanceof SyntaxError) {
+                            console.error('fetchAPI: JSON parse failed. Status:', r.status, 'Body:', text.substring(0,500));
+                            throw new Error('Error server: ' + r.status);
+                        }
+                        throw e;
+                    }
+                });
+            }
+            return r.json();
+        });
+    };
+    window.addEventListener('pageshow', function() {
+        document.querySelectorAll('[data-loading]').forEach(function(el) {
+            el.disabled = false;
+            el.classList.remove('btn-is-loading');
+            var orig = el.getAttribute('data-orig-html');
+            if (orig) { el.innerHTML = orig; el.removeAttribute('data-orig-html'); }
+        });
+        window._loadingBtn = null;
+    });
     </script>
     @stack('scripts')
     @livewireScripts

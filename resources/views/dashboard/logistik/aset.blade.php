@@ -24,7 +24,7 @@
     <div style="margin-bottom: 20px;">
         <div style="position: relative; width: 100%;">
             <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #5f716d; font-size: 18px;">search</span>
-            <input type="text" placeholder="Cari kendaraan/aset..." style="width: 100%; padding: 8px 12px 8px 40px; background-color: white; border: 1px solid #b7c8c2; border-radius: 999px; font-size: 13px; outline: none; color: black; height: 38px;">
+            <input type="text" id="searchInput" placeholder="Cari nama, plat, tipe, status..." oninput="filterTable(this, 'aset-table', 'aset-empty')" style="width: 100%; padding: 8px 12px 8px 40px; background-color: white; border: 1px solid #b7c8c2; border-radius: 999px; font-size: 13px; outline: none; color: black; height: 38px;">
         </div>
     </div>
 
@@ -47,34 +47,28 @@
                     </thead>
                     <tbody>
                         @php
-                            $asetList = [
-                                [
-                                    'nama' => 'Toyota Hiace',
-                                    'plat' => 'W 1234 XYZ',
-                                    'tipe' => 'Mobil',
-                                    'status' => 'Dipakai',
-                                    'statusBg' => '#2563eb',
-                                    'kondisi' => 'Baik & Layak Jalan',
-                                ],
-                                [
-                                    'nama' => 'Suzuki Carry',
-                                    'plat' => 'W 5678 YZA',
-                                    'tipe' => 'Mobil',
-                                    'status' => 'Tersedia',
-                                    'statusBg' => '#166534',
-                                    'kondisi' => 'Baik',
-                                ],
+                            $statusLabel = [
+                                'tersedia' => 'Tersedia',
+                                'dipinjam' => 'Dipinjam',
+                                'rusak' => 'Rusak',
+                                'dihapus' => 'Dihapus',
+                            ];
+                            $statusBg = [
+                                'tersedia' => '#166534',
+                                'dipinjam' => '#2563eb',
+                                'rusak' => '#dc2626',
+                                'dihapus' => '#6b7280',
                             ];
                         @endphp
-                        @foreach($asetList as $item)
+                        @forelse($aset as $item)
                         <tr>
-                            <td style="padding: 12px 20px; font-weight: 500; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['nama'] }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['plat'] }}</td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['tipe'] }}</td>
+                            <td style="padding: 12px 20px; font-weight: 500; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->nama_aset }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->nomor_plat_seri ?? '-' }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->kategoriAset->nama ?? '-' }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2; text-align: center;">
-                                <span style="background-color: {{ $item['statusBg'] }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $item['status'] }}</span>
+                                <span style="background-color: {{ $statusBg[$item->status] ?? '#6b7280' }}; color: white; padding: 4px 20px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; min-width: 80px;">{{ $statusLabel[$item->status] ?? ucfirst($item->status) }}</span>
                             </td>
-                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item['kondisi'] }}</td>
+                            <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">-</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     <button onclick="openModal('statusModal')" style="background-color: var(--primary-900); border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -86,7 +80,11 @@
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr id="aset-empty">
+                            <td colspan="6" style="padding: 20px; text-align: center; color: #6b7280; font-size: 13px;">Belum ada data aset.</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -185,6 +183,27 @@ function openModal(id) {
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
+
+function filterTable(input, tableId, emptyId) {
+    var search = input.value.toLowerCase().trim();
+    var rows = document.querySelectorAll('#' + tableId + ' tbody tr');
+    var visible = 0;
+    rows.forEach(function(row) {
+        if (row.id === emptyId) return;
+        var text = row.textContent.toLowerCase();
+        if (search === '' || text.indexOf(search) !== -1) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    var emptyRow = document.getElementById(emptyId);
+    if (emptyRow) {
+        emptyRow.style.display = (visible === 0 && search !== '') ? '' : 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var modals = ['tambahAsetModal', 'statusModal', 'hapusAsetModal'];
     modals.forEach(function(id) {

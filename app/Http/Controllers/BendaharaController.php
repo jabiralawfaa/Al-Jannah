@@ -490,7 +490,7 @@ class BendaharaController extends Controller
             $kategori = $model->kategoriPengeluaran?->nama ?? '-';
         }
 
-        $model->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
+        $model->addMedia($request->file('file_bukti'))->withCustomProperties(['uploaded_by' => auth()->id()])->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -542,7 +542,7 @@ class BendaharaController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        $pemasukan->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
+        $pemasukan->addMedia($request->file('file_bukti'))->withCustomProperties(['uploaded_by' => auth()->id()])->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -574,7 +574,7 @@ class BendaharaController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        $pengeluaran->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
+        $pengeluaran->addMedia($request->file('file_bukti'))->withCustomProperties(['uploaded_by' => auth()->id()])->toMediaCollection('bukti');
 
         return response()->json([
             'success' => true,
@@ -704,7 +704,7 @@ class BendaharaController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        $pemasukan->addMedia($request->file('file_bukti'))->toMediaCollection('bukti');
+        $pemasukan->addMedia($request->file('file_bukti'))->withCustomProperties(['uploaded_by' => auth()->id()])->toMediaCollection('bukti');
 
         for ($b = $validated['bulan_mulai']; $b <= $bulanAkhir; $b++) {
             IuranTahunan::create([

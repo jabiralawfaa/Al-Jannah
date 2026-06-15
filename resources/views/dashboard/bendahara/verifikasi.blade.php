@@ -64,7 +64,7 @@
                     '<td style="font-weight:600;">' + row.nama + '</td>' +
                     '<td>' + row.telepon + '</td>' +
                     '<td><span class="badge-status belum-lunas">' + row.status + '</span></td>' +
-                    '<td><button class="btn-action sudah-dibayar" onclick="verifikasi(' + row.id + ')">Sudah Membayar</button></td>' +
+                    '<td><button class="btn-action sudah-dibayar" data-loading onclick="verifikasi(' + row.id + ')">Sudah Membayar</button></td>' +
                 '</tr>';
             }
             if (!data.length) {
@@ -74,15 +74,18 @@
         }
 
         window.verifikasi = function(id) {
-            if (!confirm('Konfirmasi pembayaran Rp 30.000 untuk calon anggota ini?')) return;
-            fetch('/bendahara/verifikasi/' + id, {
+            var btn = window._loadingBtn;
+            if (!confirm('Konfirmasi pembayaran Rp 30.000 untuk calon anggota ini?')) { enableBtn(btn); return; }
+            fetchAPI('/bendahara/verifikasi/' + id, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             })
-            .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success) fetchVerifikasiData();
-            });
+                else alert(res.message || 'Gagal verifikasi');
+                enableBtn(btn);
+            })
+            .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
         };
 
         fetchVerifikasiData();

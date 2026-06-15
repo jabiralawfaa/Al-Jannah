@@ -1,114 +1,127 @@
-// Service Worker untuk Image Caching
-const CACHE_NAME = 'rkm-al-jannah-v1';
-const IMAGE_CACHE_NAME = 'rkm-images-v1';
+// Service Worker untuk RKM Al-Jannah
+// Caching strategy: preloader shell + page caching + image caching
+var CACHE_SHELL = 'rkm-shell-v2';
+var CACHE_PAGES = 'rkm-pages-v3';
+var CACHE_IMAGES = 'rkm-images-v2';
 
-// URLs yang akan di-cache saat install
-const STATIC_ASSETS = [
-    '/',
+var STATIC_ASSETS = [
+    '/preloader.html',
     '/images/logo-al-jannah.png',
     '/images/ranting.png',
     '/images/pohon.png',
     '/images/bottom-ornament.png',
 ];
 
-// Install Event - Cache static assets
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('Service Worker: Caching static assets');
+// Install: cache shell + static assets
+self.addEventListener('install', function (e) {
+    e.waitUntil(
+        caches.open(CACHE_SHELL).then(function (cache) {
             return cache.addAll(STATIC_ASSETS);
+        }).then(function () {
+            return self.skipWaiting();
         })
     );
-    self.skipWaiting();
 });
 
-// Activate Event - Clean old caches
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE_NAME) {
-                        console.log('Service Worker: Clearing old cache', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
+// Activate: clean old caches, claim all clients
+self.addEventListener('activate', function (e) {
+    var cachesToKeep = [CACHE_SHELL, CACHE_PAGES, CACHE_IMAGES];
+    e.waitUntil(
+        caches.keys().then(function (names) {
+            return Promise.all(names.map(function (n) {
+                if (cachesToKeep.indexOf(n) === -1) return caches.delete(n);
+            }));
+        }).then(function () {
+            return self.clients.claim();
         })
     );
-    self.clients.claim();
 });
 
-// Fetch Event - Serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
-    const { request } = event;
-    const url = new URL(request.url);
+// Fetch: navigation, images, static assets
+self.addEventListener('fetch', function (e) {
+    var url = new URL(e.request.url);
 
-    // SKIP: Ignore non-HTTP/HTTPS requests (chrome-extension, moz-extension, etc.)
-    if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
+    // Only handle same-origin GET requests
+    if (e.request.method !== 'GET') return;
+    if (url.origin !== self.location.origin) return;
+
+    // Bypass parameter — fetch fresh from network (used by preloader.html hydration)
+    if (url.searchParams.has('__preloader_bypass')) {
+        e.respondWith(fetch(e.request));
         return;
     }
 
-    // SKIP: Ignore requests from browser extensions
-    // Check if request is from a different origin (extensions, external sites, etc.)
-    const isSameOrigin = url.origin === self.location.origin;
-    
-    if (!isSameOrigin) {
-        // Allow images from trusted CDNs (Unsplash, etc.)
-        const allowedImageDomains = ['images.unsplash.com', 'unsplash.com'];
-        const isAllowedImage = allowedImageDomains.includes(url.hostname) && isImageRequest(request);
-        
-        if (!isAllowedImage) {
-            return; // Skip caching for other external requests
-        }
-    }
+    // Skip non-HTML downloads — let browser handle directly
+    if (isDownloadRequest(e.request)) return;
 
-    // Only cache image requests
-    if (isImageRequest(request)) {
-        event.respondWith(
-            caches.open(IMAGE_CACHE_NAME).then((cache) => {
-                return cache.match(request).then((cachedResponse) => {
-                    if (cachedResponse) {
-                        console.log('Service Worker: Serving from cache', request.url);
-                        // Return cached image immediately
-                        return cachedResponse;
-                    }
-                    
-                    // Not in cache, fetch from network
-                    return fetch(request).then((networkResponse) => {
-                        // Only cache successful responses
-                        if (networkResponse.ok) {
-                            cache.put(request, networkResponse.clone());
-                            console.log('Service Worker: Caching new image', request.url);
+    // Navigation requests (HTML pages)
+    if (e.request.mode === 'navigate') {
+        e.respondWith(
+            caches.match('/preloader.html').then(function (preloader) {
+                if (preloader) {
+                    // Fetch real page from network, cache for offline, show preloader while loading
+                    var fetchPromise = fetch(e.request).then(function (res) {
+                        if (res.ok) {
+                            var clone = res.clone();
+                            caches.open(CACHE_PAGES).then(function (cache) {
+                                cache.put(e.request, clone);
+                            });
                         }
-                        return networkResponse;
+                        return res;
+                    }).catch(function () {
+                        return caches.match(e.request);
                     });
+                    e.waitUntil(fetchPromise);
+                    return preloader;
+                }
+                return fetch(e.request).then(function (res) {
+                    if (res.ok) {
+                        var clone = res.clone();
+                        caches.open(CACHE_PAGES).then(function (cache) {
+                            cache.put(e.request, clone);
+                        });
+                    }
+                    return res;
                 });
             })
         );
+        return;
     }
-    // For non-image requests, use network first
-    else {
-        event.respondWith(
-            fetch(request).catch(() => {
-                return caches.match(request);
+
+    // Image requests
+    if (isImageRequest(e.request)) {
+        e.respondWith(
+            caches.match(e.request).then(function (cached) {
+                if (cached) return cached;
+                return fetch(e.request).then(function (res) {
+                    if (res.ok) {
+                        var clone = res.clone();
+                        caches.open(CACHE_IMAGES).then(function (cache) {
+                            cache.put(e.request, clone);
+                        });
+                    }
+                    return res;
+                }).catch(function () {
+                    return caches.match(e.request);
+                });
             })
         );
+        return;
     }
 });
 
-// Helper function to check if request is for an image
 function isImageRequest(request) {
-    const url = new URL(request.url);
-    const pathname = url.pathname.toLowerCase();
-    
-    // Check if it's an image file extension
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico'];
-    const isImageExtension = imageExtensions.some(ext => pathname.endsWith(ext));
-    
-    // Check if it's from Unsplash or other image CDN
-    const isImageCDN = url.hostname.includes('unsplash.com') || 
-                       url.hostname.includes('images.unsplash.com');
-    
-    return isImageExtension || isImageCDN;
+    var url = new URL(request.url);
+    var path = url.pathname.toLowerCase();
+    var exts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico', '.avif'];
+    return exts.some(function (e) { return path.endsWith(e); });
+}
+
+function isDownloadRequest(request) {
+    var url = new URL(request.url);
+    var path = url.pathname.toLowerCase();
+    var exts = ['.xlsx', '.xls', '.pdf', '.docx', '.doc', '.zip', '.csv', '.ods'];
+    if (exts.some(function (e) { return path.endsWith(e); })) return true;
+    if (path.indexOf('/export') !== -1) return true;
+    return false;
 }

@@ -46,6 +46,7 @@ class EditorUploadController extends Controller
 
         $fileRecord
             ->addMedia($uploadedFile->getRealPath())
+            ->withCustomProperties(['uploaded_by' => auth()->id()])
             ->usingFileName(FileRenamer::rename($originalName))
             ->toMediaCollection('uploads');
 

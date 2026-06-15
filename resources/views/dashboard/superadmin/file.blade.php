@@ -40,6 +40,10 @@
                         {{ $label }}
                     </a>
                 @endforeach
+                <a href="{{ route('superadmin.file', ['kategori' => 'media']) }}"
+                   class="btn btn-sm {{ request('kategori') === 'media' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    Media Lain
+                </a>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openUploadModal()" style="display: inline-flex; align-items: center; gap: 4px;">
                 <span class="material-icons" style="font-size: 16px;">upload</span> Upload File
@@ -49,61 +53,36 @@
 
     <x-dashboard.data-table
         title="Daftar File"
-        :headers="['Nomor', 'Nama File', 'Kategori', 'Ukuran', 'Tipe', 'Status', 'Diupload Oleh', 'Aksi']"
+        :headers="['Nomor', 'Nama File', 'Sumber', 'Kategori', 'Ukuran', 'Tipe', 'Status', 'Diupload Oleh', 'Aksi']"
         :paginator="$files"
         search-placeholder="Cari file..."
     >
         @forelse($files as $index => $file)
             @php
-                $spatieMedia = $file->getFirstMedia('uploads');
-                $fileSize = $spatieMedia?->size ?? 0;
-                $mimeType = $spatieMedia?->mime_type ?? '-';
+                $sizeFormatted = $file->size >= 1048576
+                    ? number_format($file->size / 1048576, 2) . ' MB'
+                    : ($file->size >= 1024 ? number_format($file->size / 1024, 1) . ' KB' : $file->size . ' B');
                 $extension = pathinfo($file->nama_file, PATHINFO_EXTENSION);
-                $mediaId = $spatieMedia?->id;
-                $fileId = $file->id;
-
-                $sizeFormatted = $fileSize >= 1048576
-                    ? number_format($fileSize / 1048576, 2) . ' MB'
-                    : ($fileSize >= 1024 ? number_format($fileSize / 1024, 1) . ' KB' : $fileSize . ' B');
             @endphp
             <tr>
                 <td>{{ $files->firstItem() + $index }}</td>
                 <td>{{ $file->nama_file }}</td>
+                <td><span style="font-size:12px;color:#6b7280;">{{ $file->source_label }}</span></td>
                 <td>
-                    @php
-                        $kategoriClass = config("file-pemilah.badge_classes.{$file->kategori}", 'badge-info');
-                        $kategoriLabel = $kategoriLabels[$file->kategori] ?? ucfirst($file->kategori);
-                    @endphp
-                    <span class="badge {{ $kategoriClass }}">{{ $kategoriLabel }}</span>
+                    <span class="badge {{ $file->kategori_badge }}">{{ $file->kategori_label }}</span>
                 </td>
                 <td style="white-space:nowrap;">{{ $sizeFormatted }}</td>
-                <td style="font-size:12px;color:#6b7280;max-width:180px;word-break:break-all;">{{ $mimeType }}</td>
+                <td style="font-size:12px;color:#6b7280;max-width:180px;word-break:break-all;">{{ $file->mime_type }}</td>
                 <td>
-                    @php
-                        $statusClass = match($file->status) {
-                            'aktif' => 'badge-success',
-                            'diperiksa' => 'badge-warning',
-                            'arsip' => 'badge-info',
-                            'dihapus' => 'badge-danger',
-                            default => 'badge-info',
-                        };
-                        $statusLabel = match($file->status) {
-                            'aktif' => 'Aktif',
-                            'diperiksa' => 'Diperiksa',
-                            'arsip' => 'Arsip',
-                            'dihapus' => 'Dihapus',
-                            default => $file->status,
-                        };
-                    @endphp
-                    <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                    <span class="badge {{ $file->status_badge }}">{{ $file->status_label }}</span>
                 </td>
-                <td>{{ $file->uploadedBy->nama ?? 'Tidak diketahui' }}</td>
+                <td>{{ $file->uploader_nama }}</td>
                 <td>
                     <div style="display: flex; gap: 6px;">
-                        <a href="{{ route('superadmin.file.download', $file->id) }}" class="btn btn-sm btn-outline-primary" title="Download">
+                        <a href="{{ $file->download_url }}" class="btn btn-sm btn-outline-primary" title="Download">
                             <span class="material-icons" style="font-size: 16px;">download</span>
                         </a>
-                        <button class="btn btn-sm btn-outline-primary" onclick="openFileInfoModal({{ $fileId }}, '{{ escapeJs($file->nama_file) }}', '{{ escapeJs($kategoriLabel) }}', '{{ escapeJs($file->status) }}', '{{ escapeJs($file->uploadedBy->nama ?? 'Tidak diketahui') }}', '{{ $file->created_at->format('d/m/Y H:i') }}', '{{ $sizeFormatted }}', '{{ escapeJs($mimeType) }}', '{{ escapeJs($extension) }}', '{{ $mediaId ?? '' }}')" title="Info File" style="background:transparent;border:1.5px solid #6b7280;color:#6b7280;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openFileInfoModal('{{ escapeJs($file->nama_file) }}', '{{ escapeJs($file->kategori_label) }}', '{{ escapeJs($file->status_label) }}', '{{ escapeJs($file->uploader_nama) }}', '{{ $file->created_at?->format('d/m/Y H:i') ?? '-' }}', '{{ $sizeFormatted }}', '{{ escapeJs($file->mime_type) }}', '{{ escapeJs($extension) }}', '{{ $file->media_id ?? '' }}', '{{ escapeJs($file->source_label) }}')" title="Info File" style="background:transparent;border:1.5px solid #6b7280;color:#6b7280;">
                             <span class="material-icons" style="font-size: 16px;">info</span>
                         </button>
                     </div>
@@ -111,7 +90,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="8" style="text-align: center; color: var(--secondary-600); padding: 40px 16px;">
+                <td colspan="9" style="text-align: center; color: var(--secondary-600); padding: 40px 16px;">
                     Tidak ada file ditemukan.
                 </td>
             </tr>
@@ -191,10 +170,10 @@
             if (e.target === this) closeUploadModal();
         });
 
-        function openFileInfoModal(id, nama, kategori, status, uploader, tanggal, ukuran, mime, ext, mediaId) {
+        function openFileInfoModal(nama, kategori, status, uploader, tanggal, ukuran, mime, ext, mediaId, sumber) {
             var rows = [
-                { label: 'ID', value: id },
                 { label: 'Nama File', value: nama },
+                { label: 'Sumber', value: sumber },
                 { label: 'Ekstensi', value: ext || '-' },
                 { label: 'Ukuran', value: ukuran },
                 { label: 'Tipe MIME', value: mime },

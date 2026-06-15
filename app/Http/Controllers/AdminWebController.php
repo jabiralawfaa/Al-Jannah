@@ -161,6 +161,7 @@ class AdminWebController extends Controller
     {
         $media = $page
             ->addMedia($file->getRealPath())
+            ->withCustomProperties(['uploaded_by' => auth()->id()])
             ->usingFileName(FileRenamer::rename($file->getClientOriginalName()))
             ->toMediaCollection('images');
 

@@ -49,10 +49,7 @@
                 </select>
                 <span class="material-icons" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;color:#6b7280;pointer-events:none;">expand_more</span>
             </div>
-            <a href="/bendahara/laporan/export" class="btn-export" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--primary-500);color:#fff;border:none;border-radius:100px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;transition:background .2s;flex-shrink:0;text-decoration:none;">
-                <span class="material-icons" style="font-size:16px;">file_download</span>
-                Export
-            </a>
+            <a href="/bendahara/laporan/export" class="btn-export" onclick="var el=this;el.innerHTML='<span class=\\'btn-spinner\\'></span> Menyiapkan...';setTimeout(function(){el.innerHTML='<span class=\\'material-icons\\' style=\\'font-size:16px;\\'>file_download</span> Export';},8000);" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--primary-500);color:#fff;border:none;border-radius:100px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;transition:background .2s;flex-shrink:0;text-decoration:none;"><span class="material-icons" style="font-size:16px;">file_download</span> Export</a>
         </div>
         <div class="table-scroll">
             <table>

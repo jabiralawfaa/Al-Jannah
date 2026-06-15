@@ -18,7 +18,7 @@
             <p class="subtitle">Monitoring pembayaran iuran anggota</p>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
-            <button class="btn-primary" onclick="openCariIuranModal()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;font-size:13px;">
+            <button class="btn-primary" onclick="openCariIuranModal()" data-loading data-loading-text="Membuka..." style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;font-size:13px;">
                 <span class="material-icons" style="font-size:18px;">add</span>
                 Tambah Iuran
             </button>
@@ -122,7 +122,7 @@
 
         <div class="modal-actions">
             <button class="btn-batal" onclick="closeCariIuranModal()">Batal</button>
-            <button class="btn-minta" onclick="submitCariIuran()">Simpan</button>
+            <button class="btn-minta" data-loading onclick="submitCariIuran()">Simpan</button>
         </div>
     </div>
 </div>
@@ -175,7 +175,7 @@
         </div>
         <div class="modal-actions" style="gap:8px;flex-wrap:wrap;">
             <button class="btn-batal" onclick="closeInfoIuranModal()" style="flex:1;">Batal</button>
-            <button class="btn-batal" id="btnGenerateAccessCode" onclick="generateAccessCode()" style="flex:1;background:#f3f4f6;color:#374151;border:2px solid #d1d5db;">Generate Access Code</button>
+            <button class="btn-batal" id="btnGenerateAccessCode" onclick="generateAccessCode()" data-loading style="flex:1;background:#f3f4f6;color:#374151;border:2px solid #d1d5db;">Generate Access Code</button>
             <button id="btnInfoTambahTransaksi" class="btn-minta" style="flex:1;">Tambah Transaksi</button>
         </div>
     </div>
@@ -229,7 +229,7 @@
 
         <div class="modal-footer">
             <button type="button" class="btn-batal" onclick="closeIuranModal()">Batal</button>
-            <button type="button" class="btn-catat" onclick="submitIuran()">Catat &amp; Cetak Kwitansi</button>
+            <button type="button" class="btn-catat" data-loading onclick="submitIuran()">Catat &amp; Cetak Kwitansi</button>
         </div>
     </div>
 </div>
@@ -293,6 +293,7 @@
     function updateNominal() { document.getElementById('modalNominal').value = formatNominal(nominalPerMonth * monthQty); document.getElementById('monthCount').textContent = monthQty + ' Bulan'; }
 
     function submitIuran() {
+        var btn = window._loadingBtn;
         var member = members[selectedMi];
         var bulanAkhir = Math.min(selectedBi + monthQty - 1, 11);
         var rangeLabel = bulanListIuran[selectedBi] + (monthQty > 1 ? '-' + bulanListIuran[bulanAkhir] : '');
@@ -305,17 +306,16 @@
         formData.append('nominal', nominalPerMonth);
         formData.append('keterangan', document.getElementById('modalKeterangan').value);
         var fi = document.getElementById('fileInput');
-        if (!fi || !fi.files[0]) { alert('Harap upload bukti pembayaran.'); return; }
+        if (!fi || !fi.files[0]) { enableBtn(btn); alert('Harap upload bukti pembayaran.'); return; }
         formData.append('file_bukti', fi.files[0]);
 
-        fetch('/bendahara/iuran', {
+        fetchAPI('/bendahara/iuran', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: formData
         })
-        .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (!res.success) return alert('Gagal menyimpan iuran');
+            if (!res.success) { enableBtn(btn); return alert(res.message || 'Gagal menyimpan iuran'); }
             for (var b = selectedBi; b <= bulanAkhir; b++) {
                 member.bulan[b].status = 'paid';
                 if (!member.bulan[b].date) member.bulan[b].date = today();
@@ -323,8 +323,9 @@
             closeIuranModal();
             renderIuranTable();
             showToast(document.getElementById('toastMsg'), 'Pembayaran ' + member.nama + ' untuk ' + rangeLabel + ' (' + monthQty + ' bln) berhasil dicatat');
+            enableBtn(btn);
         })
-        .catch(function() { alert('Terjadi kesalahan'); });
+        .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
     }
 
     /* Modal Cari Anggota + Tambah Iuran */
@@ -344,6 +345,7 @@
     }
 
     function openCariIuranModal() {
+        enableBtn();
         cariMemberIdx = -1;
         cariMonthQty = 1;
         cariMaxQty = 12;
@@ -393,13 +395,14 @@
     }
 
     function submitCariIuran() {
-        if (cariMemberIdx < 0) { alert('Cari anggota terlebih dahulu.'); return; }
+        var btn = window._loadingBtn;
+        if (cariMemberIdx < 0) { enableBtn(btn); alert('Cari anggota terlebih dahulu.'); return; }
         var member = members[cariMemberIdx];
         var bulanMulai = -1;
         for (var b = 0; b < 12; b++) {
             if (member.bulan[b].status !== 'paid') { bulanMulai = b; break; }
         }
-        if (bulanMulai < 0) { alert('Semua bulan sudah lunas.'); return; }
+        if (bulanMulai < 0) { enableBtn(btn); alert('Semua bulan sudah lunas.'); return; }
         var bulanAkhir = Math.min(bulanMulai + cariMonthQty - 1, 11);
         var rangeLabel = bulanListIuran[bulanMulai] + (cariMonthQty > 1 ? '-' + bulanListIuran[bulanAkhir] : '');
 
@@ -411,17 +414,16 @@
         formData.append('nominal', cariNominalPerMonth);
         formData.append('keterangan', document.getElementById('cariKeterangan').value);
         var fi = document.getElementById('cariFileInput');
-        if (!fi || !fi.files[0]) { alert('Harap upload bukti pembayaran.'); return; }
+        if (!fi || !fi.files[0]) { enableBtn(btn); alert('Harap upload bukti pembayaran.'); return; }
         formData.append('file_bukti', fi.files[0]);
 
-        fetch('/bendahara/iuran', {
+        fetchAPI('/bendahara/iuran', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             body: formData
         })
-        .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (!res.success) return alert('Gagal menyimpan iuran');
+            if (!res.success) { enableBtn(btn); return alert(res.message || 'Gagal menyimpan iuran'); }
             for (var b = bulanMulai; b <= bulanAkhir; b++) {
                 member.bulan[b].status = 'paid';
                 if (!member.bulan[b].date) member.bulan[b].date = today();
@@ -429,8 +431,9 @@
             closeCariIuranModal();
             renderIuranTable();
             showToast(document.getElementById('toastMsg'), 'Pembayaran ' + member.nama + ' untuk ' + rangeLabel + ' (' + cariMonthQty + ' bln) berhasil dicatat');
+            enableBtn(btn);
         })
-        .catch(function() { alert('Terjadi kesalahan'); });
+        .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); enableBtn(btn); });
     }
 
     function buildInfoTahunDropdown() {
@@ -559,11 +562,8 @@
 
     function generateAccessCode() {
         var member = members[_infoMemberIdx];
-        if (!member) return;
-        var btn = document.getElementById('btnGenerateAccessCode');
-        btn.disabled = true;
-        btn.textContent = 'Memproses...';
-        fetch('/bendahara/iuran/generate-access-code', {
+        if (!member) { enableBtn(document.getElementById('btnGenerateAccessCode')); return; }
+        fetchAPI('/bendahara/iuran/generate-access-code', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -571,16 +571,16 @@
             },
             body: JSON.stringify({ anggota_id: member.id })
         })
-        .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (!res.success) { alert('Gagal generate access code'); return; }
+            if (!res.success) { alert(res.message || 'Gagal generate access code'); return; }
             member.accessCode = res.access_code;
             document.getElementById('infoIuranAccessCodeValue').textContent = res.access_code;
             document.getElementById('infoIuranAccessCode').style.display = 'block';
-            btn.textContent = 'Regenerate Access Code';
+            var btn = document.getElementById('btnGenerateAccessCode');
+            if (btn) { btn.setAttribute('data-orig-html', 'Regenerate Access Code'); btn.innerHTML = 'Regenerate Access Code'; }
         })
-        .catch(function() { alert('Terjadi kesalahan'); })
-        .finally(function() { btn.disabled = false; });
+        .catch(function(e) { console.error(e); alert('Gagal: ' + e.message); })
+        .finally(function() { enableBtn(document.getElementById('btnGenerateAccessCode')); });
     }
 
     fetchIuranData(currentYear);

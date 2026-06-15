@@ -439,8 +439,10 @@
             }
         }
     </style>
+    <script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js')}</script>
 </head>
 <body>
+    @include('components.preloader')
     <!-- Navbar Component -->
     <x-navbar />
 
@@ -556,22 +558,7 @@
         </div>
     </section>
 
-    <!-- Footer Component -->
     <x-footer />
 
-    <!-- Register Service Worker for Image Caching -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-    </script>
 </body>
 </html>

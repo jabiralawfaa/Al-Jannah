@@ -154,6 +154,7 @@ class PostEditor extends Component implements HasActions, HasForms
             if ($this->thumbnail) {
                 try {
                     $this->post->addMedia($this->thumbnail->getRealPath())
+                        ->withCustomProperties(['uploaded_by' => auth()->id()])
                         ->usingFileName(\App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName()))
                         ->toMediaCollection('thumbnails');
                 } catch (\Exception $e) {
@@ -168,6 +169,7 @@ class PostEditor extends Component implements HasActions, HasForms
             if ($this->thumbnail) {
                 try {
                     $post->addMedia($this->thumbnail->getRealPath())
+                        ->withCustomProperties(['uploaded_by' => auth()->id()])
                         ->usingFileName(\App\Services\FileRenamer::rename($this->thumbnail->getClientOriginalName()))
                         ->toMediaCollection('thumbnails');
                 } catch (\Exception $e) {

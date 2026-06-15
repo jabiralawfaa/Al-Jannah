@@ -201,6 +201,31 @@ class LogistikController extends Controller
         return redirect()->route('logistik.aset')->with('success', 'Aset berhasil ditambahkan.');
     }
 
+    public function updateAset(Request $request, $id)
+    {
+        $aset = AsetKendaraan::findOrFail($id);
+
+        $validated = $request->validate([
+            'kode_aset' => 'required|unique:aset_kendaraan,kode_aset,' . $id,
+            'nama_aset' => 'required',
+            'nomor_plat_seri' => 'nullable',
+            'kategori_aset_id' => 'required|exists:kategori_aset,id',
+            'kondisi' => 'nullable|string|max:255',
+        ]);
+
+        $aset->update($validated);
+
+        return redirect()->route('logistik.aset')->with('success', 'Aset berhasil diperbarui.');
+    }
+
+    public function destroyAset($id)
+    {
+        $aset = AsetKendaraan::findOrFail($id);
+        $aset->delete();
+
+        return redirect()->route('logistik.aset')->with('success', 'Aset berhasil dihapus.');
+    }
+
     public function updateStatusAset(Request $request, $id)
     {
         $aset = AsetKendaraan::findOrFail($id);

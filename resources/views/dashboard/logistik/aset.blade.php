@@ -71,10 +71,13 @@
                             <td style="padding: 12px 20px; color: black; font-size: 13px; border: 1px solid #b7c8c2;">{{ $item->kondisi ?? '-' }}</td>
                             <td style="padding: 12px 20px; border: 1px solid #b7c8c2;">
                                 <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <button onclick="ubahStatus({{ $item->id }}, '{{ $item->status }}', '{{ $item->kondisi ?? '' }}')" style="background-color: var(--primary-900); border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                                        <span class="material-icons" style="font-size: 16px; color: white;">edit</span>
+                                    <button onclick="editAset({{ $item->id }}, '{{ $item->kode_aset }}', '{{ $item->nama_aset }}', '{{ $item->nomor_plat_seri ?? '' }}', {{ $item->kategori_aset_id }}, '{{ $item->kondisi ?? '' }}')" style="background-color: #fcd34d; border: 1px solid black; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                        <span class="material-icons" style="font-size: 16px; color: black;">edit</span>
                                     </button>
-                                    <button onclick="openModal('hapusAsetModal')" style="background-color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <button onclick="ubahStatus({{ $item->id }}, '{{ $item->status }}', '{{ $item->kondisi ?? '' }}')" style="background-color: var(--primary-900); border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                                        <span class="material-icons" style="font-size: 16px; color: white;">sync_alt</span>
+                                    </button>
+                                    <button onclick="confirmHapusAset({{ $item->id }})" style="background-color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                                         <span class="material-icons" style="font-size: 16px; color: white;">delete</span>
                                     </button>
                                 </div>
@@ -143,6 +146,51 @@
     </div>
 </div>
 
+<div id="editAsetModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
+    <div style="background: white; width: 520px; max-width: 90%; border-radius: 12px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--primary-900);">
+        <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Ubah Data Aset</h3>
+        <form id="editAsetForm" method="POST">
+            @csrf
+            @method('PUT')
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kode Aset</label>
+                        <input type="text" name="kode_aset" id="edit_kode_aset" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nama Aset / Kendaraan</label>
+                        <input type="text" name="nama_aset" id="edit_nama_aset" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    </div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nomor Plat/Seri</label>
+                        <input type="text" name="nomor_plat_seri" id="edit_nomor_plat_seri" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kategori</label>
+                        <select name="kategori_aset_id" id="edit_kategori_aset_id" style="width: 100%; padding: 7px 10px; border: 1px solid #c8d6d3; border-radius: 6px; font-size: 12px; outline: none; color: black; background: white;">
+                            <option value="">Pilih Kategori</option>
+                            @foreach($kategoris as $kat)
+                                <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Kondisi</label>
+                <textarea name="kondisi" id="edit_kondisi" style="width: 100%; height: 60px; border: 1px solid #c8d6d3; border-radius: 6px; padding: 8px 10px; font-size: 12px; resize: none; outline: none; color: black; background: white; font-family: 'Inter', 'Poppins', sans-serif;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="closeModal('editAsetModal')" style="background: #374151; color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Batal</button>
+                <button type="submit" style="background: var(--primary-900); color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="statusModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
     <div style="background: white; width: 440px; max-width: 90%; border-radius: 12px; padding: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--primary-900);">
         <h3 style="font-size: 16px; font-weight: 700; color: black; margin: 0 0 20px 0;">Ubah Status Aset</h3>
@@ -172,12 +220,16 @@
 
 <div id="hapusAsetModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
     <div style="background: white; width: 400px; max-width: 90%; border-radius: 12px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
-        <h3 style="font-size: 18px; font-weight: 800; color: black; margin: 0 0 10px 0;">Hapus Data Aset?</h3>
-        <p style="font-size: 14px; color: #6b7280; margin: 0 0 24px 0;">Data yang dihapus tidak dapat dikembalikan.</p>
-        <div style="display: flex; gap: 12px; justify-content: center;">
-            <button onclick="closeModal('hapusAsetModal')" style="background: #374151; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Batal</button>
-            <button onclick="closeModal('hapusAsetModal')" style="background: #dc2626; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Hapus</button>
-        </div>
+        <form id="hapusAsetForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <h3 style="font-size: 18px; font-weight: 800; color: black; margin: 0 0 10px 0;">Hapus Data Aset?</h3>
+            <p style="font-size: 14px; color: #6b7280; margin: 0 0 24px 0;">Data yang dihapus tidak dapat dikembalikan.</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" onclick="closeModal('hapusAsetModal')" style="background: #374151; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Batal</button>
+                <button type="submit" style="background: #dc2626; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Hapus</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -189,11 +241,26 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
+function editAset(id, kode, nama, plat, kategoriId, kondisi) {
+    document.getElementById('editAsetForm').action = updateUrl.replace('REPLACE_ME', id);
+    document.getElementById('edit_kode_aset').value = kode;
+    document.getElementById('edit_nama_aset').value = nama;
+    document.getElementById('edit_nomor_plat_seri').value = plat;
+    document.getElementById('edit_kategori_aset_id').value = kategoriId;
+    document.getElementById('edit_kondisi').value = kondisi || '';
+    openModal('editAsetModal');
+}
+
 function ubahStatus(id, statusSekarang, kondisiSekarang) {
     document.getElementById('statusForm').action = statusUrl.replace('REPLACE_ME', id);
     document.getElementById('statusSelect').value = statusSekarang;
     document.getElementById('kondisiText').value = kondisiSekarang || '';
     openModal('statusModal');
+}
+
+function confirmHapusAset(id) {
+    document.getElementById('hapusAsetForm').action = hapusUrl.replace('REPLACE_ME', id);
+    openModal('hapusAsetModal');
 }
 
 function filterTable(input, tableId, emptyId) {
@@ -216,10 +283,12 @@ function filterTable(input, tableId, emptyId) {
     }
 }
 
+var updateUrl = '{{ route('logistik.aset.update', 'REPLACE_ME') }}';
 var statusUrl = '{{ route('logistik.aset.status', 'REPLACE_ME') }}';
+var hapusUrl = '{{ route('logistik.aset.destroy', 'REPLACE_ME') }}';
 
 document.addEventListener('DOMContentLoaded', function() {
-    var modals = ['tambahAsetModal', 'statusModal', 'hapusAsetModal'];
+    var modals = ['tambahAsetModal', 'editAsetModal', 'statusModal', 'hapusAsetModal'];
     modals.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) {

@@ -76,20 +76,41 @@ class SekretarisController extends Controller
         return back()->with('success', "Calon anggota {$calon->nama} berhasil diverifikasi.");
     }
 
-    public function log()
+    public function log(Request $request)
     {
-        $activities = LogAktivitas::where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $search = $request->get('search');
 
-        return view('dashboard.sekretaris.log', compact('activities'));
+        $query = LogAktivitas::where('user_id', Auth::id())->latest();
+
+        if ($search) {
+            $query->where('deskripsi', 'like', "%{$search}%")
+                  ->orWhere('aksi', 'like', "%{$search}%")
+                  ->orWhere('modul', 'like', "%{$search}%");
+        }
+
+        $activities = $query->get();
+
+        return view('dashboard.sekretaris.log', compact('activities', 'search'));
     }
 
-    public function anggota()
+    public function anggota(Request $request)
     {
-        $anggota = Anggota::with('calonAnggota.keluargaAnggota')
-            ->latest()
-            ->paginate(20);
+        $search = $request->get('search');
+        $statusFilter = $request->get('status', 'all');
+
+        $query = Anggota::with('calonAnggota.keluargaAnggota')->latest();
+
+        if ($search) {
+            $query->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nomor_anggota', 'like', "%{$search}%")
+                  ->orWhere('telepon', 'like', "%{$search}%");
+        }
+
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+
+        $anggota = $query->paginate(20)->appends(['search' => $search, 'status' => $statusFilter]);
 
         $totalAnggota = Anggota::count();
         $anggotaAktif = Anggota::where('status', 'aktif')->count();
@@ -99,7 +120,9 @@ class SekretarisController extends Controller
             'anggota',
             'totalAnggota',
             'anggotaAktif',
-            'anggotaNonAktif'
+            'anggotaNonAktif',
+            'search',
+            'statusFilter'
         ));
     }
 

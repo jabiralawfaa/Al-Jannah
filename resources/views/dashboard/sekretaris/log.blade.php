@@ -29,10 +29,10 @@
     <div class="card" style="border: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; border-radius: 12px; background-color: white;">
         <!-- Search Area -->
         <div style="padding: 15px 20px; background-color: white; border-bottom: 1px solid #e5e7eb;">
-            <div style="position: relative; width: 350px;">
+            <form id="logSearchForm" method="GET" action="{{ route('sekretaris.log') }}" style="position: relative; width: 350px;">
                 <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #4b5563; font-size: 20px;">search</span>
-                <input type="text" placeholder="Cari aktivitas..." style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; outline: none; color: black;">
-            </div>
+                <input type="text" name="search" id="logSearchInput" placeholder="Cari aktivitas..." value="{{ $search }}" style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; outline: none; color: black;">
+            </form>
         </div>
 
         <!-- Activity Header -->
@@ -41,7 +41,7 @@
         </div>
 
         <!-- Activity List -->
-        <div style="padding: 0; background-color: #d1d5db;">
+        <div style="padding: 0; background-color: #d1d5db;" id="activityList">
             @forelse($activities as $activity)
             @php
                 $icon = match ($activity->aksi) {
@@ -51,7 +51,7 @@
                     default => ['name' => 'info', 'color' => '#6b7280'],
                 };
             @endphp
-            <div style="display: flex; align-items: flex-start; gap: 20px; padding: 15px 20px; border-bottom: 1px solid #9ca3af; background-color: #d1d5db;">
+            <div class="activity-item" style="display: flex; align-items: flex-start; gap: 20px; padding: 15px 20px; border-bottom: 1px solid #9ca3af; background-color: #d1d5db;">
                 <div style="margin-top: 5px;">
                     <span class="material-icons" style="font-size: 32px; color: {{ $icon['color'] }};">{{ $icon['name'] }}</span>
                 </div>
@@ -73,4 +73,17 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Auto submit log search form with debounce
+    let logSearchTimeout;
+    document.getElementById('logSearchInput').addEventListener('input', function() {
+        clearTimeout(logSearchTimeout);
+        logSearchTimeout = setTimeout(() => {
+            document.getElementById('logSearchForm').submit();
+        }, 500);
+    });
+</script>
 @endsection

@@ -35,10 +35,13 @@
                 <button type="submit" name="status" value="non_aktif" style="background-color: {{ $statusFilter === 'non_aktif' ? '#e5e7eb' : 'transparent' }}; padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; color: #4b5563; border: 1px solid {{ $statusFilter === 'non_aktif' ? '#9ca3af' : 'transparent' }};">Non-Aktif ({{ $anggotaNonAktif }})</button>
                 <input type="hidden" name="search" value="{{ $search }}">
             </form>
-            <form id="searchForm" method="GET" action="{{ route('sekretaris.anggota') }}" style="position: relative; width: 280px;">
-                <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #4b5563; font-size: 20px;">search</span>
-                <input type="text" name="search" id="searchInput" placeholder="Cari Nama Anggota..." value="{{ $search }}" style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #9ca3af; border-radius: 10px; font-size: 13px; outline: none; color: black;">
+            <form id="searchForm" method="GET" action="{{ route('sekretaris.anggota') }}" style="display:flex;gap:8px;align-items:center;">
+                <div style="position:relative;flex:1;">
+                    <span class="material-icons" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#4b5563;font-size:20px;">search</span>
+                    <input type="text" name="search" id="searchInput" placeholder="Cari Nama Anggota..." value="{{ $search }}" style="width:100%;padding:8px 12px 8px 40px;background-color:#e5e7eb;border:1px solid #9ca3af;border-radius:10px;font-size:13px;outline:none;color:black;">
+                </div>
                 <input type="hidden" name="status" value="{{ $statusFilter }}">
+                <button type="submit" style="padding:8px 16px;background:var(--primary-500);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Cari</button>
             </form>
         </div>
 

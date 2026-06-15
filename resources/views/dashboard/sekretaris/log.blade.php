@@ -29,9 +29,12 @@
     <div class="card" style="border: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 0; overflow: hidden; border-radius: 12px; background-color: white;">
         <!-- Search Area -->
         <div style="padding: 15px 20px; background-color: white; border-bottom: 1px solid #e5e7eb;">
-            <form id="logSearchForm" method="GET" action="{{ route('sekretaris.log') }}" style="position: relative; width: 350px;">
-                <span class="material-icons" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #4b5563; font-size: 20px;">search</span>
-                <input type="text" name="search" id="logSearchInput" placeholder="Cari aktivitas..." value="{{ $search }}" style="width: 100%; padding: 8px 12px 8px 40px; background-color: #e5e7eb; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; outline: none; color: black;">
+            <form id="logSearchForm" method="GET" action="{{ route('sekretaris.log') }}" style="display:flex;gap:8px;align-items:center;width:420px;">
+                <div style="position:relative;flex:1;">
+                    <span class="material-icons" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#4b5563;font-size:20px;">search</span>
+                    <input type="text" name="search" id="logSearchInput" placeholder="Cari aktivitas..." value="{{ $search ?? '' }}" style="width:100%;padding:8px 12px 8px 40px;background-color:#e5e7eb;border:1px solid #d1d5db;border-radius:10px;font-size:13px;outline:none;color:black;">
+                </div>
+                <button type="submit" style="padding:8px 16px;background:var(--primary-500);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Cari</button>
             </form>
         </div>
 

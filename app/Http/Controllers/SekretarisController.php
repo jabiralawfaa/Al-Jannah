@@ -129,18 +129,58 @@ class SekretarisController extends Controller
 
     public function editAnggota($id)
     {
-        $anggota = Anggota::with('calonAnggota')->find($id);
+        return redirect()->route('sekretaris.anggota');
+    }
+
+    public function prosesEditAnggota(Request $request, $id)
+    {
+        $anggota = Anggota::find($id);
 
         if (!$anggota) {
-            $anggota = (object) [
-                'id' => $id,
-                'nomor_anggota' => 'RKM-' . str_pad($id, 5, '0', STR_PAD_LEFT),
-                'nama' => 'Anggota',
-                'telepon' => '-',
-            ];
+            return response()->json(['success' => false, 'message' => 'Anggota tidak ditemukan.'], 404);
         }
 
-        return view('dashboard.sekretaris.anggota-edit', compact('anggota'));
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'telepon' => 'nullable|string|max:20',
+            'anggota_keluarga' => 'nullable|array',
+            'anggota_keluarga.*.nama' => 'required|string|max:255',
+            'anggota_keluarga.*.jenis_kelamin' => 'required|in:laki-laki,perempuan',
+            'anggota_keluarga.*.tanggal_lahir' => 'nullable|date',
+        ]);
+
+        $anggota->update([
+            'nama' => $validated['nama'],
+            'telepon' => $validated['telepon'],
+        ]);
+
+        // Sync keluarga
+        if ($request->has('anggota_keluarga') && $anggota->calon_anggota_id) {
+            KeluargaAnggota::where('calon_anggota_id', $anggota->calon_anggota_id)->delete();
+            foreach ($validated['anggota_keluarga'] as $item) {
+                if (trim($item['nama'])) {
+                    KeluargaAnggota::create([
+                        'calon_anggota_id' => $anggota->calon_anggota_id,
+                        'nama' => trim($item['nama']),
+                        'jenis_kelamin' => $item['jenis_kelamin'],
+                        'tanggal_lahir' => $item['tanggal_lahir'] ?? now()->toDateString(),
+                    ]);
+                }
+            }
+        }
+
+        LogAktivitas::create([
+            'user_id' => Auth::id(),
+            'aksi' => 'update',
+            'deskripsi' => "Mengupdate data anggota {$anggota->nama} - {$anggota->nomor_anggota}",
+            'modul' => 'Sekretaris',
+            'referensi_id' => $anggota->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data anggota {$anggota->nama} berhasil diperbarui.",
+        ]);
     }
 
     public function nonaktifAnggota($id)

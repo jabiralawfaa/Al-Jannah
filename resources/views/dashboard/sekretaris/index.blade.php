@@ -187,6 +187,7 @@
                     <div class="search-box">
                         <span class="material-icons">search</span>
                         <input type="text" id="searchInput" placeholder="Cari nama atau email..." oninput="filterTable()">
+                        <button type="button" onclick="filterTable()" style="padding:4px 12px;background:var(--primary-500);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Cari</button>
                     </div>
                     <select class="filter-select" id="filterBayar" onchange="filterTable()">
                         <option value="all">Semua Bayar</option>
